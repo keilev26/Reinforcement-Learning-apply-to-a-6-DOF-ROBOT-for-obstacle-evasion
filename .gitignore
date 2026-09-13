@@ -1,0 +1,42 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- ROS 2 / colcon ---
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# --- Entrenamiento (artefactos pesados, no versionar) ---
+training/checkpoints/
+training/tensorboard/
+training/runs/
+*.zip
+*.pth
+*.pt
+
+# --- CAD (respaldos automaticos) ---
+*.FCStd1
+*.SLDPRT.bak
+*~
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+*.swp
+.venv/
+
+
+# --- PDF (los papers y tesis viven en Drive) ---
+*.pdf
+
+# --- Excel (el formato de entrega del curso vive en Drive, no en el repo) ---
+*.xls
+*.xlsx
+*.xlsm
+~$*.xls*

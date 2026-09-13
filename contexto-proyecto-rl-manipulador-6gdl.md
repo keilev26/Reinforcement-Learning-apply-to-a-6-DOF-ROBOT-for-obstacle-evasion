@@ -49,11 +49,14 @@ Registro breve para no reabrir discusiones ya cerradas.
 - **Percepción:** ideal, declarada explícitamente como supuesto.
 - **Línea base:** RRT-Connect y RRT* vía OMPL/MoveIt 2.
 - **Obstáculos dinámicos:** elementos móviles genéricos de la celda (prensas, piezas en tránsito, carros). **No se modela al operario humano**; queda excluida la colaboración humano-robot y su marco normativo.
-- **Robot:** manipulador industrial no redundante de 6 GDL (referencia: UR5/UR5e, por madurez de su modelo URDF y ecosistema abierto).
-- **Stack (actualizado):** **todo unificado en ROS 2 Jazzy + Gazebo Harmonic**. El entorno Gymnasium se construye sobre `ros2_control`, de modo que la política y los planificadores de OMPL comparten simulador, URDF y verificador de colisiones. Línea base con MoveIt 2 + OMPL. Ver `EDT-Ruta2-ROS2-Unificado.md`.
-  - *Motivo del cambio:* entrenar en PyBullet y medir en Gazebo dejaba abierta la objeción de comparar métodos sobre motores de física distintos. La unificación da paridad experimental estricta y supera el protocolo del Paper 4, que logra paridad solo mediante adaptadores ROS/MoveIt.
-  - *Plan B declarado:* si la Compuerta 1 (semana 4) demuestra que Gazebo es demasiado lento para entrenar, el backend de entrenamiento pasa a PyBullet manteniendo la evaluación en Gazebo, y el cambio se reporta como resultado de transferencia sim-to-sim. El Plan B es barato porque los módulos propios viven por encima del simulador. Ver `EDT-Ruta1-PyBullet.md`.
-  - *Descartado:* Isaac Sim / Isaac Lab, por curva de aprendizaje incompatible con 10 semanas y porque no elimina el trabajo de ROS 2 sino que lo añade encima. Ver `EDT-Ruta3-IsaacSim.md`.
+- **Robot:** manipulador industrial no redundante de 6 GDL. El proyecto trata sobre **un manipulador de 6 GDL**, no sobre un modelo comercial concreto.
+  - Se adopta la **mecánica del UR5e como plataforma de referencia**: CAD, parámetros de Denavit-Hartenberg, envolvente de trabajo y límites articulares, por la madurez de su modelo URDF y su ecosistema abierto.
+  - La **electrónica de control se rediseña** (entregable E2), dimensionada para reproducir esa misma envolvente de pares y velocidades: 150 N·m en hombro y codo, 28 N·m en muñeca, π rad/s.
+  - Por construcción, **la simulación sigue siendo válida para el robot rediseñado**, porque conserva sus mismos límites dinámicos.
+- **Stack:** PyBullet + Gymnasium + Stable-Baselines3 para entrenamiento; ROS 2 Jazzy + Gazebo Harmonic + MoveIt 2 + OMPL para validación y línea base. Ver `EDT.md`.
+  - *Motivo:* replica exactamente el stack del Paper 1 (Mao et al., 2025), la referencia metodológica directa, lo que refuerza el argumento de «misma formulación más los tres elementos ausentes». Es también el de menor riesgo técnico y el que permite arrancar el entrenamiento en la semana 3, dejando margen para las 5 semillas y los 8 escenarios completos dentro del plazo de 10 semanas. No requiere GPU.
+  - *Condición obligatoria:* al entrenar en un motor de física y medir la línea base en otro, la comparación solo es válida si ambos modelos son equivalentes. El **paquete 3.13 (verificación de equivalencia PyBullet ↔ Gazebo)** —mismo URDF, mismos límites articulares, misma geometría de colisión y escala, desde una fuente única— es obligatorio y debe documentarse en el informe, reportando las diferencias residuales entre motores.
+  - *Alternativas evaluadas y descartadas:* unificar todo en ROS 2 + Gazebo construyendo el entorno Gymnasium sobre `ros2_control` daría paridad estricta, pero a costa de un entorno de entrenamiento sustancialmente más lento y de la tarea más compleja del proyecto en la ruta crítica. Isaac Sim / Isaac Lab se descartó por curva de aprendizaje incompatible con 10 semanas y porque no elimina el trabajo de ROS 2, sino que lo añade encima.
 - **Métricas (las «5 métricas» que se repiten en todo el documento):** tasa de éxito, número de colisiones, longitud de trayectoria, tiempo de ejecución, distancia mínima a los obstáculos.
 
 ### 4.1 Estructura de entregables del curso
@@ -62,12 +65,14 @@ El curso organiza la entrega en cuatro componentes: electrónico, software/contr
 
 | ID | Entregable | Contenido |
 |---|---|---|
-| **E1** | Diseño mecánico | Celda CAD de *machine tending* de un centro CNC; parámetros de Denavit-Hartenberg del UR5e de 6 GDL; cinemática directa e inversa; envolvente de trabajo y alcanzabilidad; singularidades de muñeca que fundamentan el espacio de acción Δq. **La celda diseñada se exporta a URDF/SDF y es la escena donde se mide.** |
-| **E2** | Electrónico (reformulado) | Arquitectura de sensado y comunicaciones que haría realizable la celda: controlador, PLC, bus y jerarquía de mando; instrumentación que produciría el vector de observación (LiDAR 3D, cámaras de profundidad, escáner de seguridad); presupuesto de latencia; cadena de seguridad. |
-| **E3** | Software y control | Entorno Gymnasium sobre ROS 2/Gazebo; formulación del MDP y recompensa multiobjetivo; entrenamiento SAC desde cero; módulo analítico de distancia mínima validado contra FCL; línea base MoveIt 2 + OMPL; generador paramétrico de escenarios. |
+| **E1** | Diseño mecánico | Celda base de *machine tending* de un centro CNC y **biblioteca modular de componentes CAD** —máquina, mesa, utillaje, prensa, carro, pieza en tránsito, obstáculos primitivos— cada uno exportable por separado; parámetros de Denavit-Hartenberg del manipulador de 6 GDL; cinemática directa e inversa; envolvente de trabajo y alcanzabilidad; singularidades de muñeca que fundamentan el espacio de acción Δq. **Los 8 escenarios experimentales se componen a partir de esta biblioteca: es la única fuente de geometría del proyecto.** |
+| **E2** | Electrónico | Diseño de la electrónica de control del manipulador: dimensionamiento de actuadores y reductores para reproducir la envolvente de pares y velocidades; etapa de potencia; unidad de cómputo y microcontrolador; sensado por encoders e instrumentación del vector de observación; arquitectura de comunicación; cadena de seguridad; presupuesto de latencia del lazo. |
+| **E3** | Software y control | Entorno Gymnasium sobre PyBullet; formulación del MDP y recompensa multiobjetivo; entrenamiento SAC desde cero; módulo analítico de distancia mínima validado contra FCL; línea base MoveIt 2 + OMPL; generador paramétrico de escenarios. |
 | **E4** | Implementación | Demo en vivo con obstáculos propuestos durante la sustentación; tablero comparativo de las 5 métricas; análisis estadístico; informe y repositorio reproducible. |
 
-> **E2 convierte el supuesto de percepción ideal de una limitación en una decisión de diseño con ruta de realización identificada**, y responde por adelantado la objeción «asumes percepción perfecta, eso no existe» de la sección 22.
+> **Ningún entregable es decorativo, y los cuatro están enganchados entre sí.** La biblioteca de E1 es la geometría que compone los escenarios del experimento. En E2, la unidad de cómputo debe ejecutar la inferencia de la política entrenada en E3 dentro del período de control, y el dimensionamiento de actuadores se obtiene por dinámica inversa sobre las trayectorias que el propio proyecto genera.
+>
+> Este encuadre responde además dos objeciones de la sección 22: «asumes percepción perfecta, eso no existe» —E2 identifica la instrumentación que la haría real— y «¿esto es mecatrónica o informática?», ya que el proyecto integra diseño mecánico, diseño electrónico, control e inteligencia artificial.
 
 **Pendiente bloqueante:** confirmar con el profesor la reformulación de E2 y que el diseño de celda satisface el entregable mecánico. Ver `preguntas-profesor.md`.
 
@@ -550,10 +555,9 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 11. Confirmar con el profesor que una demostración de software satisface el requisito de producto tangible del curso. *(Incluido en `preguntas-profesor.md`.)*
 
 **Documentos de planificación asociados:**
-- `EDT-Ruta2-ROS2-Unificado.md` — EDT adoptada, con paquetes de trabajo, cronograma de 10 semanas y compuertas de decisión.
-- `EDT-Ruta1-PyBullet.md` — Plan B ante la Compuerta 1.
-- `EDT-Ruta3-IsaacSim.md` — ruta evaluada y descartada para este plazo.
+- `EDT.md` — EDT adoptada, con paquetes de trabajo, cronograma de 10 semanas y compuertas de decisión.
 - `preguntas-profesor.md` — puntos bloqueantes a confirmar con el curso.
+- `docs/nota-tecnica-semana1.md` — verificación del entorno y hallazgos técnicos.
 
 **Verificaciones ya realizadas (no repetir):**
 - Papers 1, 2, 3, 4 y 5: existen, DOI correctos.

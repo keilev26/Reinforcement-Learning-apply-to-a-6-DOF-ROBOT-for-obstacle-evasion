@@ -14,6 +14,7 @@ Fecha de verificación: 2026-09-06 · Máquina: Ubuntu 24.04.4 LTS
 | Gymnasium | 1.3.0 |
 | Stable-Baselines3 | 2.9.0 |
 | PyTorch | 2.14.0+cpu — **CUDA no disponible en esta máquina** |
+| PyBullet | Instalado — **simulador de entrenamiento de la ruta adoptada** |
 
 Entorno de Python en `.venv/` (no versionado).
 
@@ -55,7 +56,7 @@ bash -c 'source /opt/ros/jazzy/setup.bash && \
   ur_type:=ur5e name:=ur5e > /tmp/ur5e.urdf'
 ```
 
-## 4. Hallazgo para el paquete B.4 — configuración de OMPL
+## 4. Hallazgo para el paquete 3.9 — configuración de OMPL
 
 `ur_moveit_config/config/ompl_planning.yaml` **solo declara el plugin y los adaptadores; no define
 `planner_configs`.** Es decir, el paquete de UR no deja RRT-Connect ni RRT\* listos para seleccionar.
@@ -75,7 +76,7 @@ RRTstar:
   delay_collision_checking: 1
 ```
 
-**Trabajo concreto de B.4:** escribir un `ompl_planning.yaml` propio que declare `planner_configs`
+**Trabajo concreto de 3.9:** escribir un `ompl_planning.yaml` propio que declare `planner_configs`
 con RRT-Connect y RRT\*, y asociarlos al grupo de planificación `ur_manipulator`, fijando
 explícitamente `range` y `goal_bias` en lugar de dejarlos en 0.0.
 
@@ -114,7 +115,7 @@ sigue a `ur_type`. Es un defecto de empaquetado de la combinación `ur_simulatio
 `scaled_joint_trajectory_controller` **activos**, y el grupo de planificación `ur_manipulator`
 presente en el SRDF cargado.
 
-**Acción para el paquete B.1.** El equipo va a construir de todos modos su propia configuración de
+**Acción para el paquete 3.8.** El equipo va a construir de todos modos su propia configuración de
 MoveIt para incorporar la celda como escena, así que la corrección se absorbe ahí: en el launch
 propio, pasar el **mismo** nombre al URDF y al SRDF. No parchear los paquetes del sistema.
 
@@ -122,7 +123,64 @@ propio, pasar el **mismo** nombre al URDF y al SRDF. No parchear los paquetes de
 > Si el desajuste llegara a afectar la validación del modelo cinemático, contaminaría todas las
 > métricas de la línea base.
 
-## 6. Pendiente de la semana 1
+## 6. PyBullet + UR5e — dos bloqueadores verificados
+
+Probado el 2026-09-13 con el URDF oficial de `ur_description` (`ur_type:=ur5e`).
+
+### 6.1 PyBullet no resuelve URIs `package://`
+
+El URDF de `ur_description` contiene **14 referencias `package://`**. PyBullet no las resuelve
+—tampoco con `setAdditionalSearchPath()`— y falla con:
+
+```
+cannot find 'ur_description/meshes/ur5e/visual/base.dae' in any directory in urdf path
+Cannot load URDF file.
+```
+
+**Solución verificada:** reescribir el prefijo a ruta absoluta antes de cargar.
+
+```python
+src = open("/tmp/ur5e.urdf").read()
+open("/tmp/ur5e_abs.urdf", "w").write(src.replace("package://", "/opt/ros/jazzy/share/"))
+```
+
+Con eso carga correctamente: **6 articulaciones móviles**, límites y `vmax = 3.142 rad/s`
+coincidiendo con lo que reporta ROS 2. Confirma el invariante de 6 GDL también en PyBullet.
+
+> Nota: los meshes visuales son `.dae` y los de colisión `.stl`. Para el cálculo de distancias
+> mínimas y la detección de colisiones interesan los `.stl`.
+
+### 6.2 Masa fantasma — afecta directamente al paquete 3.13
+
+**Este es el hallazgo crítico.** PyBullet asigna `mass = 1.0` e inercia identidad a todo link que
+no declare `<inertial>`. El URDF del UR5e tiene **5 links sin datos inerciales**:
+
+| Link | ROS 2 / Gazebo | PyBullet |
+|---|---|---|
+| `base_link` | frame sin masa | **1.0 kg** |
+| `ft_frame` | frame sin masa | **1.0 kg** |
+| `base` | frame sin masa | **1.0 kg** |
+| `flange` | frame sin masa | **1.0 kg** |
+| `tool0` | frame sin masa | **1.0 kg** |
+
+**PyBullet introduce 5 kg que Gazebo no tiene.** Tres de esos links —`ft_frame`, `flange` y
+`tool0`— están en la muñeca, es decir, en el extremo de la cadena cinemática, que es donde más
+afectan a la dinámica.
+
+**Consecuencia para el proyecto.** La política se entrenaría sobre un robot dinámicamente
+distinto del que se mide en la línea base, sin que nada lo advierta. Es exactamente el tipo de
+divergencia silenciosa que el **paquete 3.13 (verificación de equivalencia PyBullet ↔ Gazebo)**
+existe para atrapar, y apareció en la primera prueba de carga.
+
+**Acción:** al construir el entorno (paquete 3.2), poner en cero la masa y la inercia de esos
+cinco links tras cargar el URDF, con `p.changeDynamics(rid, idx, mass=0)`, y dejar una prueba
+automatizada que compare masa por link entre ambos motores.
+
+> Para la sustentación: este caso es evidencia concreta de que la verificación de equivalencia
+> no es un trámite. Vale la pena mencionarlo si preguntan por la validez de comparar entre
+> motores de física distintos.
+
+## 7. Pendiente de la semana 1
 
 - Confirmar que `moveit_ros_benchmarks` corre y qué métricas entrega (asunto `warehouse_mongo`).
 - Aclarar en qué máquina está la GPU: aquí `nvidia-smi` no responde y torch quedó en versión CPU.
