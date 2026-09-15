@@ -150,18 +150,43 @@ Se entrena la política en **PyBullet** (rápido, ligero, CPU) y se evalúa la l
 
 ## 5. Cronograma
 
+El curso fija **15 semanas: 14 de desarrollo más la sustentación**. Las semanas 1-4 cubrieron la
+definición del proyecto y el montaje del entorno, ya ejecutados. **Los paquetes de esta EDT corren
+de la semana 5 a la 14**, salvo los cuatro adelantados que aparecen abajo.
+
+El cronograma detallado, fase por fase y paquete por paquete, está en
+`Cronograma RL Manipulador 6GDL.xlsx`, generado desde `tools/gen_cronograma.py`.
+
+### Ya ejecutado al cierre de la semana 4
+
+| Paquete | Actividad | Sem |
+|---|---|---|
+| 3.8 | Workspace ROS 2, MoveIt 2 y `ur_simulation_gz`; simulación levantada y verificada | 1-3 |
+| 1.5 | Tabla DH y cinemática directa e inversa | 4 |
+| 3.1 | Contrato de escenarios y definición formal de las 5 métricas | 4 |
+| 3.9 | Configuración de OMPL con RRT-Connect y RRT\* | 4 |
+
+Más la fase de documentación: planteamiento del problema, estado del arte, y esta EDT con su
+cronograma.
+
+### Desarrollo, semanas 5 a 14
+
 | Sem | Persona A | Persona B | Hito verificable |
 |---|---|---|---|
-| 1 | CAD celda v1; contrato de escenarios | Instalar MoveIt 2 y paquetes UR; contrato de escenarios | UR5e visible en Gazebo |
-| 2 | CAD + DH + alcanzabilidad | `ur_simulation_gz` + OMPL configurado | Trayectoria planificada con RRT-Connect |
-| 3 | Entorno Gym en PyBullet + MDP | Módulo de distancia mínima | `env.step()` funcionando; distancias validadas vs FCL |
-| 4 | Recompensa v1 | Generador de escenarios; benchmarks | **Equivalencia PyBullet↔Gazebo verificada** |
-| 5 | Entrenamiento escenarios 1-2 | Batch de línea base automatizado · **E2: actuadores y reductores** | Curva de aprendizaje que sube |
-| 6 | Aleatorización de dominio; escenarios 4-5-6 | Corridas de línea base · **E2: potencia y unidad de cómputo** | **Compuerta: ¿converge con obstáculos variables?** |
-| 7 | Entrenamiento 5 semillas | Barrido completo del clásico · **E2: sensado y comunicación** | Datos crudos completos |
-| 8 | Escenario 8 (OOD); extensión PPO | Métricas y estadística · **E2: seguridad y latencia** | 5 métricas tabuladas; memoria de E2 cerrada |
-| 9 | Informe | Tablero y demo | Borrador de informe completo |
-| 10 | Slides y ensayo | Slides y ensayo | Defensa ensayada |
+| 5 | Celda base y biblioteca CAD (1.1, 1.2) | Workspace consolidado; benchmarks OMPL (3.10) | Componentes exportables |
+| 6 | Geometría de colisión; entorno Gym (1.3, 3.2) | Distancia mínima (3.11) | `env.step()` funcionando |
+| 7 | Exportación URDF; alcanzabilidad; MDP (1.4, 1.6, 1.7, 3.3) | Distancia mínima validada vs FCL | Distancias validadas |
+| 8 | Recompensa v1 (3.4) | Generador de escenarios (3.12) | **Equivalencia PyBullet↔Gazebo verificada** (3.13) |
+| 9 | Entrenamiento escenarios 1-2 (3.5) | **E2: actuadores y reductores** (2.1, 2.2) | Curva de aprendizaje que sube |
+| 10 | Aleatorización de dominio (3.6, 3.7) | Línea base batch (3.14) · **E2: potencia y cómputo** (2.3, 2.4) | **Compuerta: ¿converge?** |
+| 11 | Entrenamiento 5 semillas (3.7) | Barrido del clásico · **E2: sensado y comunicación** (2.5, 2.6) | Datos crudos completos |
+| 12 | Escenario 8 y extensión PPO (3.15, 4.3) | Métricas y estadística (4.1, 4.2) · **E2: seguridad y latencia** (2.7, 2.8) | 5 métricas tabuladas; E2 cerrado |
+| 13 | Informe (4.5) | Tablero y demo (4.4) | Borrador de informe |
+| 14 | Slides (4.6) · Paper IEEE | Paper IEEE | Paper y defensa listos |
+| **15** | **Sustentación** | **Sustentación** | Proyecto presentado |
+
+> El entregable documentario del curso es un **paper en formato IEEE**. El informe final es la base
+> de la tesis posterior.
 
 ---
 
@@ -207,7 +232,7 @@ Se adopta esta ruta por **cobertura experimental y bajo riesgo técnico**: el en
 
 | Compuerta | Semana | Criterio |
 |---|---|---|
-| **1 — Equivalencia entre motores** | 4 | El mismo escenario cargado en PyBullet y en Gazebo debe coincidir en geometría, posición, escala y límites articulares. Si no coincide, se detiene el entrenamiento hasta resolverlo: entrenar sobre un modelo que no es el que se mide invalida los resultados |
-| **2 — Convergencia** | 6 | Si la política no converge al introducir aleatorización de dominio, reducir el rango y aplicar currículo progresivo. Si aun así falla, el resultado es la caracterización de dónde falla, que también responde la pregunta de investigación |
+| **1 — Equivalencia entre motores** | 8 | El mismo escenario cargado en PyBullet y en Gazebo debe coincidir en geometría, posición, escala y límites articulares. Si no coincide, se detiene el entrenamiento hasta resolverlo: entrenar sobre un modelo que no es el que se mide invalida los resultados |
+| **2 — Convergencia** | 10 | Si la política no converge al introducir aleatorización de dominio, reducir el rango y aplicar currículo progresivo. Si aun así falla, el resultado es la caracterización de dónde falla, que también responde la pregunta de investigación |
 
 Son decisiones con fecha. Si se dejan pasar «a ver si mejora la próxima semana», se pierde el proyecto.

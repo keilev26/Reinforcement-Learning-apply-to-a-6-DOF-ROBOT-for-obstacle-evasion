@@ -91,8 +91,8 @@ repositorio, no cuenta como resultado del proyecto.
 
 | Compuerta | Semana | Criterio |
 |---|---|---|
-| **1 — Equivalencia entre motores** | 4 | El mismo escenario cargado en PyBullet y en Gazebo debe coincidir en geometría, posición, escala y límites articulares. Si no coincide, se detiene el entrenamiento hasta resolverlo: entrenar sobre un modelo que no es el que se mide invalida los resultados |
-| **2 — Convergencia** | 6 | Si la política no converge con obstáculos variables, reducir el rango de aleatorización y aplicar currículo progresivo |
+| **1 — Equivalencia entre motores** | 8 | El mismo escenario cargado en PyBullet y en Gazebo debe coincidir en geometría, posición, escala y límites articulares. Si no coincide, se detiene el entrenamiento hasta resolverlo: entrenar sobre un modelo que no es el que se mide invalida los resultados |
+| **2 — Convergencia** | 10 | Si la política no converge con obstáculos variables, reducir el rango de aleatorización y aplicar currículo progresivo |
 
 Son decisiones con fecha. Si se dejan pasar "a ver si mejora", se pierde el proyecto.
 
