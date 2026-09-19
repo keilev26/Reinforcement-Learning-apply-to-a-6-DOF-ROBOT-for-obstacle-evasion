@@ -24,6 +24,14 @@ response_adapters:
   - default_planning_response_adapters/ValidateSolution
   - default_planning_response_adapters/DisplayMotionPath
 
+# Parametrización temporal (TOTG). ValidateSolution solo revisa los PUNTOS de la
+# trayectoria, no el movimiento entre ellos. Con el default resample_dt = 0.1 s,
+# a velocidad máxima hay hasta ~0.3 rad entre puntos, y la interpolación recta
+# entre dos puntos corta las esquinas del camino y atraviesa el obstáculo sin que
+# el validador lo detecte. Con 0.01 s, 0 colisiones en validación independiente.
+totg:
+  resample_dt: 0.01
+
 # ---------------------------------------------------------------------------
 # Justificación del valor de range
 #
@@ -58,7 +66,9 @@ ur_manipulator:
     - RRTConnect
     - RRTstar
   projection_evaluator: joints(shoulder_pan_joint,shoulder_lift_joint)
-  # Resolución del verificador de colisiones, como fracción de la extensión del
-  # espacio. Se fija explícitamente porque de ella depende que no se atraviesen
-  # obstáculos delgados entre dos estados consecutivos.
-  longest_valid_segment_fraction: 0.005
+  # Resolución del verificador de colisiones DURANTE la planificación, como
+  # fracción de la extensión del espacio (28.793 rad). El default 0.005 da
+  # segmentos de ~0.14 rad: con el brazo extendido el TCP avanza ~11 cm entre
+  # chequeos y el planificador "atraviesa" el obstáculo. 0.0005 -> ~0.014 rad.
+  # Medido en docs/semana-04/3.9-configuracion-ompl.md (sección 4.1).
+  longest_valid_segment_fraction: 0.0005

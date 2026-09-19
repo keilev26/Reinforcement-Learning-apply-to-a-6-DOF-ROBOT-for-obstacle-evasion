@@ -14,7 +14,7 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -29,7 +29,7 @@ def cargar_yaml(paquete, ruta_rel):
         return yaml.safe_load(f)
 
 
-def generate_launch_description():
+def launch_setup(context):
     ur_type = LaunchConfiguration("ur_type")
 
     robot_description = {
@@ -50,9 +50,14 @@ def generate_launch_description():
         .to_moveit_configs()
     )
 
-    # Configuracion propia de OMPL: sustituye la del paquete de UR, que no
-    # declara planner_configs.
-    ompl_config = cargar_yaml("rl6gdl_planning", "config/ompl_planning.yaml")
+    # Configuracion de OMPL: la del paquete por defecto, o una alternativa via
+    # ompl_config:=<ruta> para experimentos sin tocar la entregada.
+    ruta = LaunchConfiguration("ompl_config").perform(context)
+    if ruta:
+        with open(ruta, "r") as f:
+            ompl_config = yaml.safe_load(f)
+    else:
+        ompl_config = cargar_yaml("rl6gdl_planning", "config/ompl_planning.yaml")
 
     move_group = Node(
         package="moveit_ros_move_group",
@@ -66,17 +71,17 @@ def generate_launch_description():
             {"publish_robot_description_semantic": True, "use_sim_time": False},
         ],
     )
+    rsp = Node(package="robot_state_publisher", executable="robot_state_publisher",
+               output="screen", parameters=[robot_description])
+    jsp = Node(package="joint_state_publisher", executable="joint_state_publisher",
+               output="screen", parameters=[robot_description])
+    return [rsp, jsp, move_group]
 
-    rsp = Node(
-        package="robot_state_publisher", executable="robot_state_publisher",
-        output="screen", parameters=[robot_description],
-    )
-    jsp = Node(
-        package="joint_state_publisher", executable="joint_state_publisher",
-        output="screen", parameters=[robot_description],
-    )
 
+def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("ur_type", default_value="ur5e"),
-        rsp, jsp, move_group,
+        DeclareLaunchArgument("ompl_config", default_value="",
+                              description="YAML de OMPL alternativo (vacio = el del paquete)"),
+        OpaqueFunction(function=launch_setup),
     ])
