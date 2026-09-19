@@ -1,0 +1,93 @@
+# Paquete 3.1 — Definición operativa de las 5 métricas.
+# FUENTE ÚNICA: la política de RL y la línea base clásica leen de aquí.
+# Cambiar un valor aquí invalida toda comparación hecha con el valor anterior.
+
+version: "1.0"
+fecha: "2026-09-15"
+
+# ---------------------------------------------------------------------------
+# Criterios de terminación de un episodio
+# ---------------------------------------------------------------------------
+terminacion:
+  tolerancia_posicion_m: 0.010        # 1 cm: ||p_tcp - p_goal||_2
+  tolerancia_orientacion_rad: 0.050   # ~2.9 deg: 2*acos(|<q_tcp, q_goal>|)
+  pasos_maximos: 500                  # limite del episodio para el agente de RL
+  timeout_planificacion_s: 5.0        # presupuesto de OMPL por consulta
+  periodo_control_s: 0.004167         # 1/240 s, paso de simulacion de PyBullet
+
+# ---------------------------------------------------------------------------
+# M1 — Tasa de éxito  [adimensional, 0..1]
+# ---------------------------------------------------------------------------
+m1_tasa_exito:
+  definicion: >
+    Fracción de episodios que satisfacen SIMULTÁNEAMENTE las tres condiciones:
+    (a) el TCP alcanza la pose objetivo dentro de las tolerancias declaradas,
+    (b) el episodio registra cero colisiones (M2 == 0),
+    (c) se alcanza antes de pasos_maximos (RL) o antes del timeout (clásico).
+  agregacion: "por escenario y semilla; se reporta media y desviación entre semillas"
+
+# ---------------------------------------------------------------------------
+# M2 — Número de colisiones  [entero, conteo por episodio]
+# ---------------------------------------------------------------------------
+m2_colisiones:
+  umbral_contacto_m: 0.0              # distancia de separacion <= 0 cuenta como colision
+  histeresis_m: 0.005                 # debe superarse para volver a contar el mismo par
+  conteo: "por par (eslabón, objeto) y por ENTRADA en contacto, no por paso de simulación"
+  pares_evaluados:
+    - eslabon_obstaculo
+    - eslabon_eslabon               # autocolisión
+    - eslabon_suelo
+    - eslabon_estructura_celda
+  pares_excluidos: "los desactivados en la matriz de colisión permitida (eslabones adyacentes)"
+  motor: "FCL sobre las mallas de colisión, evaluado cada periodo_control_s"
+
+# ---------------------------------------------------------------------------
+# M3 — Longitud de trayectoria
+# ---------------------------------------------------------------------------
+m3_longitud:
+  primaria: "cartesiana"
+  cartesiana_m: "L_cart = suma de ||p(t_k+1) - p(t_k)||_2 sobre el TCP"
+  articular_rad: "L_art = suma de ||q(t_k+1) - q(t_k)||_2"
+  nota: >
+    Se reportan ambas porque miden cosas distintas: la cartesiana es interpretable
+    físicamente, la articular es la que el espacio de acción controla directamente.
+    Se calculan sobre la trayectoria EJECUTADA, remuestreada a periodo_control_s.
+
+# ---------------------------------------------------------------------------
+# M4 — Tiempo  (dos magnitudes, NO se suman)
+# ---------------------------------------------------------------------------
+m4_tiempo:
+  t_computo_ms:
+    rl: "suma de los tiempos de inferencia de la política a lo largo del episodio"
+    clasico: >
+      tiempo de planificación reportado por OMPL: hasta la primera solución válida
+      en RRT-Connect, y hasta agotar timeout_planificacion_s en RRT*
+  t_ejecucion_s:
+    definicion: "duración de la trayectoria ejecutada"
+    condicion_de_paridad: >
+      mismo perfil de velocidad y mismos límites articulares y de velocidad para
+      ambos métodos; de lo contrario la comparación de este valor no es válida
+  hardware: "misma máquina para ambos métodos, CPU, sin GPU. Declarar modelo en el informe"
+
+# ---------------------------------------------------------------------------
+# M5 — Distancia mínima a los obstáculos  [m]
+# ---------------------------------------------------------------------------
+m5_distancia_minima:
+  definicion: >
+    d_min = mínimo, sobre todos los pasos del episodio y sobre todos los pares
+    (eslabón, obstáculo) no excluidos, de la distancia euclídea de separación
+    entre mallas de colisión.
+  motor: "FCL, mismas mallas que M2"
+  signo: "valor negativo indica penetración"
+  agregacion: "se reporta el mínimo por episodio; por escenario, media y desviación de esos mínimos"
+
+# ---------------------------------------------------------------------------
+# Protocolo estadístico
+# ---------------------------------------------------------------------------
+protocolo:
+  episodios_por_escenario_y_semilla: 100
+  semillas_nucleo: 3
+  semillas_extension: 5
+  politica_en_evaluacion: "determinista (sin ruido de exploración)"
+  prueba: "rangos con signo de Wilcoxon, pareada por escenario, frente a la línea base"
+  nivel_significancia: 0.05

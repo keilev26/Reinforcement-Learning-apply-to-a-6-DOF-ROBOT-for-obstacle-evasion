@@ -1,0 +1,64 @@
+# Paquete 3.9 — Configuración de OMPL para la línea base clásica.
+#
+# MOTIVO DE ESTE ARCHIVO
+# ur_moveit_config/config/ompl_planning.yaml declara el plugin y los adaptadores
+# pero NO declara planner_configs, de modo que RRT-Connect y RRT* no quedan
+# seleccionables de forma explícita. Las configuraciones existen en
+# moveit_configs_utils/default_configs/ompl_defaults.yaml, pero con range: 0.0,
+# que hace que OMPL resuelva el valor en tiempo de ejecución.
+#
+# Para el protocolo experimental eso es una variable NO CONTROLADA: dos corridas
+# podrían usar parámetros distintos sin que nada lo advierta. Aquí se fijan.
+
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+
+response_adapters:
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
+
+# ---------------------------------------------------------------------------
+# Justificación del valor de range
+#
+# Extensión máxima del espacio de estados (L2 sobre los rangos articulares
+# verificados en el URDF): 28.793 rad.
+#   - Default de OMPL cuando range = 0.0  ->  0.2 x 28.793 = 5.759 rad
+#   - Criterio geométrico: una extensión del árbol no debería desplazar el TCP
+#     más que la dimensión del obstáculo más pequeño del contrato de escenarios
+#     (pieza en tránsito, 0.15 m). Con brazo de palanca 0.85 m -> 0.176 rad.
+#
+# El default es 33 veces más grueso que ese criterio. Se fija range = 0.5 rad:
+# suficientemente fino frente a los obstáculos del contrato y sin penalizar en
+# exceso el tiempo de planificación. Valor validado empíricamente en
+# docs/3.9-configuracion-ompl.md
+# ---------------------------------------------------------------------------
+planner_configs:
+
+  RRTConnect:
+    type: geometric::RRTConnect
+    range: 0.5
+    # RRTConnect es bidireccional y NO expone goal_bias: crece dos árboles desde
+    # inicio y meta, así que no necesita sesgar el muestreo hacia el objetivo.
+
+  RRTstar:
+    type: geometric::RRTstar
+    range: 0.5
+    goal_bias: 0.05
+    delay_collision_checking: 1
+
+ur_manipulator:
+  planner_configs:
+    - RRTConnect
+    - RRTstar
+  projection_evaluator: joints(shoulder_pan_joint,shoulder_lift_joint)
+  # Resolución del verificador de colisiones, como fracción de la extensión del
+  # espacio. Se fija explícitamente porque de ella depende que no se atraviesen
+  # obstáculos delgados entre dos estados consecutivos.
+  longest_valid_segment_fraction: 0.005

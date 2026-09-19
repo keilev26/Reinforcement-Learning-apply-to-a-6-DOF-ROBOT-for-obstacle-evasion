@@ -1,0 +1,138 @@
+# Paquete 3.1 — Contrato de escenarios experimentales.
+# FUENTE ÚNICA de geometría: el entorno de RL (PyBullet) y la línea base
+# (MoveIt 2 / OMPL) componen sus escenas leyendo EXCLUSIVAMENTE de este archivo.
+#
+# Marco de referencia: origen en la base del pedestal, Z hacia arriba,
+# X hacia el centro CNC, Y hacia la mesa de piezas (regla de la mano derecha).
+# Unidades: metros y radianes.
+
+version: "1.0"
+fecha: "2026-09-15"
+
+# ---------------------------------------------------------------------------
+# Manipulador y tarea nominal
+# ---------------------------------------------------------------------------
+robot:
+  tipo: "manipulador de 6 GDL, no redundante"
+  plataforma_referencia: "UR5e"
+  alcance_m: 0.850
+  base_pose: [0.0, 0.0, 0.750, 0.0, 0.0, 0.0]   # sobre pedestal de 0.75 m
+
+tarea_nominal:
+  descripcion: "Abastecimiento de máquina: recoger pieza de la mesa y depositarla en el CNC"
+  p_pick:  {pos: [0.00, -0.55, 0.85], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.559}
+  p_place: {pos: [0.65,  0.00, 0.95], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.680}
+  q_inicial_rad: [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]   # pose de reposo
+
+# ---------------------------------------------------------------------------
+# Biblioteca de componentes (entregable E1, paquete 1.2)
+# Cada componente se modela una vez y se instancia con pose y escala.
+# ---------------------------------------------------------------------------
+biblioteca:
+  pedestal:        {tipo: estructura, dim: [0.30, 0.30, 0.75]}
+  centro_cnc:      {tipo: estructura, dim: [0.80, 1.20, 1.80]}
+  mesa_piezas:     {tipo: estructura, dim: [0.60, 0.80, 0.75]}
+  utillaje:        {tipo: estructura, dim: [0.25, 0.25, 0.30]}
+  prensa:          {tipo: movil,      dim: [0.25, 0.25, 0.50]}
+  carro:           {tipo: movil,      dim: [0.45, 0.35, 0.60]}
+  pieza_transito:  {tipo: movil,      dim: [0.15, 0.15, 0.15]}
+  # Primitivos de VOLUMEN IDÉNTICO (0.016 m3): aíslan la morfología del tamaño.
+  prisma:          {tipo: primitivo, dim: [0.20, 0.20, 0.40],  volumen_m3: 0.016}
+  cilindro:        {tipo: primitivo, radio: 0.1128, altura: 0.40, volumen_m3: 0.016}
+  esfera:          {tipo: primitivo, radio: 0.1563, volumen_m3: 0.016}
+
+# Celda base: presente en TODOS los escenarios.
+celda_base:
+  - {componente: pedestal,    pose: [0.00,  0.00, 0.000, 0, 0, 0]}
+  - {componente: centro_cnc,  pose: [1.05,  0.00, 0.000, 0, 0, 0]}
+  - {componente: mesa_piezas, pose: [0.00, -0.75, 0.000, 0, 0, 0]}
+
+# ---------------------------------------------------------------------------
+# Los 8 escenarios. Cada uno = celda_base + obstaculos.
+# El centro (0.325, -0.275, 0.900) es el punto medio de la trayectoria nominal.
+# ---------------------------------------------------------------------------
+escenarios:
+
+  1:
+    nombre: "Espacio libre"
+    proposito: "Control experimental; cota superior de precisión"
+    nucleo: true
+    obstaculos: []
+
+  2:
+    nombre: "Obstáculo prismático único en la trayectoria nominal"
+    proposito: "Maniobra base de circunvalación"
+    nucleo: true
+    obstaculos:
+      - {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0], escala: [1.0, 1.0, 1.0]}
+
+  3:
+    nombre: "Tres obstáculos concurrentes"
+    proposito: "Celda densamente poblada"
+    nucleo: false          # extensión
+    obstaculos:
+      - {componente: prensa,         pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+      - {componente: carro,          pose: [0.500, -0.500, 0.300, 0, 0, 0.5236]}
+      - {componente: pieza_transito, pose: [0.200, -0.100, 1.000, 0, 0, 0]}
+
+  4:
+    nombre: "Obstáculo desplazado"
+    proposito: "Robustez ante traslación del centroide"
+    nucleo: true
+    eje_de_variabilidad: "posicion"
+    base: {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+    desplazamientos_m:      # se evalúa uno por episodio, muestreado uniformemente
+      - [ 0.15,  0.00, 0.00]
+      - [-0.15,  0.00, 0.00]
+      - [ 0.00,  0.15, 0.00]
+      - [ 0.00, -0.15, 0.00]
+      - [ 0.10,  0.10, 0.10]
+
+  5:
+    nombre: "Obstáculo redimensionado"
+    proposito: "Adaptación a cambio de dimensiones"
+    nucleo: true
+    eje_de_variabilidad: "escala"
+    base: {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+    factores_de_escala: [0.6, 1.0, 1.5, 2.0]   # isotrópicos
+
+  6:
+    nombre: "Forma mutada"
+    proposito: "Invarianza de la representación geométrica ante morfología"
+    nucleo: true
+    eje_de_variabilidad: "morfologia"
+    pose_comun: [0.325, -0.275, 0.900, 0, 0, 0]
+    formas: [prisma, cilindro, esfera]
+    control: "los tres primitivos tienen volumen idéntico (0.016 m3): solo varía la forma"
+
+  7:
+    nombre: "Paso estrecho entre dos prismas"
+    proposito: "Prueba de estrés; se espera ventaja del método clásico"
+    nucleo: false          # extensión
+    holguras_m: [0.25, 0.30, 0.35]   # ancho de muñeca ~0.09 m
+    obstaculos_por_holgura: >
+      dos prismas centrados en (0.325, -0.275, 0.900), separados en Y por la
+      holgura indicada, es decir en y = -0.275 +/- (holgura/2 + 0.10)
+
+  8:
+    nombre: "Configuración de utillaje no vista en entrenamiento"
+    proposito: "Fuera de distribución. Escenario decisivo sobre generalización"
+    nucleo: true
+    fuera_de_distribucion: true
+    restriccion: >
+      NINGUNA de estas poses ni combinaciones puede aparecer durante el
+      entrenamiento. Es la condición que hace válida la medición de generalización.
+    obstaculos:
+      - {componente: utillaje,       pose: [0.450, -0.150, 0.850, 0, 0, 0.7854]}
+      - {componente: prensa,         pose: [0.250, -0.450, 0.900, 0, 0, 0]}
+      - {componente: pieza_transito, pose: [0.550, -0.300, 1.050, 0, 0, 0]}
+
+# ---------------------------------------------------------------------------
+# Aleatorización de dominio durante el entrenamiento (paquete 3.6)
+# ---------------------------------------------------------------------------
+aleatorizacion_entrenamiento:
+  escenarios_de_entrenamiento: [1, 2, 4, 5, 6]
+  posicion_m:   {distribucion: uniforme, rango: [-0.15, 0.15], ejes: [x, y, z]}
+  escala:       {distribucion: uniforme, rango: [0.6, 2.0]}
+  forma:        {distribucion: categorica, valores: [prisma, cilindro, esfera]}
+  excluido: "el escenario 8 nunca se muestrea durante el entrenamiento"
