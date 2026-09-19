@@ -42,6 +42,8 @@ fuente única.
 | `docs/semana-03/nota-tecnica-entorno.md` | Verificación del entorno y hallazgos técnicos |
 | `docs/semana-04/3.1-contrato-escenarios-y-metricas.md` | Paquete 3.1: contrato de escenarios y las 5 métricas |
 | `docs/semana-04/3.9-configuracion-ompl.md` | Paquete 3.9: configuración de OMPL y pendientes P1-P6 |
+| `docs/semana-04/3.1-propuesta-contrato-v1.1.md` | Propuesta de corrección del contrato 3.1 (pendiente de revisión) |
+| `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
 ---
 

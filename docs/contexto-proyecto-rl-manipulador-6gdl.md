@@ -192,6 +192,7 @@ Los escenarios 4, 5 y 6 permanecen en el núcleo porque son los ejes de variabil
 #### Paper 1 — Mao, Wang, Zhou, Xia & Zhang (2025)
 
 *Design and experimental verification of a dynamic obstacle avoidance algorithm for robot manipulators based on deep reinforcement learning*
+*Experimental Technology and Management* (实验技术与管理), vol. 42, n.º 4, pp. 78–85, abr. 2025. ISSN 1002-4956. **Artículo en chino con resumen en inglés.**
 
 Propone un algoritmo de evitación de obstáculos dinámicos basado en SAC para un manipulador de 6 GDL. La recompensa combina evitación de colisiones, autocolisión, alcance del objetivo y suavidad de movimiento; el estado incluye ángulos y velocidades articulares junto con la posición del efector y puntos clave del cuerpo del robot; la acción son aceleraciones articulares. Entrenado en PyBullet con Gymnasium y Stable-Baselines3, y validado sobre un UR5 físico con cámara Intel RealSense D435, pinza OnRobot y marcadores ArUco procesados con OpenCV, logrando que el error de posición converja a cero y trayectorias suaves tanto en simulación como en hardware real.
 
@@ -357,11 +358,14 @@ https://developer.nvidia.com/blog/making-industrial-robots-more-nimble-with-nvid
 
 Software de simulación y programación fuera de línea multimarca para manipuladores industriales.
 
-RoboDK realiza programación fuera de línea, calibración y verificación de colisiones para más de mil modelos de robot, invocando la Open Motion Planning Library con RRT, PRM o EST cuando se activa la resolución automática de colisiones. Es la herramienta que emplearía realmente un taller metalmecánico de escala media que decidiera automatizar, y al apoyarse en OMPL utiliza los mismos planificadores adoptados como línea base en este trabajo, confirmando que la comparación propuesta contrasta contra el producto efectivamente disponible en el mercado accesible.
+RoboDK realiza programación fuera de línea, calibración y verificación de colisiones para más de mil modelos de robot, e incorpora un planificador de movimiento libre de colisiones basado en **mapas de rutas probabilísticos (PRM) de implementación propia**: una fase de construcción del mapa, que se ejecuta una vez, y una fase de consulta que busca el camino más corto sobre él. Es la herramienta que emplearía realmente un taller metalmecánico de escala media que decidiera automatizar, y por eso representa la práctica efectivamente accesible en el mercado.
+
+> **Corrección (2026-09-19).** Versiones anteriores de este documento afirmaban que RoboDK invoca OMPL con RRT, PRM o EST, y que por tanto la línea base de este trabajo usaba sus mismos planificadores. **La documentación oficial no lo respalda**: describe un PRM propio y no menciona OMPL. El argumento debe formularse con cuidado: la línea base comparte a lo sumo la *familia* de algoritmos (planificación por muestreo, y PRM si se adopta LazyPRM\* como planificador de calidad; ver `semana-04/3.9-configuracion-ompl.md`), no la implementación.
 
 Sin embargo, calcula rutas estáticas a priori y carece de adaptación en tiempo de ejecución: los obstáculos deben permanecer inmóviles en el árbol CAD, de modo que cualquier cambio de utillaje obliga a rehacer la planificación y reexportar el programa, que es precisamente el costo de reconfiguración que este trabajo busca eliminar. Hereda además el tiempo de cómputo no determinista de los planificadores por muestreo.
 
-https://robodk.com
+https://robodk.com/doc/en/Collision-Avoidance-Collision-Free-Motion-Planner.html
+https://robodk.com/doc/en/Collision-Avoidance-Using-PRM-Motion-Planner.html
 
 **Modelos de costo (para el campo correspondiente):**
 
@@ -547,9 +551,9 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 5. Reformular cualquier hipótesis con umbral numérico a formulación direccional.
 
 **Importantes:**
-6. Descargar el Paper 4 (PDF libre) y confirmar personalmente el vector de observación de 14 valores sin representación de obstáculos, en la sección 3.2.2. Es el pilar del argumento de aporte y no debe citarse de segunda mano.
-7. Confirmar en documentación oficial de RoboDK el uso de OMPL, y reemplazar la URL raíz por la página específica.
-8. Confirmar accesibilidad del PDF de la Tesis 3 en el repositorio de Deusto y verificar autor, año y directores.
+6. Descargar el Paper 4 (PDF libre; el portal de MDPI bloquea la descarga automatizada, hay que bajarlo a mano) y confirmar personalmente el vector de observación de 14 valores sin representación de obstáculos, en la sección 3.2.2. Es el pilar del argumento de aporte y no debe citarse de segunda mano.
+7. ~~Confirmar en documentación oficial de RoboDK el uso de OMPL.~~ **Resuelto (2026-09-19):** RoboDK **no** usa OMPL, sino un PRM propio. Corregida la sección 16 y reemplazada la URL raíz.
+8. ~~Confirmar accesibilidad del PDF de la Tesis 3 y verificar autor, año y directores.~~ **Resuelto (2026-09-19):** verificado y descargado; ver `estado-del-arte/README.md`.
 9. Declarar el supuesto de percepción ideal en algún campo visible del formato de entrega (hoy no aparece).
 10. Diferenciar mejor «Aporte a nivel de producto» de «Aporte del trabajo»: el primero debe hablar solo del artefacto frente a los tres productos comerciales; el segundo integrar papers, tesis y productos.
 11. Confirmar con el profesor que una demostración de software satisface el requisito de producto tangible del curso.
@@ -559,11 +563,13 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 - `semana-03/nota-tecnica-entorno.md` — verificación del entorno y hallazgos técnicos.
 - `semana-04/3.1-contrato-escenarios-y-metricas.md` — contrato de escenarios y definición de las 5 métricas.
 - `semana-04/3.9-configuracion-ompl.md` — configuración de OMPL, verificación y pendientes P1-P6.
+- `semana-04/3.1-propuesta-contrato-v1.1.md` — corrección propuesta del contrato de escenarios (pendiente de revisión).
+- `estado-del-arte/` — las 13 referencias verificadas: BibTeX, lista IEEE, índice con discrepancias y PDFs de acceso abierto.
 
 **Verificaciones ya realizadas (no repetir):**
 - Papers 1, 2, 3, 4 y 5: existen, DOI correctos.
 - Paper 3: el DOI correcto es el de *Manufacturing Letters* (10.1016/j.mfglet.2024.09.151). Cualquier versión que lo atribuya a *Journal of Manufacturing Systems* es errónea.
-- Paper 1: la revista no es *Complex System Modeling and Simulation*; está alojada en SciOpen y debe verificarse el nombre exacto.
+- Paper 1: la revista es *Experimental Technology and Management* (实验技术与管理), vol. 42, n.º 4, pp. 78–85, 2025, verificado en el propio PDF. No es *Complex System Modeling and Simulation*.
 - Tesis 1 y 2: existen, con PDF de acceso libre.
 - Patente 1: primer inventor es Changhao Wang.
 - Patente 2: usar el número concedido US 12,240,113 B2; inventores Levine, Holly, Gu y Lillicrap.
