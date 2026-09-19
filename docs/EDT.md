@@ -40,7 +40,7 @@ Se entrena la política en **PyBullet** (rápido, ligero, CPU) y se evalúa la l
 | **`pybullet`** | Instalado en `.venv/` — **es el simulador de entrenamiento de esta ruta** |
 | GPU NVIDIA | No requerida. `nvidia-smi` no responde en esta máquina; torch quedó en versión CPU |
 
-> El entorno está completo. El detalle operativo pendiente está en `docs/nota-tecnica-semana1.md`:
+> El entorno está completo. El detalle operativo pendiente está en `semana-03/nota-tecnica-entorno.md`:
 > el shell por defecto es zsh y `setup.bash` de ROS 2 falla ahí, hay un desajuste de nombre entre
 > URDF y SRDF en los paquetes de Jazzy, y `ur_moveit_config` no declara `planner_configs`.
 

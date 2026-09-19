@@ -74,7 +74,7 @@ El curso organiza la entrega en cuatro componentes: electrónico, software/contr
 >
 > Este encuadre responde además dos objeciones de la sección 22: «asumes percepción perfecta, eso no existe» —E2 identifica la instrumentación que la haría real— y «¿esto es mecatrónica o informática?», ya que el proyecto integra diseño mecánico, diseño electrónico, control e inteligencia artificial.
 
-**Pendiente bloqueante:** confirmar con el profesor la reformulación de E2 y que el diseño de celda satisface el entregable mecánico. Ver `preguntas-profesor.md`.
+**Pendiente bloqueante:** confirmar con el profesor la reformulación de E2 y que el diseño de celda satisface el entregable mecánico.
 
 ---
 
@@ -530,7 +530,7 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 
 ### 26. Lista de pendientes
 
-**Bloqueantes — resolver antes de la semana 1** *(redactados en `preguntas-profesor.md`)*:
+**Bloqueantes — confirmar con el profesor:**
 - Completar nombre y código del segundo integrante en el encabezado de este documento y en el formato Excel del curso.
 - Confirmar con el profesor la reformulación del entregable electrónico E2 como arquitectura de sensado y comunicaciones.
 - Confirmar que el diseño de celda CAD satisface el entregable de diseño mecánico.
@@ -552,12 +552,13 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 8. Confirmar accesibilidad del PDF de la Tesis 3 en el repositorio de Deusto y verificar autor, año y directores.
 9. Declarar el supuesto de percepción ideal en algún campo visible del formato de entrega (hoy no aparece).
 10. Diferenciar mejor «Aporte a nivel de producto» de «Aporte del trabajo»: el primero debe hablar solo del artefacto frente a los tres productos comerciales; el segundo integrar papers, tesis y productos.
-11. Confirmar con el profesor que una demostración de software satisface el requisito de producto tangible del curso. *(Incluido en `preguntas-profesor.md`.)*
+11. Confirmar con el profesor que una demostración de software satisface el requisito de producto tangible del curso.
 
 **Documentos de planificación asociados:**
-- `EDT.md` — EDT adoptada, con paquetes de trabajo, cronograma de 10 semanas y compuertas de decisión.
-- `preguntas-profesor.md` — puntos bloqueantes a confirmar con el curso.
-- `docs/nota-tecnica-semana1.md` — verificación del entorno y hallazgos técnicos.
+- `EDT.md` — EDT adoptada, con paquetes de trabajo, cronograma de 15 semanas y compuertas de decisión.
+- `semana-03/nota-tecnica-entorno.md` — verificación del entorno y hallazgos técnicos.
+- `semana-04/3.1-contrato-escenarios-y-metricas.md` — contrato de escenarios y definición de las 5 métricas.
+- `semana-04/3.9-configuracion-ompl.md` — configuración de OMPL, verificación y pendientes P1-P6.
 
 **Verificaciones ya realizadas (no repetir):**
 - Papers 1, 2, 3, 4 y 5: existen, DOI correctos.

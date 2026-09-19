@@ -4,7 +4,7 @@ No arranca Gazebo: para verificar la PLANIFICACION basta el modelo del robot,
 robot_state_publisher y un publicador de estados articulares.
 
 Corrige ademas el desajuste de nombre entre URDF y SRDF documentado en
-docs/nota-tecnica-semana1.md: ur_sim_control.launch.py fija el URDF con
+docs/semana-03/nota-tecnica-entorno.md: ur_sim_control.launch.py fija el URDF con
 name:="ur" mientras ur_moveit.launch.py construye el SRDF con name:=ur_type.
 Aqui se pasa el MISMO nombre a ambos.
 """

@@ -37,7 +37,7 @@ response_adapters:
 # El default es 33 veces más grueso que ese criterio. Se fija range = 0.5 rad:
 # suficientemente fino frente a los obstáculos del contrato y sin penalizar en
 # exceso el tiempo de planificación. Valor validado empíricamente en
-# docs/3.9-configuracion-ompl.md
+# docs/semana-04/3.9-configuracion-ompl.md
 # ---------------------------------------------------------------------------
 planner_configs:
 

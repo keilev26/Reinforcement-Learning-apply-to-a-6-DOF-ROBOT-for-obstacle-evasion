@@ -37,10 +37,11 @@ fuente única.
 
 | Documento | Contenido |
 |---|---|
-| `EDT.md` | **EDT adoptada** — paquetes de trabajo, cronograma y compuertas |
-| `contexto-proyecto-rl-manipulador-6gdl.md` | Documento de contexto consolidado: estado del arte y decisiones |
-| `preguntas-profesor.md` | Puntos bloqueantes a confirmar con el curso |
-| `docs/nota-tecnica-semana1.md` | Verificación del entorno y hallazgos técnicos |
+| `docs/EDT.md` | **EDT adoptada** — paquetes de trabajo, cronograma y compuertas |
+| `docs/contexto-proyecto-rl-manipulador-6gdl.md` | Documento de contexto consolidado: estado del arte y decisiones |
+| `docs/semana-03/nota-tecnica-entorno.md` | Verificación del entorno y hallazgos técnicos |
+| `docs/semana-04/3.1-contrato-escenarios-y-metricas.md` | Paquete 3.1: contrato de escenarios y las 5 métricas |
+| `docs/semana-04/3.9-configuracion-ompl.md` | Paquete 3.9: configuración de OMPL y pendientes P1-P6 |
 
 ---
 
@@ -56,7 +57,7 @@ fuente única.
 | `training/` | Configuraciones de SB3, scripts de entrenamiento SAC | A |
 | `evaluation/` | Cálculo de las 5 métricas, protocolo estadístico, gráficos | A + B |
 | `results/` | Datos crudos (`raw/`) y figuras exportadas (`figures/`) | A + B |
-| `docs/` | Informe, memoria de diseño electrónico (E2), actas de reunión, bibliografía | A + B |
+| `docs/` | Documentos vivos (contexto, EDT) en la raíz; entregables fechados en `semana-NN/`; actas en `actas/` | A + B |
 
 > `shared_scenarios/` y `geometry/` alimentan por igual a la política y a la línea base.
 > Si cada integrante define obstáculos o distancias a su manera, la comparación pierde validez
@@ -101,7 +102,7 @@ Son decisiones con fecha. Si se dejan pasar "a ver si mejora", se pierde el proy
 ## Puesta en marcha
 
 > **Ojo:** el shell por defecto es zsh y `source /opt/ros/jazzy/setup.bash` **falla** ahí.
-> Usar `setup.zsh`, o envolver en `bash -c '...'`. Ver `docs/nota-tecnica-semana1.md`.
+> Usar `setup.zsh`, o envolver en `bash -c '...'`. Ver `docs/semana-03/nota-tecnica-entorno.md`.
 
 ```bash
 # ROS 2 Jazzy + Gazebo Harmonic + MoveIt 2 + paquetes UR ya instalados (Ubuntu 24.04)
