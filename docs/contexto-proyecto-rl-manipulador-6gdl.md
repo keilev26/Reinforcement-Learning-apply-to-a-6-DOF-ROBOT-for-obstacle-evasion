@@ -563,7 +563,7 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 - `semana-03/nota-tecnica-entorno.md` — verificación del entorno y hallazgos técnicos.
 - `semana-04/3.1-contrato-escenarios-y-metricas.md` — contrato de escenarios y definición de las 5 métricas.
 - `semana-04/3.9-configuracion-ompl.md` — configuración de OMPL, verificación y pendientes P1-P6.
-- `semana-04/3.1-propuesta-contrato-v1.1.md` — corrección propuesta del contrato de escenarios (pendiente de revisión).
+- `semana-04/3.1-propuesta-contrato-v1.1.md` — corrección del contrato de escenarios, aplicada como v1.1; 9 de 19 variantes aún infactibles (v1.2 pendiente).
 - `estado-del-arte/` — las 13 referencias verificadas: BibTeX, lista IEEE, índice con discrepancias y PDFs de acceso abierto.
 
 **Verificaciones ya realizadas (no repetir):**

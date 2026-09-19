@@ -40,3 +40,6 @@ Thumbs.db
 *.xlsx
 *.xlsm
 ~$*.xls*
+
+# --- Notas privadas (guias de presentacion, borradores): nunca se suben ---
+notas-privadas/

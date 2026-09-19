@@ -5,9 +5,21 @@
 # Marco de referencia: origen en la base del pedestal, Z hacia arriba,
 # X hacia el centro CNC, Y hacia la mesa de piezas (regla de la mano derecha).
 # Unidades: metros y radianes.
+#
+# CONVENCIÓN DE POSES (desde v1.1): 'pose' = [x, y, z, roll, pitch, yaw] del
+# CENTRO GEOMÉTRICO del componente (centro de su caja envolvente; para cilindro
+# y esfera, su centro). Sin excepciones: vale para estructuras y obstáculos.
+#
+# HISTORIAL
+#   1.0 (2026-09-15)  Versión inicial.
+#   1.1 (2026-09-19)  p_place movido 15 cm delante del CNC (en v1.0 caía sobre su
+#                     cara frontal y toda solución chocaba); punto medio de la
+#                     trayectoria y obstáculos de los escenarios 2-7 actualizados;
+#                     convención de poses declarada y celda base expresada por su
+#                     centro. Ver docs/semana-04/3.1-propuesta-contrato-v1.1.md
 
-version: "1.0"
-fecha: "2026-09-15"
+version: "1.1"
+fecha: "2026-09-19"
 
 # ---------------------------------------------------------------------------
 # Manipulador y tarea nominal
@@ -21,7 +33,7 @@ robot:
 tarea_nominal:
   descripcion: "Abastecimiento de máquina: recoger pieza de la mesa y depositarla en el CNC"
   p_pick:  {pos: [0.00, -0.55, 0.85], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.559}
-  p_place: {pos: [0.65,  0.00, 0.95], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.680}
+  p_place: {pos: [0.50,  0.00, 0.95], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.539}
   q_inicial_rad: [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]   # pose de reposo
 
 # ---------------------------------------------------------------------------
@@ -43,13 +55,15 @@ biblioteca:
 
 # Celda base: presente en TODOS los escenarios.
 celda_base:
-  - {componente: pedestal,    pose: [0.00,  0.00, 0.000, 0, 0, 0]}
-  - {componente: centro_cnc,  pose: [1.05,  0.00, 0.000, 0, 0, 0]}
-  - {componente: mesa_piezas, pose: [0.00, -0.75, 0.000, 0, 0, 0]}
+# (poses por su centro: el pedestal ocupa z 0-0.75, el CNC x 0.65-1.45,
+#  la mesa z 0-0.75)
+  - {componente: pedestal,    pose: [0.00,  0.00, 0.375, 0, 0, 0]}
+  - {componente: centro_cnc,  pose: [1.05,  0.00, 0.900, 0, 0, 0]}
+  - {componente: mesa_piezas, pose: [0.00, -0.75, 0.375, 0, 0, 0]}
 
 # ---------------------------------------------------------------------------
 # Los 8 escenarios. Cada uno = celda_base + obstaculos.
-# El centro (0.325, -0.275, 0.900) es el punto medio de la trayectoria nominal.
+# El centro (0.250, -0.275, 0.900) es el punto medio de la trayectoria nominal.
 # ---------------------------------------------------------------------------
 escenarios:
 
@@ -64,14 +78,14 @@ escenarios:
     proposito: "Maniobra base de circunvalación"
     nucleo: true
     obstaculos:
-      - {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0], escala: [1.0, 1.0, 1.0]}
+      - {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0], escala: [1.0, 1.0, 1.0]}
 
   3:
     nombre: "Tres obstáculos concurrentes"
     proposito: "Celda densamente poblada"
     nucleo: false          # extensión
     obstaculos:
-      - {componente: prensa,         pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+      - {componente: prensa,         pose: [0.250, -0.275, 0.900, 0, 0, 0]}
       - {componente: carro,          pose: [0.500, -0.500, 0.300, 0, 0, 0.5236]}
       - {componente: pieza_transito, pose: [0.200, -0.100, 1.000, 0, 0, 0]}
 
@@ -80,7 +94,7 @@ escenarios:
     proposito: "Robustez ante traslación del centroide"
     nucleo: true
     eje_de_variabilidad: "posicion"
-    base: {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+    base: {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0]}
     desplazamientos_m:      # se evalúa uno por episodio, muestreado uniformemente
       - [ 0.15,  0.00, 0.00]
       - [-0.15,  0.00, 0.00]
@@ -93,7 +107,7 @@ escenarios:
     proposito: "Adaptación a cambio de dimensiones"
     nucleo: true
     eje_de_variabilidad: "escala"
-    base: {componente: prisma, pose: [0.325, -0.275, 0.900, 0, 0, 0]}
+    base: {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0]}
     factores_de_escala: [0.6, 1.0, 1.5, 2.0]   # isotrópicos
 
   6:
@@ -101,7 +115,7 @@ escenarios:
     proposito: "Invarianza de la representación geométrica ante morfología"
     nucleo: true
     eje_de_variabilidad: "morfologia"
-    pose_comun: [0.325, -0.275, 0.900, 0, 0, 0]
+    pose_comun: [0.250, -0.275, 0.900, 0, 0, 0]
     formas: [prisma, cilindro, esfera]
     control: "los tres primitivos tienen volumen idéntico (0.016 m3): solo varía la forma"
 
@@ -111,7 +125,7 @@ escenarios:
     nucleo: false          # extensión
     holguras_m: [0.25, 0.30, 0.35]   # ancho de muñeca ~0.09 m
     obstaculos_por_holgura: >
-      dos prismas centrados en (0.325, -0.275, 0.900), separados en Y por la
+      dos prismas centrados en (0.250, -0.275, 0.900), separados en Y por la
       holgura indicada, es decir en y = -0.275 +/- (holgura/2 + 0.10)
 
   8:

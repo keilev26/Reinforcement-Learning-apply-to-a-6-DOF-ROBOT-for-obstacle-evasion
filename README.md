@@ -2,7 +2,7 @@
 
 Proyecto Mecatrónico · Escuela Profesional de Ingeniería Mecatrónica · FIM–UNI
 
-**Equipo:** 2 personas · **Duración:** 10 semanas
+**Equipo:** 2 personas · **Duración:** 15 semanas (14 de desarrollo + sustentación)
 **Manipulador:** UR5e — **6 grados de libertad, no redundante**
 
 Sistema de planificación de movimiento reactivo basado en una política de control continuo
@@ -42,7 +42,7 @@ fuente única.
 | `docs/semana-03/nota-tecnica-entorno.md` | Verificación del entorno y hallazgos técnicos |
 | `docs/semana-04/3.1-contrato-escenarios-y-metricas.md` | Paquete 3.1: contrato de escenarios y las 5 métricas |
 | `docs/semana-04/3.9-configuracion-ompl.md` | Paquete 3.9: configuración de OMPL y pendientes P1-P6 |
-| `docs/semana-04/3.1-propuesta-contrato-v1.1.md` | Propuesta de corrección del contrato 3.1 (pendiente de revisión) |
+| `docs/semana-04/3.1-propuesta-contrato-v1.1.md` | Corrección del contrato 3.1, aplicada como v1.1, y su verificación |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
 ---
