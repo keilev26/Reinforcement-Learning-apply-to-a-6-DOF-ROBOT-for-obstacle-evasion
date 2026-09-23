@@ -3,8 +3,24 @@
 **Fecha:** 2026-09-22 · **Rama:** `feature/magician-e6-evaluacion`
 **Antecedente:** `evaluacion-magician-e6.md` (el E6 es viable: modelo oficial, PyBullet y MoveIt
 verificados, `ServoJ` a 33 Hz para el robot real).
-**Estado:** PROPUESTA. Cada documento se modifica después de aprobarla, con revisión cruzada.
-**Ya hecho en esta rama:** el modelo corregido del E6 para PyBullet (sección 2.1).
+**Estado:** **APROBADA el 2026-09-22 con una modificación** (Caleb Camargo). Aplicada a `EDT.md`,
+al documento de contexto, al `README.md` y al cronograma. Pendiente la revisión cruzada de
+Leonardo Vásquez.
+
+> **Modificación al aprobar: el robot real queda fuera de las 15 semanas.** El alcance obligatorio
+> es el algoritmo de RL y su evaluación en simulación. Todo lo que exige el E6 físico —la
+> caracterización de `ServoJ`, la aleatorización para la transferencia (1.3), la capa de seguridad
+> (1.4), la validación en el robot (1.5), la maqueta física y la compuerta 3— pasa a **trabajo
+> adicional** (`EDT.md`, sección 10). En consecuencia:
+>
+> - Se mantienen D1-D5: el MDP usa el período y los límites del E6 para que la política **pueda**
+>   ejecutarse en él sin reentrenar.
+> - **D6 no se aplica**: eliminar PPO solo servía para liberar la semana del robot real. La
+>   subprueba 3.15 sigue como extensión.
+> - El E2 no mide sobre el robot: **diseña su integración** (arquitectura, latencia, seguridad) con
+>   la documentación del fabricante, y hace el análisis dinámico con el modelo.
+> - El cronograma apenas cambia: las secciones 4.2, 4.5 y 4.6 de abajo quedan **sustituidas** por lo
+>   aplicado en `EDT.md`. El resto del documento se conserva como registro de la propuesta.
 
 ---
 

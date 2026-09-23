@@ -22,46 +22,47 @@ AMBOS = "Ambos"
 # (codigo, actividad, entregable, responsable, sem_ini, sem_fin, estado, costo_soles)
 TAREAS = [
     ("FASE", "FASE 1 — DISEÑO MECÁNICO (E1)", "", "", 0, 0, "", 0),
-    ("1.1", "Celda base de machine tending de CNC: layout general, pedestal del robot, envolvente de seguridad", "Layout de celda", LEO, 5, 5, "P", 0),
-    ("1.2", "Biblioteca de componentes CAD individuales: centro CNC, mesa, utillaje, prensa, carro, pieza, primitivos", "Biblioteca CAD", LEO, 5, 6, "P", 0),
-    ("1.3", "Geometría de colisión simplificada por componente, separada de la visual", "Mallas de colisión", LEO, 6, 6, "P", 0),
+    ("1.1", "Celda de machine tending de escritorio para el Magician E6: layout, robot sobre la mesa, envolvente de seguridad", "Layout de celda", LEO, 5, 5, "P", 0),
+    ("1.2", "Biblioteca de componentes CAD a escala de escritorio: centro CNC, mesa, utillaje, prensa, carro, pieza, primitivos", "Biblioteca CAD", LEO, 5, 6, "P", 0),
+    ("1.3", "Geometría de colisión simplificada por componente de celda (la del robot: 3.16)", "Mallas de colisión", LEO, 6, 6, "P", 0),
     ("1.4", "Exportación a URDF/SDF con convención de anclaje para componer escenarios", "Componentes URDF/SDF", LEO, 6, 7, "P", 0),
-    ("1.5", "Parámetros de Denavit-Hartenberg del manipulador de 6 GDL; cinemática directa e inversa", "Tabla DH + ecuaciones", LEO, 4, 4, "R", 0),
-    ("1.6", "Envolvente de trabajo y análisis de alcanzabilidad de las poses de recogida y depósito", "Mapa de alcanzabilidad", LEO, 6, 7, "P", 0),
-    ("1.7", "Análisis de singularidades de muñeca; justificación del espacio de acción Δq", "Análisis de singularidades", LEO, 7, 7, "P", 0),
+    ("1.5", "Parámetros de Denavit-Hartenberg; cinemática directa e inversa (UR5e en sem. 4; se rehace para el E6 en sem. 5)", "Tabla DH + ecuaciones", LEO, 4, 4, "R", 0),
+    ("1.6", "Envolvente de trabajo del E6 y alcanzabilidad de las poses de recogida y depósito", "Mapa de alcanzabilidad", LEO, 6, 7, "P", 0),
+    ("1.7", "Análisis de singularidades de muñeca del E6; justificación del espacio de acción Δq", "Análisis de singularidades", LEO, 7, 7, "P", 0),
 
     ("FASE", "FASE 2 — DISEÑO ELECTRÓNICO (E2)", "", "", 0, 0, "", 0),
-    ("2.1", "Dimensionamiento de actuadores para reproducir la envolvente: 150 N·m hombro y codo, 28 N·m muñeca, π rad/s", "Cálculo de actuadores", LEO, 9, 9, "P", 0),
-    ("2.2", "Selección de reductores y transmisión; relación de reducción por articulación", "Selección de reductores", LEO, 9, 9, "P", 0),
-    ("2.3", "Etapa de potencia: drivers de motor, fuente de alimentación, protecciones", "Esquema de potencia", LEO, 10, 10, "P", 0),
-    ("2.4", "Unidad de cómputo y microcontrolador: debe ejecutar la inferencia de la política dentro del período de control", "Selección de cómputo", LEO, 10, 10, "P", 0),
-    ("2.5", "Sensado: encoders por articulación e instrumentación del vector de observación", "Selección de sensores", LEO, 11, 11, "P", 0),
-    ("2.6", "Arquitectura de comunicación: bus entre articulaciones y con el controlador de celda", "Diagrama de comunicación", LEO, 11, 11, "P", 0),
-    ("2.7", "Cadena de seguridad: paro de emergencia, enclavamientos, categoría de seguridad", "Esquema de seguridad", LEO, 12, 12, "P", 0),
-    ("2.8", "Presupuesto de latencia del lazo: sensado + inferencia + actuación vs. período de control", "Análisis de latencia", LEO, 12, 12, "P", 0),
+    ("2.1", "Análisis dinámico: par demandado por las trayectorias (dinámica inversa) frente al par estimado del E6", "Análisis dinámico", LEO, 9, 9, "P", 0),
+    ("2.2", "Arquitectura de control del E6: controlador, TCP/IP (puertos 29999 y 30004), lazo ServoJ de 33 Hz", "Diagrama de control", LEO, 9, 9, "P", 0),
+    ("2.3", "Efector final: ventosa o pinza, E/S de la brida, presupuesto de carga útil (0.75 kg)", "Selección de efector", LEO, 10, 10, "P", 0),
+    ("2.4", "Unidad de cómputo: la inferencia de la política debe caber en el período de control de 30 ms", "Selección de cómputo", LEO, 10, 10, "P", 0),
+    ("2.5", "Sensado: pose de los obstáculos en la celda real e instrumentación del vector de observación", "Esquema de sensado", LEO, 11, 11, "P", 0),
+    ("2.6", "Comunicación PC ↔ controlador del E6: protocolo, frecuencia y jitter admisible", "Diagrama de comunicación", LEO, 11, 11, "P", 0),
+    ("2.7", "Cadena de seguridad: paro de emergencia, detección de colisión del E6, filtro de seguridad por software", "Esquema de seguridad", LEO, 12, 12, "P", 0),
+    ("2.8", "Presupuesto de latencia del lazo: lectura de q + inferencia + ServoJ vs. período de 30 ms", "Análisis de latencia", LEO, 12, 12, "P", 0),
 
     ("FASE", "FASE 3 — ALGORITMO (E3)", "", "", 0, 0, "", 0),
-    ("3.1", "Contrato de escenarios y definición formal de las 5 métricas (antes de codificar)", "Contrato de escenarios", AMBOS, 4, 4, "R", 0),
-    ("3.2", "Entorno Gymnasium sobre PyBullet con el manipulador de 6 GDL", "Entorno Gym", CALEB, 6, 7, "P", 0),
-    ("3.3", "Formulación del MDP: acción Δq acotada, observación por descriptores geométricos", "Especificación del MDP", CALEB, 7, 7, "P", 0),
+    ("3.1", "Contrato de escenarios y definición formal de las 5 métricas (v1.1 UR5e en sem. 4; v2.0 del E6 en sem. 5)", "Contrato de escenarios", AMBOS, 4, 4, "R", 0),
+    ("3.2", "Entorno Gymnasium sobre PyBullet con el Magician E6 (Δt = 30 ms, transición cinemática)", "Entorno Gym", CALEB, 6, 7, "P", 0),
+    ("3.3", "Formulación del MDP: acción Δq ≤ 0.05 rad, observación de 43 descriptores", "Especificación del MDP", CALEB, 7, 7, "P", 0),
     ("3.4", "Función de recompensa multiobjetivo: colisión, autocolisión, alcance de meta, suavidad", "Función de recompensa", CALEB, 8, 8, "P", 0),
     ("3.5", "Entrenamiento SAC desde cero — escenarios 1 y 2", "Política entrenada v1", CALEB, 9, 9, "P", 0),
     ("3.6", "Aleatorización de dominio (posición, escala, forma) e integración de escenarios 4-5-6", "Dominio aleatorizado", CALEB, 10, 10, "P", 0),
     ("3.7", "Entrenamiento completo: 5 semillas × escenarios núcleo", "Políticas + logs", CALEB, 10, 11, "P", 0),
-    ("3.8", "Workspace ROS 2: ur_simulation_gz, manipulador de 6 GDL, ros2_control, MoveIt 2", "Workspace ROS 2", LEO, 1, 3, "R", 0),
-    ("3.9", "Configuración de OMPL: RRT-Connect y RRT* con parámetros documentados", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
+    ("3.8", "Workspace ROS 2: ros2_control, MoveIt 2, Gazebo (UR5e en sem. 1-3; E6 y Gazebo Harmonic en sem. 5-6)", "Workspace ROS 2", LEO, 1, 3, "R", 0),
+    ("3.9", "Configuración de OMPL: RRT-Connect y RRT* (UR5e en sem. 4; se vuelve a medir con el E6 en sem. 6)", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
     ("3.10", "moveit_ros_benchmarks para tiempo, longitud y tasa de éxito", "Banco de pruebas OMPL", LEO, 6, 7, "P", 0),
     ("3.11", "Módulo de distancia mínima eslabón-obstáculo, validado contra FCL", "Módulo de distancias", LEO, 7, 8, "P", 0),
     ("3.12", "Generador de escenarios: compone los 8 escenarios desde la biblioteca CAD de E1", "Generador de escenarios", LEO, 8, 8, "P", 0),
     ("3.13", "Verificación de equivalencia PyBullet ↔ Gazebo: URDF, límites, geometría y escala", "Informe de equivalencia", AMBOS, 8, 9, "P", 0),
     ("3.14", "Ejecución batch de la línea base clásica sobre escenarios núcleo", "Corridas de línea base", LEO, 10, 11, "P", 0),
     ("3.15", "Subprueba PPO bajo la misma recompensa (extensión)", "Comparativa SAC/PPO", CALEB, 12, 12, "P", 0),
+    ("3.16", "Modelo corregido del Magician E6: fuente única para PyBullet, MoveIt y Gazebo", "rl6gdl_e6_description", CALEB, 5, 5, "R", 0),
 
     ("FASE", "FASE 4 — INTEGRACIÓN (E4)", "", "", 0, 0, "", 0),
     ("4.1", "Cálculo de las 5 métricas para ambos métodos", "Tablas de métricas", AMBOS, 12, 12, "P", 0),
     ("4.2", "Protocolo estadístico: medias, desviaciones, prueba de Wilcoxon", "Análisis estadístico", AMBOS, 12, 12, "P", 0),
     ("4.3", "Análisis de generalización — escenario 8, fuera de distribución", "Análisis de generalización", CALEB, 12, 12, "P", 0),
-    ("4.4", "Tablero comparativo y demo en vivo", "Demo + tablero", LEO, 13, 13, "P", 0),
+    ("4.4", "Tablero comparativo y demo en vivo en simulación", "Demo + tablero", LEO, 13, 13, "P", 0),
     ("4.5", "Informe final", "Informe", AMBOS, 13, 14, "P", 0),
     ("4.6", "Slides y ensayo de sustentación", "Diapositivas", AMBOS, 14, 14, "P", 0),
 
@@ -74,20 +75,29 @@ TAREAS = [
     ("5.6", "Sustentación del proyecto", "Presentación final", AMBOS, 15, 15, "P", 0),
 ]
 
+# Paquetes hechos con el UR5e en las semanas 1-4 que se rehacen con el Magician E6.
+# Conservan su barra R y suman esta barra P. Para la ruta critica cuenta lo pendiente (la barra P).
+REHACER_E6 = {
+    "1.5": (5, 5),
+    "3.1": (5, 5),   # se redacta en la sem. 5; su verificación con MoveIt va en 3.9 (sem. 6)
+    "3.8": (5, 6),
+    "3.9": (6, 6),
+}
+
 # Precedencias para el calculo de ruta critica (CPM).
 # REVISAR: la ruta critica solo es tan buena como estas dependencias.
 PRED = {
     "1.1": ["3.1"], "1.2": ["1.1"], "1.3": ["1.1"], "1.4": ["1.3"],
-    "1.5": [],      "1.6": ["1.5"], "1.7": ["1.6"],
+    "1.5": ["3.16"], "1.6": ["1.5"], "1.7": ["1.6"],
 
     "2.1": ["1.5"], "2.2": ["2.1"], "2.3": ["2.2"], "2.4": ["3.5"],
     "2.5": ["2.4"], "2.6": ["2.5"], "2.7": ["2.6"], "2.8": ["2.4", "2.7"],
 
-    "3.1": [],      "3.2": ["3.1"], "3.3": ["3.2", "3.11"], "3.4": ["3.3"],
+    "3.1": ["3.16"], "3.2": ["3.1", "3.16"], "3.3": ["3.2", "3.11"], "3.4": ["3.3"],
     "3.5": ["3.4"], "3.6": ["3.5", "3.12"], "3.7": ["3.6"],
-    "3.8": [],      "3.9": ["3.8"], "3.10": ["3.9"], "3.11": ["3.1"],
+    "3.8": ["3.16"], "3.9": ["3.8"], "3.10": ["3.9"], "3.11": ["3.1"],
     "3.12": ["1.4", "3.11"], "3.13": ["3.2", "3.10", "3.12"],
-    "3.14": ["3.10", "3.12"], "3.15": ["3.7"],
+    "3.14": ["3.10", "3.12"], "3.15": ["3.7"], "3.16": [],
 
     "4.1": ["3.7", "3.14"], "4.2": ["4.1"], "4.3": ["4.1"],
     "4.4": ["4.2"], "4.5": ["4.2", "4.3"], "4.6": ["4.5"],
@@ -97,43 +107,51 @@ PRED = {
 }
 
 ACT = [t for t in TAREAS if t[0] != "FASE"]
+# DUR: semanas totales de la fila (lo que muestra el Excel). DUR_CPM: lo que cuenta la ruta crítica.
 DUR = {t[0]: t[5] - t[4] + 1 for t in ACT}
+DUR_CPM = dict(DUR)
+for k, (ini, fin) in REHACER_E6.items():
+    DUR[k] += fin - ini + 1          # la barra R del UR5e más la barra P del E6
+    DUR_CPM[k] = fin - ini + 1       # la ruta crítica solo depende de lo que falta
+# 3.16 se hizo en un día (2026-09-22), antes que el resto de la semana 5: no ocupa una semana
+# de la ruta crítica. Sin esta excepción el método, que solo cuenta semanas enteras, lo suma como 1.
+DUR_CPM["3.16"] = 0
 
 # ---------- CPM: pasada hacia adelante y hacia atras ----------
 def cpm():
     ES, EF = {}, {}
-    pendientes = list(DUR)
+    pendientes = list(DUR_CPM)
     while pendientes:
         avance = False
         for k in list(pendientes):
             ps = PRED.get(k, [])
             if all(p in EF for p in ps):
                 ES[k] = max([EF[p] for p in ps], default=0)
-                EF[k] = ES[k] + DUR[k]
+                EF[k] = ES[k] + DUR_CPM[k]
                 pendientes.remove(k); avance = True
         if not avance:
             raise SystemExit(f"ciclo o dependencia inexistente en: {pendientes}")
 
     fin = max(EF.values())
-    SUC = {k: [] for k in DUR}
+    SUC = {k: [] for k in DUR_CPM}
     for k, ps in PRED.items():
         for p in ps:
             SUC[p].append(k)
 
     LF, LS = {}, {}
-    pendientes = list(DUR)
+    pendientes = list(DUR_CPM)
     while pendientes:
         avance = False
         for k in list(pendientes):
             ss = SUC[k]
             if all(s in LS for s in ss):
                 LF[k] = min([LS[s] for s in ss], default=fin)
-                LS[k] = LF[k] - DUR[k]
+                LS[k] = LF[k] - DUR_CPM[k]
                 pendientes.remove(k); avance = True
         if not avance:
             raise SystemExit(f"ciclo en pasada inversa: {pendientes}")
 
-    holgura = {k: LS[k] - ES[k] for k in DUR}
+    holgura = {k: LS[k] - ES[k] for k in DUR_CPM}
     return ES, EF, LS, LF, holgura, fin
 
 ES, EF, LS, LF, HOLGURA, DURACION = cpm()
@@ -217,14 +235,18 @@ for cod, act, ent, resp, s_ini, s_fin, estado, costo in TAREAS:
     for col in range(1, 8):
         ws.cell(row=fila, column=col).border = Border(left=BORDE, right=BORDE, top=BORDE, bottom=BORDE)
 
-    relleno = PatternFill("solid", fgColor=VERDE if estado == "R" else GRIS_AZUL)
+    barras = [(s_ini, s_fin, estado)]
+    if cod in REHACER_E6:
+        barras.append((*REHACER_E6[cod], "P"))
     for i in range(N_SEM):
         c = ws.cell(row=fila, column=COL_S1 + i)
         c.border = Border(left=BORDE, right=BORDE, top=BORDE, bottom=BORDE)
-        if s_ini <= i + 1 <= s_fin:
-            c.value = estado; c.fill = relleno
-            c.font = Font(bold=True, size=9, color="FFFFFF" if estado == "R" else "1F3864")
-            c.alignment = Alignment(horizontal="center", vertical="center")
+        for ini, fin, est in barras:
+            if ini <= i + 1 <= fin:
+                c.value = est
+                c.fill = PatternFill("solid", fgColor=VERDE if est == "R" else GRIS_AZUL)
+                c.font = Font(bold=True, size=9, color="FFFFFF" if est == "R" else "1F3864")
+                c.alignment = Alignment(horizontal="center", vertical="center")
     fila += 1
 
 fila_fin = fila - 1
@@ -265,6 +287,14 @@ fila += 2
 ws.cell(row=fila, column=1, value="La línea vertical roja marca el corte al cierre de la semana 4, fecha de la presentación de avance.")
 ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=7)
 ws.cell(row=fila, column=1).font = Font(italic=True, size=9)
+fila += 1
+ws.cell(row=fila, column=1, value=("Desde la semana 5 el robot es el DOBOT Magician E6. Las filas con R en las semanas 1-4 y P "
+                                   "después se hicieron con el UR5e y se rehacen con el E6. La prueba en el E6 real es trabajo "
+                                   "adicional fuera de este cronograma (EDT, sección 10)."))
+ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=7)
+ws.cell(row=fila, column=1).font = Font(italic=True, size=9)
+ws.cell(row=fila, column=1).alignment = Alignment(wrap_text=True, vertical="top")
+ws.row_dimensions[fila].height = 40
 
 ws.freeze_panes = ws.cell(row=FILA_H + 1, column=COL_S1)
 
@@ -292,7 +322,7 @@ for cod, act, *_ in ACT:
     crit = cod in CRITICAS
     w2.cell(row=r, column=1, value=cod)
     w2.cell(row=r, column=2, value=act).alignment = Alignment(wrap_text=True)
-    for i, v in enumerate([DUR[cod], ES[cod], EF[cod], LS[cod], LF[cod], HOLGURA[cod]], start=3):
+    for i, v in enumerate([DUR_CPM[cod], ES[cod], EF[cod], LS[cod], LF[cod], HOLGURA[cod]], start=3):
         w2.cell(row=r, column=i, value=v).alignment = Alignment(horizontal="center")
     if crit:
         for i in range(1, 9):
@@ -312,7 +342,7 @@ def cadena_critica():
         ant = [p for p in PRED.get(k, []) if p in CRITICAS and EF[p] == ES[k]]
         if not ant:
             break
-        camino.append(max(ant, key=lambda p: DUR[p]))
+        camino.append(max(ant, key=lambda p: DUR_CPM[p]))
     return list(reversed(camino))
 
 orden = cadena_critica()
