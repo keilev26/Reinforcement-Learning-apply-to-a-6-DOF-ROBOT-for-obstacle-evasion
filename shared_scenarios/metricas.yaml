@@ -1,19 +1,35 @@
 # Paquete 3.1 — Definición operativa de las 5 métricas.
 # FUENTE ÚNICA: la política de RL y la línea base clásica leen de aquí.
 # Cambiar un valor aquí invalida toda comparación hecha con el valor anterior.
+#
+# HISTORIAL
+#   1.0 (2026-09-15)  Versión inicial (UR5e).
+#   2.0 (2026-09-22)  Magician E6: tolerancia de posición 10 -> 5 mm, 500 -> 300 pasos,
+#                     período de control 30 ms (ServoJ), 3 subpasos de revisión de colisión,
+#                     escalado de velocidad 0.8 para la paridad de M4. Decisiones D2-D5 de
+#                     docs/semana-05/propuesta-migracion-magician-e6.md
 
-version: "1.0"
-fecha: "2026-09-15"
+version: "2.0"
+fecha: "2026-09-22"
 
 # ---------------------------------------------------------------------------
 # Criterios de terminación de un episodio
 # ---------------------------------------------------------------------------
 terminacion:
-  tolerancia_posicion_m: 0.010        # 1 cm: ||p_tcp - p_goal||_2
+  tolerancia_posicion_m: 0.005        # 5 mm: 1.2 % de la tarea (0.43 m); 10 mm eran 1.5 % en el UR5e
   tolerancia_orientacion_rad: 0.050   # ~2.9 deg: 2*acos(|<q_tcp, q_goal>|)
-  pasos_maximos: 500                  # limite del episodio para el agente de RL
+  pasos_maximos: 300                  # 9 s a 30 ms: límite del episodio para el agente de RL
   timeout_planificacion_s: 5.0        # presupuesto de OMPL por consulta
-  periodo_control_s: 0.004167         # 1/240 s, paso de simulacion de PyBullet
+  periodo_control_s: 0.030            # período de ServoJ del Magician E6 (33 Hz)
+
+# ---------------------------------------------------------------------------
+# Acción y transición del MDP (compartidas con la línea base por la paridad de M4)
+# ---------------------------------------------------------------------------
+accion:
+  delta_q_max_rad: 0.05               # por paso: 80 % de 2.0944 rad/s x 0.030 s
+  transicion: "cinemática: q <- clip(q + delta_q) dentro de los límites articulares"
+  subpasos_colision: 3                # cada paso se revisa en 3 subpasos (<= 0.017 rad)
+  escalado_velocidad_linea_base: 0.8  # mismo techo de velocidad que la política (config/e6/joint_limits.yaml)
 
 # ---------------------------------------------------------------------------
 # M1 — Tasa de éxito  [adimensional, 0..1]
@@ -39,7 +55,7 @@ m2_colisiones:
     - eslabon_suelo
     - eslabon_estructura_celda
   pares_excluidos: "los desactivados en la matriz de colisión permitida (eslabones adyacentes)"
-  motor: "FCL sobre las mallas de colisión, evaluado cada periodo_control_s"
+  motor: "FCL sobre las mallas de colisión, evaluado en cada subpaso (accion.subpasos_colision)"
 
 # ---------------------------------------------------------------------------
 # M3 — Longitud de trayectoria
@@ -52,6 +68,7 @@ m3_longitud:
     Se reportan ambas porque miden cosas distintas: la cartesiana es interpretable
     físicamente, la articular es la que el espacio de acción controla directamente.
     Se calculan sobre la trayectoria EJECUTADA, remuestreada a periodo_control_s.
+    El TCP es la punta del efector (escenarios.yaml, efector), no tool0.
 
 # ---------------------------------------------------------------------------
 # M4 — Tiempo  (dos magnitudes, NO se suman)

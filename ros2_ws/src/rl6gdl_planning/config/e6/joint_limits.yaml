@@ -1,0 +1,23 @@
+# Límites articulares del Magician E6 para la parametrización temporal (paquete 3.8).
+#
+# Velocidad: 2.0944 rad/s (120 grados/s, ficha oficial; es también el límite del URDF).
+# Aceleración: 4.72 rad/s^2, de joint_limits.yaml del me6_moveit oficial (Dobot no publica otra).
+#
+# Escalado de velocidad 0.8: CONDICIÓN DE PARIDAD de M4 (metricas.yaml). La política mueve como
+# máximo 0.05 rad por paso de 30 ms = 1.667 rad/s = 80 % del límite. La línea base se ejecuta con
+# el mismo techo; si no, sus tiempos de ejecución no serían comparables.
+#
+# OJO: MoveIt (Jazzy) NO aplica este valor por defecto cuando la solicitud de planificación deja
+# max_velocity_scaling_factor en 0: TOTG avisa "Invalid max_velocity_scaling_factor 0.000000" y
+# usa 1.0. Todo script que planifique debe leer este valor y ponerlo EXPLÍCITO en la solicitud
+# (así lo hace p6_contrato.py).
+default_velocity_scaling_factor: 0.8
+default_acceleration_scaling_factor: 1.0
+
+joint_limits:
+  joint1: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}
+  joint2: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}
+  joint3: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}
+  joint4: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}
+  joint5: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}
+  joint6: {has_velocity_limits: true, max_velocity: 2.0944, has_acceleration_limits: true, max_acceleration: 4.72}

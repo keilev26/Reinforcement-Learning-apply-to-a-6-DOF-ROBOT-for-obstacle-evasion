@@ -22,7 +22,8 @@ abajo) y escribe el paquete ROS 2 `ros2_ws/src/rl6gdl_e6_description/` con estas
      `world_joint` oficial) y se añade el marco `tool0` en la cara de la brida.
   7. Se eliminan los bloques de Gazebo Classic (`gravity=false`, `gazebo_ros2_control`).
   8. Matriz de colisiones permitidas calculada sobre esta geometría, para que ambos motores
-     excluyan exactamente los mismos pares.
+     excluyan exactamente los mismos pares. Se escribe como YAML (PyBullet) y como SRDF (MoveIt),
+     con el grupo `manipulador` de base_link a tool0.
 
 La cinemática (orígenes y ejes de las articulaciones, límites de posición) NO se modifica: el
 generador verifica que la cinemática directa coincide con la oficial antes de escribir.
@@ -331,6 +332,25 @@ def matriz_colisiones(urdf: Path, rng) -> list[dict]:
     return pares, en_reposo, frecuencia
 
 
+def escribir_srdf(pares: list[dict]) -> str:
+    """SRDF de MoveIt: grupo, postura de reposo y la MISMA matriz de colisiones que el YAML."""
+    out = ['<?xml version="1.0"?>',
+           "<!-- GENERADO por tools/gen_modelo_e6.py desde colisiones_permitidas.yaml. No editar. -->",
+           '<robot name="magician_e6">',
+           '  <group name="manipulador">',
+           '    <chain base_link="base_link" tip_link="tool0"/>',
+           "  </group>",
+           '  <group_state name="reposo" group="manipulador">']
+    out += [f'    <joint name="{j}" value="0"/>' for j in ARTICULACIONES]
+    out.append("  </group_state>")
+    for x in pares:
+        a, b = x["par"]
+        motivo = "Adjacent" if x["motivo"] == "adyacentes" else "Default"
+        out.append(f'  <disable_collisions link1="{a}" link2="{b}" reason="{motivo}"/>')
+    out += ["</robot>", ""]
+    return "\n".join(out)
+
+
 # --------------------------------------------------------------------------- principal
 
 def main():
@@ -411,6 +431,7 @@ def main():
            "muestras": MUESTRAS_ACM, "semilla": SEMILLA, "pares_excluidos": pares}
     (DESTINO / "config" / "colisiones_permitidas.yaml").write_text(
         yaml.safe_dump(acm, allow_unicode=True, sort_keys=False))
+    (DESTINO / "config" / "magician_e6.srdf").write_text(escribir_srdf(pares))
     (DESTINO / "config" / "informe_generacion.yaml").write_text(
         yaml.safe_dump(informe, allow_unicode=True, sort_keys=False))
     shutil.copy(fuente / "LICENSE", DESTINO / "LICENSE.dobot")

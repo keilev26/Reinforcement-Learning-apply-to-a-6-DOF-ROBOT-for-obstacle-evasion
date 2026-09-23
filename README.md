@@ -49,6 +49,7 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | `docs/semana-04/3.1-propuesta-contrato-v1.1.md` | Corrección del contrato 3.1, aplicada como v1.1, y su verificación |
 | `docs/semana-05/evaluacion-magician-e6.md` | Evaluación del Magician E6: modelo, PyBullet, MoveIt y robot real |
 | `docs/semana-05/propuesta-migracion-magician-e6.md` | Migración aprobada al E6: MDP, entorno, contrato v2.0, EDT y cronograma |
+| `docs/semana-05/3.1-contrato-v2.0.md` | Contrato de escenarios v2.0 para el E6 y su verificación en PyBullet y MoveIt |
 | `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 

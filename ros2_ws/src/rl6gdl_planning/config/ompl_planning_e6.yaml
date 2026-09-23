@@ -1,0 +1,83 @@
+# Paquete 3.9 — Configuración de OMPL para la línea base clásica: Magician E6.
+#
+# Derivada de config/ompl_planning.yaml (UR5e, semana 4), que se conserva como registro. Cambian
+# el grupo, la proyección y longest_valid_segment_fraction; range queda PENDIENTE de volver a
+# medirse con el E6 (paquete 3.9, semana 6).
+#
+# MOTIVO DE ESTE ARCHIVO
+# ur_moveit_config/config/ompl_planning.yaml declara el plugin y los adaptadores
+# pero NO declara planner_configs, de modo que RRT-Connect y RRT* no quedan
+# seleccionables de forma explícita. Las configuraciones existen en
+# moveit_configs_utils/default_configs/ompl_defaults.yaml, pero con range: 0.0,
+# que hace que OMPL resuelva el valor en tiempo de ejecución.
+#
+# Para el protocolo experimental eso es una variable NO CONTROLADA: dos corridas
+# podrían usar parámetros distintos sin que nada lo advierta. Aquí se fijan.
+
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+
+response_adapters:
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
+
+# Parametrización temporal (TOTG). ValidateSolution solo revisa los PUNTOS de la
+# trayectoria, no el movimiento entre ellos. Con el default resample_dt = 0.1 s,
+# a velocidad máxima hay hasta ~0.3 rad entre puntos, y la interpolación recta
+# entre dos puntos corta las esquinas del camino y atraviesa el obstáculo sin que
+# el validador lo detecte. Con 0.01 s, 0 colisiones en validación independiente.
+totg:
+  resample_dt: 0.01
+
+# ---------------------------------------------------------------------------
+# Justificación del valor de range
+#
+# Extensión máxima del espacio de estados del E6 (L2 sobre sus rangos articulares): 20.81 rad.
+#   - Default de OMPL cuando range = 0.0  ->  0.2 x 20.81 = 4.16 rad
+#   - Criterio geométrico: una extensión del árbol no debería desplazar el TCP
+#     más que la dimensión del obstáculo más pequeño del contrato v2.0
+#     (pieza en tránsito, 0.08 m). Con brazo de palanca ~0.5 m -> 0.16 rad.
+#
+# Es la misma proporción que en el UR5e (0.176 rad), así que se conserva range = 0.5 rad, el
+# valor validado allí (docs/semana-04/3.9-configuracion-ompl.md). Hay que volver a medirlo
+# con el E6.
+# ---------------------------------------------------------------------------
+planner_configs:
+
+  RRTConnect:
+    type: geometric::RRTConnect
+    range: 0.5
+    # RRTConnect es bidireccional y NO expone goal_bias: crece dos árboles desde
+    # inicio y meta, así que no necesita sesgar el muestreo hacia el objetivo.
+
+  RRTstar:
+    type: geometric::RRTstar
+    range: 0.5
+    goal_bias: 0.05
+    delay_collision_checking: 1
+
+manipulador:
+  planner_configs:
+    - RRTConnect
+    - RRTstar
+  projection_evaluator: joints(joint1,joint2)
+  # Resolución del verificador de colisiones DURANTE la planificación, como
+  # fracción de la extensión del espacio (20.81 rad): 0.0003 -> ~0.006 rad.
+  #
+  # Con los ~0.014 rad heredados del UR5e (fraction 0.00067) ~8 % de los planes del
+  # contrato v2.0 salían rechazados por ValidateSolution: contactos del EFECTOR con
+  # obstáculos en estados que el planificador no había revisado. El efector está en la
+  # punta del brazo y recorre ~7 mm por cada 0.014 rad; en la celda de escritorio eso
+  # basta para rozar un obstáculo entre dos revisiones. Con 0.0003: 373/380 planes
+  # válidos (98.2 %) y 0 colisiones en la validación independiente, a costa de duplicar
+  # el tiempo de planificación (~50 -> ~100 ms). Una resolución aún más fina no mejora.
+  # Ver docs/semana-05/3.1-contrato-v2.0.md, sección 4.2.
+  # Bajar la tolerancia de TOTG (totg.path_tolerance 0.1 -> 0.01 rad) NO lo resolvía.
+  longest_valid_segment_fraction: 0.0003

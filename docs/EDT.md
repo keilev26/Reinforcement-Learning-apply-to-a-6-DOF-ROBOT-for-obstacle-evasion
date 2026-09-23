@@ -43,7 +43,7 @@ Se entrena la política en **PyBullet** (rápido, ligero, CPU) y se evalúa la l
 | MoveIt 2 (2.12.4, con `moveit_planners_ompl` y `moveit_ros_benchmarks`) | Instalado |
 | Paquetes UR (`ur_description` 3.5.1, `ur_simulation_gz` 2.5.0, `ur_moveit_config`) | Instalado. Usados en las semanas 1-4; ya no son el robot del proyecto |
 | Modelo del Magician E6 (`rl6gdl_e6_description`) | **Generado y probado** el 2026-09-22: carga en PyBullet, pasa `check_urdf`, 9 pruebas |
-| MoveIt 2 con el E6 en Jazzy | Verificado con la configuración oficial parcheada (10/10). Falta la configuración propia (3.8) |
+| MoveIt 2 con el E6 en Jazzy | **Configuración propia hecha** el 2026-09-22: `planning_e6.launch.py`, SRDF generado desde la matriz de colisiones. Contrato v2.0 verificado: 19/19 variantes, 0 colisiones |
 | Gazebo Harmonic con el E6 | **Pendiente**: el paquete oficial usa Gazebo Classic (3.8) |
 | `gymnasium` 1.3.0, `stable-baselines3` 2.9.0, `torch` 2.14.0+cpu | Instalado en `.venv/` |
 | **`pybullet`** | Instalado en `.venv/` — **es el simulador de entrenamiento de esta ruta** |
@@ -172,8 +172,8 @@ sea trabajo adicional.
 | Transición | **Cinemática**: q ← clip(q + Δq) | El E6 se controla por posición; las masas del modelo son estimaciones |
 | Revisión de colisiones | 3 subpasos por paso (≤ 0.017 rad) | Mismo criterio de 0.02 rad que la validación de la línea base (3.9) |
 | Observación | q (6), Δq anterior (6), error de posición (3) y de orientación (4) del TCP, distancia mínima (6) y dirección (18) por eslabón: **43 valores** | Solo lo que el robot real puede calcular |
-| Episodio | **300 pasos** (9 s) | Tarea de ~0.3 m; triple de margen para rodear obstáculos |
-| Éxito (M1) | **5 mm** y 0.05 rad | 1.5 % de la tarea, la misma proporción que 10 mm tenían en el UR5e |
+| Episodio | **300 pasos** (9 s) | Tarea de 0.43 m (contrato v2.0): ~4.3 s a 0.1 m/s, el doble de margen para rodear obstáculos |
+| Éxito (M1) | **5 mm** y 0.05 rad | 1.2 % de la tarea (0.43 m); en el UR5e, 10 mm eran el 1.5 % |
 | Mesa | Obstáculo explícito | El robot está montado sobre ella |
 
 ### E4 — Entregable de implementación
