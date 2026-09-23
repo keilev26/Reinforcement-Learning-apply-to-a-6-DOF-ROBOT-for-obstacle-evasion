@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<!-- GENERADO por tools/gen_modelo_e6.py. No editar a mano: regenerar. -->
+<!-- Fuente: https://github.com/Dobot-Arm/DOBOT_6Axis_ROS2_V4.git @ ec201c40d5db63185a3593ec9c39f80fe25aa527 (MIT). Correcciones: ver README.md -->
+<robot name="magician_e6">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.0240568795993814 0.00375533156407527 0.0319345452713943" rpy="0 0 0"/>
+      <mass value="2.173217"/>
+      <inertia ixx="3.020601e-03" ixy="-1.872693e-05" ixz="-3.283040e-04" iyy="5.288548e-03" iyz="-1.298148e-05" izz="6.717396e-03"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/base_link.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="base_link_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/base_link_0.stl"/></geometry></collision>
+    <collision name="base_link_1"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/base_link_1.stl"/></geometry></collision>
+    <collision name="base_link_2"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/base_link_2.stl"/></geometry></collision>
+    <collision name="base_link_3"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/base_link_3.stl"/></geometry></collision>
+  </link>
+  <link name="Link1">
+    <inertial>
+      <origin xyz="-0.0083034891135278 0.000169963422442479 0.0273090165667047" rpy="0 0 0"/>
+      <mass value="0.689985"/>
+      <inertia ixx="9.600762e-04" ixy="2.917680e-06" ixz="1.989532e-04" iyy="8.135447e-04" iyz="-2.241640e-06" izz="8.454355e-04"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link1.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link1_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link1_0.stl"/></geometry></collision>
+  </link>
+  <link name="Link2">
+    <inertial>
+      <origin xyz="-3.08219150776858E-06 0.0879305908719406 0.0388340121175632" rpy="0 0 0"/>
+      <mass value="1.997437"/>
+      <inertia ixx="1.155939e-02" ixy="-6.901748e-07" ixz="-1.755252e-07" iyy="1.406978e-03" iyz="4.514555e-05" izz="1.221095e-02"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link2.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link2_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link2_0.stl"/></geometry></collision>
+    <collision name="Link2_1"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link2_1.stl"/></geometry></collision>
+    <collision name="Link2_2"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link2_2.stl"/></geometry></collision>
+    <collision name="Link2_3"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link2_3.stl"/></geometry></collision>
+  </link>
+  <link name="Link3">
+    <inertial>
+      <origin xyz="0.000287552185448503 0.071655088852445 -0.0471165778156417" rpy="0 0 0"/>
+      <mass value="1.263166"/>
+      <inertia ixx="6.327566e-03" ixy="2.147294e-05" ixz="-7.212666e-06" iyy="1.038998e-03" iyz="2.551788e-04" izz="6.667255e-03"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link3.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link3_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link3_0.stl"/></geometry></collision>
+    <collision name="Link3_1"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link3_1.stl"/></geometry></collision>
+    <collision name="Link3_2"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link3_2.stl"/></geometry></collision>
+    <collision name="Link3_3"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link3_3.stl"/></geometry></collision>
+  </link>
+  <link name="Link4">
+    <inertial>
+      <origin xyz="4.09285774923343E-06 0.00868445353374203 0.0236778972827499" rpy="0 0 0"/>
+      <mass value="0.391135"/>
+      <inertia ixx="3.055578e-04" ixy="-9.187614e-09" ixz="-3.395162e-08" iyy="3.450956e-04" iyz="-7.627702e-05" izz="3.655450e-04"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link4.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link4_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link4_0.stl"/></geometry></collision>
+  </link>
+  <link name="Link5">
+    <inertial>
+      <origin xyz="0.0105483555263245 3.64597044475367E-06 0.0262055886148362" rpy="0 0 0"/>
+      <mass value="0.532379"/>
+      <inertia ixx="4.267877e-04" ixy="-5.902101e-08" ixz="6.291841e-05" iyy="4.150835e-04" iyz="2.250494e-08" izz="4.777332e-04"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link5.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link5_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link5_0.stl"/></geometry></collision>
+  </link>
+  <link name="Link6">
+    <inertial>
+      <origin xyz="-9.26807198336826E-06 0.00202791129000202 0.0111078385958137" rpy="0 0 0"/>
+      <mass value="0.152681"/>
+      <inertia ixx="5.565063e-05" ixy="2.239056e-08" ixz="1.601325e-09" iyy="5.215324e-05" iyz="-2.339140e-07" izz="9.836302e-05"/>
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://rl6gdl_e6_description/meshes/visual/Link6.stl"/></geometry>
+      <material name="gris"><color rgba="0.75 0.75 0.75 1"/></material>
+    </visual>
+    <collision name="Link6_0"><geometry><mesh filename="package://rl6gdl_e6_description/meshes/collision/Link6_0.stl"/></geometry></collision>
+  </link>
+  <joint name="joint1" type="revolute">
+    <origin xyz="0 0 0.1268" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="Link1"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.27" upper="6.27" effort="9.0" velocity="2.0944"/>
+  </joint>
+  <joint name="joint2" type="revolute">
+    <origin xyz="-0.046 0 0.04" rpy="1.5708 0 -1.5708"/>
+    <parent link="Link1"/>
+    <child link="Link2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.356" upper="2.356" effort="32.8" velocity="2.0944"/>
+  </joint>
+  <joint name="joint3" type="revolute">
+    <origin xyz="0 0.18906 0.003" rpy="0 0 0"/>
+    <parent link="Link2"/>
+    <child link="Link3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.6878" upper="2.6878" effort="14.1" velocity="2.0944"/>
+  </joint>
+  <joint name="joint4" type="revolute">
+    <origin xyz="0 0.16 0.005" rpy="0 0 0"/>
+    <parent link="Link3"/>
+    <child link="Link4"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.7925" upper="2.7925" effort="4.4" velocity="2.0944"/>
+  </joint>
+  <joint name="joint5" type="revolute">
+    <origin xyz="0 0.067 0.032" rpy="-1.5708 1.5708 0"/>
+    <parent link="Link4"/>
+    <child link="Link5"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.0194" upper="3.0194" effort="1.3" velocity="2.0944"/>
+  </joint>
+  <joint name="joint6" type="revolute">
+    <origin xyz="-0.047 0 0.034" rpy="1.5708 0 -1.5708"/>
+    <parent link="Link5"/>
+    <child link="Link6"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.27" upper="6.27" effort="1.0" velocity="2.0944"/>
+  </joint>
+  <link name="tool0">
+    <inertial><mass value="1e-6"/><inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9"/></inertial>
+  </link>
+  <joint name="tool0_joint" type="fixed">
+    <origin xyz="0 0 0.0190" rpy="0 0 0"/>
+    <parent link="Link6"/>
+    <child link="tool0"/>
+  </joint>
+</robot>

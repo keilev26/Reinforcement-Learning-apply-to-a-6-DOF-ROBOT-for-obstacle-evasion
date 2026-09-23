@@ -1,0 +1,29 @@
+descripcion: Pares de eslabones que NO se evalúan en colisión. PyBullet y MoveIt deben
+  leer esta misma lista.
+muestras: 5000
+semilla: 0
+pares_excluidos:
+- par:
+  - Link1
+  - Link2
+  motivo: adyacentes
+- par:
+  - Link2
+  - Link3
+  motivo: adyacentes
+- par:
+  - Link3
+  - Link4
+  motivo: adyacentes
+- par:
+  - Link4
+  - Link5
+  motivo: adyacentes
+- par:
+  - Link5
+  - Link6
+  motivo: adyacentes
+- par:
+  - base_link
+  - Link1
+  motivo: adyacentes
