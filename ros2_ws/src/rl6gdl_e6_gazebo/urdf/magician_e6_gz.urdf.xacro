@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!-- Magician E6 en Gazebo Harmonic (paquete 3.8).
+     El robot es EXACTAMENTE el de rl6gdl_e6_description (fuente única); aquí solo se añade lo
+     que Gazebo necesita: fijación al mundo, el efector del contrato de escenarios y
+     gz_ros2_control. Sustituye al bloque de Gazebo Classic del URDF oficial de Dobot. -->
+<robot name="magician_e6" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="controladores" default=""/>
+  <xacro:arg name="efector_radio" default="0.025"/>
+  <xacro:arg name="efector_largo" default="0.070"/>
+  <xacro:property name="r" value="$(arg efector_radio)"/>
+  <xacro:property name="l" value="$(arg efector_largo)"/>
+
+  <xacro:include filename="$(find rl6gdl_e6_description)/urdf/magician_e6.urdf"/>
+
+  <!-- La base del robot fija a la mesa (el origen del contrato es base_link) -->
+  <link name="world"/>
+  <joint name="base_fija" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Efector del contrato (shared_scenarios/escenarios.yaml): cilindro sobre +z de tool0.
+       Masa de 0.1 kg: dentro de la carga útil de 0.75 kg, solo para la física de Gazebo. -->
+  <link name="efector">
+    <inertial>
+      <origin xyz="0 0 ${l / 2}"/>
+      <mass value="0.1"/>
+      <inertia ixx="${0.1 * (3 * r * r + l * l) / 12}" ixy="0" ixz="0"
+               iyy="${0.1 * (3 * r * r + l * l) / 12}" iyz="0" izz="${0.1 * r * r / 2}"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 ${l / 2}"/>
+      <geometry><cylinder radius="${r}" length="${l}"/></geometry>
+      <material name="efector"><color rgba="0.2 0.4 0.8 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${l / 2}"/>
+      <geometry><cylinder radius="${r}" length="${l}"/></geometry>
+    </collision>
+  </link>
+  <joint name="efector_joint" type="fixed">
+    <parent link="tool0"/>
+    <child link="efector"/>
+  </joint>
+
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <xacro:macro name="articulacion" params="nombre">
+      <joint name="${nombre}">
+        <command_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+    </xacro:macro>
+    <xacro:articulacion nombre="joint1"/>
+    <xacro:articulacion nombre="joint2"/>
+    <xacro:articulacion nombre="joint3"/>
+    <xacro:articulacion nombre="joint4"/>
+    <xacro:articulacion nombre="joint5"/>
+    <xacro:articulacion nombre="joint6"/>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg controladores)</parameters>
+    </plugin>
+  </gazebo>
+</robot>

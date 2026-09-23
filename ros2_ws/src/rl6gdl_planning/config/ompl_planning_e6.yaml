@@ -1,8 +1,8 @@
 # Paquete 3.9 — Configuración de OMPL para la línea base clásica: Magician E6.
 #
 # Derivada de config/ompl_planning.yaml (UR5e, semana 4), que se conserva como registro. Cambian
-# el grupo, la proyección y longest_valid_segment_fraction; range queda PENDIENTE de volver a
-# medirse con el E6 (paquete 3.9, semana 6).
+# el grupo, la proyección, longest_valid_segment_fraction y el range de RRT-Connect, todos
+# medidos con el E6: docs/semana-05/3.9-ompl-magician-e6.md.
 #
 # MOTIVO DE ESTE ARCHIVO
 # ur_moveit_config/config/ompl_planning.yaml declara el plugin y los adaptadores
@@ -45,15 +45,23 @@ totg:
 #     más que la dimensión del obstáculo más pequeño del contrato v2.0
 #     (pieza en tránsito, 0.08 m). Con brazo de palanca ~0.5 m -> 0.16 rad.
 #
-# Es la misma proporción que en el UR5e (0.176 rad), así que se conserva range = 0.5 rad, el
-# valor validado allí (docs/semana-04/3.9-configuracion-ompl.md). Hay que volver a medirlo
-# con el E6.
+# Medido con el E6 (docs/semana-05/3.9-ompl-magician-e6.md): RRT-Connect, variantes 2, 5 k=2.0
+# y 8 del contrato v2.0, 20 consultas por valor y variante.
+#   range   éxito   longitud media (rad) en 2 / 5 k=2.0 / 8
+#   0.25    57/60   2.51 / 4.63 / 4.21
+#   0.5     56/60   2.50 / 4.27 / 4.35
+#   1.0     60/60   2.51 / 4.27 / 4.17   <- adoptado para RRT-Connect
+#   2.0     60/60   2.64 / 4.60 / 4.21
+#   auto    60/60   4.74 / 7.43 / 6.69   (0.2 x 20.81 rad: trayectorias 70-90 % más largas)
+# 1.0 no es peor que ningún otro valor en ninguna métrica; las diferencias de éxito entre
+# 0.25-1.0 no son significativas con n = 20. RRT* y RRT conservan 0.5, el valor con que se
+# midieron.
 # ---------------------------------------------------------------------------
 planner_configs:
 
   RRTConnect:
     type: geometric::RRTConnect
-    range: 0.5
+    range: 1.0
     # RRTConnect es bidireccional y NO expone goal_bias: crece dos árboles desde
     # inicio y meta, así que no necesita sesgar el muestreo hacia el objetivo.
 
@@ -63,10 +71,23 @@ planner_configs:
     goal_bias: 0.05
     delay_collision_checking: 1
 
+  # Registrados para la medición del paquete 3.9 (docs/semana-04/3.9, sección 4.2):
+  # LazyPRM* es el candidato a reemplazar a RRT* como línea base asintóticamente óptima;
+  # RRT simple es el control que aísla el efecto de crecer desde un solo árbol.
+  LazyPRMstar:
+    type: geometric::LazyPRMstar
+
+  RRT:
+    type: geometric::RRT
+    range: 0.5
+    goal_bias: 0.05
+
 manipulador:
   planner_configs:
     - RRTConnect
     - RRTstar
+    - LazyPRMstar
+    - RRT
   projection_evaluator: joints(joint1,joint2)
   # Resolución del verificador de colisiones DURANTE la planificación, como
   # fracción de la extensión del espacio (20.81 rad): 0.0003 -> ~0.006 rad.

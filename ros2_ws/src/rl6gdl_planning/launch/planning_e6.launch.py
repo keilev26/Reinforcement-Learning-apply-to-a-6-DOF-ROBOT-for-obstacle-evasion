@@ -8,7 +8,10 @@ tools/gen_modelo_e6.py): la matriz de colisiones del SRDF es la misma que usa Py
 Los parámetros se arman a mano, sin MoveItConfigsBuilder, porque el URDF, el SRDF y la
 configuración de planificación viven en paquetes distintos.
 
-Uso: ros2 launch rl6gdl_planning planning_e6.launch.py [ompl_config:=<ruta.yaml>]
+Con gazebo:=true (lo usa rl6gdl_e6_gazebo/gazebo_e6.launch.py) corre con tiempo simulado, no
+arranca publicadores de estado propios (los da Gazebo) y ejecuta en brazo_controller.
+
+Uso: ros2 launch rl6gdl_planning planning_e6.launch.py [ompl_config:=<ruta.yaml>] [gazebo:=true]
 """
 import os
 
@@ -40,6 +43,22 @@ def launch_setup(context):
     else:
         ompl = yaml.safe_load(leer("rl6gdl_planning", "config/ompl_planning_e6.yaml"))
 
+    gazebo = LaunchConfiguration("gazebo").perform(context) == "true"
+    ejecucion = {}
+    if gazebo:
+        # MoveIt ejecuta en el JointTrajectoryController de rl6gdl_e6_gazebo
+        ejecucion = {
+            "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
+            "moveit_simple_controller_manager": {
+                "controller_names": ["brazo_controller"],
+                "brazo_controller": {"type": "FollowJointTrajectory", "action_ns": "follow_joint_trajectory",
+                                     "default": True, "joints": [f"joint{i}" for i in range(1, 7)]},
+            },
+            "trajectory_execution": {"allowed_execution_duration_scaling": 1.2,
+                                     "allowed_goal_duration_margin": 0.5,
+                                     "allowed_start_tolerance": 0.01},
+        }
+
     move_group = Node(
         package="moveit_ros_move_group",
         executable="move_group",
@@ -48,9 +67,12 @@ def launch_setup(context):
             robot_description, semantic, kinematics, planning,
             {"ompl": ompl},
             {"planning_pipelines": ["ompl"], "default_planning_pipeline": "ompl"},
-            {"publish_robot_description_semantic": True, "use_sim_time": False},
+            {"publish_robot_description_semantic": True, "use_sim_time": gazebo},
+            ejecucion,
         ],
     )
+    if gazebo:
+        return [move_group]
     rsp = Node(package="robot_state_publisher", executable="robot_state_publisher",
                output="screen", parameters=[robot_description])
     jsp = Node(package="joint_state_publisher", executable="joint_state_publisher",
@@ -62,5 +84,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("ompl_config", default_value="",
                               description="YAML de OMPL alternativo (vacío = el del paquete)"),
+        DeclareLaunchArgument("gazebo", default_value="false",
+                              description="true: tiempo simulado y ejecución en brazo_controller"),
         OpaqueFunction(function=launch_setup),
     ])

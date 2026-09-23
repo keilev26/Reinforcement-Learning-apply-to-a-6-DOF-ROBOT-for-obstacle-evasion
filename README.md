@@ -50,6 +50,8 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | `docs/semana-05/evaluacion-magician-e6.md` | Evaluación del Magician E6: modelo, PyBullet, MoveIt y robot real |
 | `docs/semana-05/propuesta-migracion-magician-e6.md` | Migración aprobada al E6: MDP, entorno, contrato v2.0, EDT y cronograma |
 | `docs/semana-05/3.1-contrato-v2.0.md` | Contrato de escenarios v2.0 para el E6 y su verificación en PyBullet y MoveIt |
+| `docs/semana-05/3.8-gazebo-magician-e6.md` | E6 en Gazebo Harmonic: ejecución de la tarea en los 8 escenarios |
+| `docs/semana-05/3.9-ompl-magician-e6.md` | OMPL con el E6: comparación de planificadores y `range` |
 | `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
@@ -60,7 +62,7 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | Carpeta | Contenido | Responsable |
 |---|---|---|
 | `cad/` | Celda base y biblioteca de componentes (E1), planos, exportables | A |
-| `ros2_ws/` | Workspace ROS 2: modelo del E6 (`rl6gdl_e6_description`), MoveIt 2, configuración de OMPL | B |
+| `ros2_ws/` | Workspace ROS 2: modelo del E6 (`rl6gdl_e6_description`), Gazebo (`rl6gdl_e6_gazebo`), MoveIt 2 y OMPL (`rl6gdl_planning`) | B |
 | `gym_env/` | Entorno Gymnasium sobre **PyBullet** con el Magician E6. `robot_e6.py` carga el modelo | A |
 | `geometry/` | Módulo de distancia mínima eslabón-obstáculo + pruebas contra FCL | B |
 | `shared_scenarios/` | **Generador de escenarios: compone los 8 a partir de la biblioteca de `cad/`** | B |

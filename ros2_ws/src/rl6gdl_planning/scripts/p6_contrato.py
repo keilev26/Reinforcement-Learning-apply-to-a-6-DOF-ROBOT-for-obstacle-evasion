@@ -143,30 +143,32 @@ class P6(Diag):
             malos += 0 if self._call("check_state_validity", r).valid else 1
         return malos
 
-    def planificar_n(self, qa, qb, n):
+    def planificar_n(self, qa, qb, n, planner="RRTConnect", tiempo=5.0):
+        """n consultas qa -> qb. Devuelve (éxitos, chocan, t_medio_ms, fallos, longitudes_rad)."""
         cs = Constraints()
         for nm, v in zip(J, qb):
             jc = JointConstraint(); jc.joint_name = nm; jc.position = v
             jc.tolerance_above = jc.tolerance_below = 0.01; jc.weight = 1.0
             cs.joint_constraints.append(jc)
         ok = choca = 0
-        tiempos, fallos = [], Counter()
+        tiempos, fallos, longitudes = [], Counter(), []
         for _ in range(n):
-            req = MotionPlanRequest(); req.group_name = GRUPO; req.planner_id = "RRTConnect"
-            req.allowed_planning_time = 5.0; req.num_planning_attempts = 1
+            req = MotionPlanRequest(); req.group_name = GRUPO; req.planner_id = planner
+            req.allowed_planning_time = tiempo; req.num_planning_attempts = 1
             req.max_velocity_scaling_factor = self.escalado; req.max_acceleration_scaling_factor = 1.0
             req.start_state = estado(qa)
             req.goal_constraints.append(cs)
             p = GetMotionPlan.Request(); p.motion_plan_request = req
-            res = self._call("plan_kinematic_path", p, t=20).motion_plan_response
+            res = self._call("plan_kinematic_path", p, t=tiempo + 20).motion_plan_response
             if res.error_code.val == 1:
                 ok += 1; tiempos.append(res.planning_time * 1000)
-                _, col = self.validar_trayectoria(res.trajectory.joint_trajectory.points)
+                pts = res.trajectory.joint_trajectory.points
+                longitudes.append(sum(math.dist(a.positions, b.positions) for a, b in zip(pts, pts[1:])))
+                _, col = self.validar_trayectoria(pts)
                 choca += 1 if col else 0
             else:
                 fallos[CODIGOS.get(res.error_code.val, res.error_code.val)] += 1
-        return ok, choca, (sum(tiempos) / len(tiempos) if tiempos else float("nan")), fallos
-
+        return ok, choca, (sum(tiempos) / len(tiempos) if tiempos else float("nan")), fallos, longitudes
 
 def main():
     ap = argparse.ArgumentParser()
@@ -199,7 +201,7 @@ def main():
             qa, qb = d.ik("p_pick", ref[0]), d.ik("p_place", ref[1])
             recta = d.estados_en_colision(*ref)
             if qa and qb:
-                ok, choca, tm, fallos = d.planificar_n(qa, qb, a.n)
+                ok, choca, tm, fallos, _ = d.planificar_n(qa, qb, a.n)
                 plan = f"{ok}/{a.n}"
             else:
                 ok = choca = 0; tm = float("nan"); plan = "-"; fallos = Counter()

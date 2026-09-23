@@ -44,7 +44,7 @@ Se entrena la política en **PyBullet** (rápido, ligero, CPU) y se evalúa la l
 | Paquetes UR (`ur_description` 3.5.1, `ur_simulation_gz` 2.5.0, `ur_moveit_config`) | Instalado. Usados en las semanas 1-4; ya no son el robot del proyecto |
 | Modelo del Magician E6 (`rl6gdl_e6_description`) | **Generado y probado** el 2026-09-22: carga en PyBullet, pasa `check_urdf`, 9 pruebas |
 | MoveIt 2 con el E6 en Jazzy | **Configuración propia hecha** el 2026-09-22: `planning_e6.launch.py`, SRDF generado desde la matriz de colisiones. Contrato v2.0 verificado: 19/19 variantes, 0 colisiones |
-| Gazebo Harmonic con el E6 | **Pendiente**: el paquete oficial usa Gazebo Classic (3.8) |
+| Gazebo Harmonic con el E6 | **Hecho** el 2026-09-22: `rl6gdl_e6_gazebo` con `gz_ros2_control`; la tarea del contrato se **ejecuta** en los 8 escenarios sin colisión (`semana-05/3.8-gazebo-magician-e6.md`) |
 | `gymnasium` 1.3.0, `stable-baselines3` 2.9.0, `torch` 2.14.0+cpu | Instalado en `.venv/` |
 | **`pybullet`** | Instalado en `.venv/` — **es el simulador de entrenamiento de esta ruta** |
 | GPU NVIDIA | No requerida. `nvidia-smi` no responde en esta máquina; torch quedó en versión CPU |
