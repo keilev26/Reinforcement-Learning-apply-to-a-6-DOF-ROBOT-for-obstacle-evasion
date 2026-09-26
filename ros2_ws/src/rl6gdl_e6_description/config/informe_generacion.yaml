@@ -1,0 +1,78 @@
+fuente:
+  repositorio: https://github.com/Dobot-Arm/DOBOT_6Axis_ROS2_V4.git
+  commit: ec201c40d5db63185a3593ec9c39f80fe25aa527
+  licencia: MIT
+masa:
+  oficial_kg: 0.9449
+  factor_escala: 7.6196
+  total_kg: 7.2
+eslabones:
+  base_link:
+    triangulos_visual: 20192
+    triangulos_original: 143072
+    piezas_colision: 4
+    sobresale_p95_mm_envolvente_unica: 20.4
+    sobresale_p95_mm_descompuesta: 6.8
+  Link1:
+    triangulos_visual: 15000
+    triangulos_original: 28960
+    piezas_colision: 1
+    sobresale_p95_mm_envolvente_unica: 17.2
+    sobresale_p95_mm_descompuesta: 19.1
+  Link2:
+    triangulos_visual: 14998
+    triangulos_original: 48690
+    piezas_colision: 4
+    sobresale_p95_mm_envolvente_unica: 25.4
+    sobresale_p95_mm_descompuesta: 14.4
+  Link3:
+    triangulos_visual: 15000
+    triangulos_original: 44194
+    piezas_colision: 4
+    sobresale_p95_mm_envolvente_unica: 32.5
+    sobresale_p95_mm_descompuesta: 10.1
+  Link4:
+    triangulos_visual: 15000
+    triangulos_original: 28852
+    piezas_colision: 1
+    sobresale_p95_mm_envolvente_unica: 12.0
+    sobresale_p95_mm_descompuesta: 13.8
+  Link5:
+    triangulos_visual: 15000
+    triangulos_original: 37528
+    piezas_colision: 1
+    sobresale_p95_mm_envolvente_unica: 12.6
+    sobresale_p95_mm_descompuesta: 14.8
+  Link6:
+    triangulos_visual: 14999
+    triangulos_original: 36836
+    piezas_colision: 1
+    sobresale_p95_mm_envolvente_unica: 7.0
+    sobresale_p95_mm_descompuesta: 6.3
+velocidad_max_rad_s: 2.0944
+esfuerzo_estimado_Nm:
+  joint1: 9.0
+  joint2: 32.8
+  joint3: 14.1
+  joint4: 4.4
+  joint5: 1.3
+  joint6: 1.0
+tool0_z_sobre_Link6_m: 0.019
+error_cinematica_vs_oficial_m: 2.9802322387695312e-08
+autocolision_en_reposo: []
+frecuencia_autocolision:
+  base_link-Link2: 0.014
+  base_link-Link3: 0.0892
+  base_link-Link4: 0.0576
+  base_link-Link5: 0.0494
+  base_link-Link6: 0.0236
+  Link1-Link3: 0.0146
+  Link1-Link4: 0.0026
+  Link1-Link5: 0.0374
+  Link1-Link6: 0.0198
+  Link2-Link4: 0.0338
+  Link2-Link5: 0.1748
+  Link2-Link6: 0.1156
+  Link3-Link5: 0.0292
+  Link3-Link6: 0.027
+  Link4-Link6: 0.0

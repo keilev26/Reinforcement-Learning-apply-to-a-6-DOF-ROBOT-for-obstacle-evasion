@@ -3,7 +3,11 @@
 Proyecto Mecatrónico · Escuela Profesional de Ingeniería Mecatrónica · FIM–UNI
 
 **Equipo:** 2 personas · **Duración:** 15 semanas (14 de desarrollo + sustentación)
-**Manipulador:** UR5e — **6 grados de libertad, no redundante**
+**Manipulador:** DOBOT Magician E6 — **6 grados de libertad, no redundante** (desde la semana 5;
+las semanas 1-4 usaron el UR5e)
+
+**Alcance:** algoritmo de RL y evaluación en simulación. La prueba en el E6 físico del profesor es
+trabajo adicional fuera de las 15 semanas (`docs/EDT.md`, sección 10).
 
 Sistema de planificación de movimiento reactivo basado en una política de control continuo
 aprendida con Soft Actor-Critic, para evasión de obstáculos en celdas de manufactura,
@@ -33,7 +37,7 @@ Replica el stack del Paper 1 (Mao et al., 2025), la referencia metodológica dir
 **Condición que sostiene la comparación:** como se entrena en un motor de física y se mide en
 otro, el **paquete 3.13 (verificación de equivalencia PyBullet ↔ Gazebo) es obligatorio**, no
 opcional. Mismo URDF, mismos límites articulares, misma geometría de colisión, desde una
-fuente única.
+fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_modelo_e6.py`.
 
 | Documento | Contenido |
 |---|---|
@@ -43,6 +47,12 @@ fuente única.
 | `docs/semana-04/3.1-contrato-escenarios-y-metricas.md` | Paquete 3.1: contrato de escenarios y las 5 métricas |
 | `docs/semana-04/3.9-configuracion-ompl.md` | Paquete 3.9: configuración de OMPL y pendientes P1-P6 |
 | `docs/semana-04/3.1-propuesta-contrato-v1.1.md` | Corrección del contrato 3.1, aplicada como v1.1, y su verificación |
+| `docs/semana-05/evaluacion-magician-e6.md` | Evaluación del Magician E6: modelo, PyBullet, MoveIt y robot real |
+| `docs/semana-05/propuesta-migracion-magician-e6.md` | Migración aprobada al E6: MDP, entorno, contrato v2.0, EDT y cronograma |
+| `docs/semana-05/3.1-contrato-v2.0.md` | Contrato de escenarios v2.0 para el E6 y su verificación en PyBullet y MoveIt |
+| `docs/semana-05/3.8-gazebo-magician-e6.md` | E6 en Gazebo Harmonic: ejecución de la tarea en los 8 escenarios |
+| `docs/semana-05/3.9-ompl-magician-e6.md` | OMPL con el E6: comparación de planificadores y `range` |
+| `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
 ---
@@ -52,13 +62,14 @@ fuente única.
 | Carpeta | Contenido | Responsable |
 |---|---|---|
 | `cad/` | Celda base y biblioteca de componentes (E1), planos, exportables | A |
-| `ros2_ws/` | Workspace ROS 2: `ur_simulation_gz`, MoveIt 2, configuración de OMPL | B |
-| `gym_env/` | Entorno Gymnasium sobre **PyBullet** con el manipulador de 6 GDL | A |
+| `ros2_ws/` | Workspace ROS 2: modelo del E6 (`rl6gdl_e6_description`), Gazebo (`rl6gdl_e6_gazebo`), MoveIt 2 y OMPL (`rl6gdl_planning`) | B |
+| `gym_env/` | Entorno Gymnasium sobre **PyBullet** con el Magician E6. `robot_e6.py` carga el modelo | A |
 | `geometry/` | Módulo de distancia mínima eslabón-obstáculo + pruebas contra FCL | B |
 | `shared_scenarios/` | **Generador de escenarios: compone los 8 a partir de la biblioteca de `cad/`** | B |
 | `training/` | Configuraciones de SB3, scripts de entrenamiento SAC | A |
 | `evaluation/` | Cálculo de las 5 métricas, protocolo estadístico, gráficos | A + B |
 | `results/` | Datos crudos (`raw/`) y figuras exportadas (`figures/`) | A + B |
+| `tools/` | Generadores: modelo del E6 (`gen_modelo_e6.py`) y cronograma (`gen_cronograma.py`) | A + B |
 | `docs/` | Documentos vivos (contexto, EDT) en la raíz; entregables fechados en `semana-NN/`; actas en `actas/` | A + B |
 
 > `shared_scenarios/` y `geometry/` alimentan por igual a la política y a la línea base.
@@ -72,9 +83,9 @@ fuente única.
 | ID | Entregable | Contenido |
 |---|---|---|
 | **E1** | Diseño mecánico | Celda base y **biblioteca modular de componentes CAD**, tabla DH, cinemática, alcanzabilidad, singularidades |
-| **E2** | Electrónico | Actuadores y reductores, potencia, unidad de cómputo, sensado, comunicación, seguridad, latencia |
+| **E2** | Electrónico | Integración del E6: análisis dinámico, arquitectura de control, efector, cómputo, sensado, comunicación, seguridad, latencia |
 | **E3** | Software y control | Entorno Gym, SAC, distancia mínima, OMPL, escenarios |
-| **E4** | Implementación | Demo en vivo, resultados, análisis estadístico, informe |
+| **E4** | Implementación | Demo en vivo en simulación, resultados, análisis estadístico, informe |
 
 ---
 
@@ -116,8 +127,13 @@ source install/setup.zsh
 
 # Entorno de Python para el entrenamiento
 python3 -m venv .venv && source .venv/bin/activate
-pip install gymnasium stable-baselines3 torch pybullet
+pip install gymnasium stable-baselines3 torch pybullet pyyaml pytest
+
+# Solo para regenerar el modelo del E6 (tools/gen_modelo_e6.py)
+pip install trimesh scipy rtree scikit-image fast-simplification
 ```
+
+Pruebas del modelo del robot: `.venv/bin/python -m pytest` desde la raíz.
 
 **Estado actual:** entorno completo y verificado el 2026-09-13. Todo lo anterior ya está
 instalado en esta máquina; el `.venv/` no se versiona.

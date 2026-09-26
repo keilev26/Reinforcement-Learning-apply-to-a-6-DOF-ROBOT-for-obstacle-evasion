@@ -11,8 +11,10 @@ Uso:
   diagnostico_pendientes.py --escala 1.0 --meta articular --n 20
   diagnostico_pendientes.py --escala 1.0 --meta pose --planners RRTstar --dcc 0
 """
-import argparse, math, statistics, sys, time
+import argparse, math, os, statistics, sys, time
 from collections import Counter
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import rclpy
 from rclpy.node import Node
@@ -25,10 +27,13 @@ from moveit_msgs.msg import (MotionPlanRequest, Constraints, JointConstraint,
 from shape_msgs.msg import SolidPrimitive
 from geometry_msgs.msg import Pose, Point, Quaternion
 
-GRUPO = "ur_manipulator"
-TCP = "tool0"
-J = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
-     "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
+from perfil_robot import PERFIL, ROBOT
+
+GRUPO = PERFIL["grupo"]
+TCP = PERFIL["tcp"]
+J = PERFIL["articulaciones"]
+# Consultas del diagnóstico de la semana 4: solo tienen sentido con el UR5e (RL6GDL_ROBOT=ur5e).
+# Con el E6, la verificación equivalente la hace p6_contrato.py sobre el contrato de escenarios.
 Q0 = [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]
 Q1 = [1.2, -1.0472, 1.0472, -1.5708, -1.5708, 0.0]
 POSE_OBS = [0.422, 0.450, 0.473]          # punto medio real del recorrido del TCP
@@ -96,6 +101,7 @@ class Diag(Node):
     def valido(self, q):
         r = GetStateValidity.Request(); r.group_name = GRUPO
         rs = RobotState(); rs.joint_state.name = J; rs.joint_state.position = list(q)
+        rs.is_diff = True   # conserva los cuerpos adjuntos de la escena (el efector)
         r.robot_state = rs
         return self._call("check_state_validity", r).valid
 
@@ -177,6 +183,9 @@ def main():
                     help="parametro de OMPL aplicado a cada planificador listado (repetible)")
     ap.add_argument("--etiqueta", default="")
     a = ap.parse_args()
+    if ROBOT != "ur5e":
+        sys.exit("este diagnóstico usa las consultas del UR5e (semana 4): ejecutar con "
+                 "RL6GDL_ROBOT=ur5e. Para el E6, usar p6_contrato.py")
 
     rclpy.init(); d = Diag()
     nobj = d.escena(a.escala)

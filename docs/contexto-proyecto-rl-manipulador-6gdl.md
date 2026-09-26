@@ -19,8 +19,8 @@ El curso exige un proyecto de investigación o innovación tecnológica que invo
 - **Proyecto en equipo de dos personas** (actualizado; originalmente se planteó individual).
 - **Plazo de desarrollo: 10 semanas.**
 - Sin cliente formal (se pierde el puntaje adicional del Artículo 14), salvo que se consiga uno vía entrevista con un integrador (ver Parte VI).
-- Sin hardware físico: el proyecto es íntegramente de software y simulación.
-- La «demostración tangible» se resolverá como demo en vivo del simulador con métricas comparativas en tiempo real.
+- **Alcance obligatorio: software y simulación.** Desde la semana 5 el robot del proyecto es el **DOBOT Magician E6**, del que el profesor tiene una unidad física. Probar la política en ese robot es **trabajo adicional** fuera de las 15 semanas (`EDT.md`, sección 10), pero el MDP se diseña para que sea posible sin reentrenar.
+- La «demostración tangible» se resolverá como demo en vivo del simulador con métricas comparativas en tiempo real; la ejecución en el E6 real se suma si el trabajo adicional llega a hacerse.
 
 ### 2. Campos requeridos en el formato de entrega
 
@@ -44,15 +44,16 @@ Registro breve para no reabrir discusiones ya cerradas.
 ### 4. Decisiones cerradas
 
 - **Algoritmo:** Soft Actor-Critic (SAC), entrenado desde cero, sin demostraciones expertas.
-- **Espacio de acción:** incrementos articulares acotados (Δq), no aceleraciones ni acciones cartesianas (evita singularidades de muñeca).
+- **Espacio de acción:** incrementos articulares acotados (Δq), no aceleraciones ni acciones cartesianas (evita singularidades de muñeca). Con el E6: **Δq ≤ 0.05 rad por paso de 30 ms**, el período de `ServoJ`, y transición cinemática en el simulador (ver `EDT.md`, «Decisiones del MDP fijadas por el E6»).
 - **Observación:** descriptores geométricos analíticos de distancia mínima entre eslabones y obstáculos. **Sin visión artificial.**
 - **Percepción:** ideal, declarada explícitamente como supuesto.
 - **Línea base:** RRT-Connect y RRT* vía OMPL/MoveIt 2.
 - **Obstáculos dinámicos:** elementos móviles genéricos de la celda (prensas, piezas en tránsito, carros). **No se modela al operario humano**; queda excluida la colaboración humano-robot y su marco normativo.
-- **Robot:** manipulador industrial no redundante de 6 GDL. El proyecto trata sobre **un manipulador de 6 GDL**, no sobre un modelo comercial concreto.
-  - Se adopta la **mecánica del UR5e como plataforma de referencia**: CAD, parámetros de Denavit-Hartenberg, envolvente de trabajo y límites articulares, por la madurez de su modelo URDF y su ecosistema abierto.
-  - La **electrónica de control se rediseña** (entregable E2), dimensionada para reproducir esa misma envolvente de pares y velocidades: 150 N·m en hombro y codo, 28 N·m en muñeca, π rad/s.
-  - Por construcción, **la simulación sigue siendo válida para el robot rediseñado**, porque conserva sus mismos límites dinámicos.
+- **Robot:** manipulador no redundante de 6 GDL. El proyecto trata sobre **un manipulador de 6 GDL**; la plataforma concreta es el **DOBOT Magician E6** (decisión del 2026-09-22).
+  - *Motivo:* el profesor dispone de un E6 físico, lo que permite desplegar la política en un robot real. Dobot publica su URDF, sus mallas y su configuración de MoveIt (licencia MIT), y su controlador acepta posiciones articulares en línea (`ServoJ`, 33 Hz), justo la forma de la acción Δq.
+  - *Modelo:* el URDF oficial trae masas irreales (0.94 kg frente a 7.2 kg), límites de velocidad y par de relleno y mallas de colisión huecas. Se corrige con `tools/gen_modelo_e6.py`, que genera el paquete `rl6gdl_e6_description`: **fuente única** para PyBullet, MoveIt y Gazebo, con la cinemática verificada idéntica a la oficial.
+  - *Escala:* el E6 alcanza 0.45 m (el UR5e, 0.85 m). La celda de *machine tending* pasa a ser **de escritorio, a escala ~1:2**. La pregunta de investigación es sobre variabilidad geométrica y no depende de la escala.
+  - *Descartado:* el UR5e, usado en las semanas 1-4 como plataforma de referencia con una electrónica rediseñada hipotética. Una política entrenada para un robot no se transfiere a otro, y mantener ambos no cabe en el plazo.
 - **Stack:** PyBullet + Gymnasium + Stable-Baselines3 para entrenamiento; ROS 2 Jazzy + Gazebo Harmonic + MoveIt 2 + OMPL para validación y línea base. Ver `EDT.md`.
   - *Motivo:* replica exactamente el stack del Paper 1 (Mao et al., 2025), la referencia metodológica directa, lo que refuerza el argumento de «misma formulación más los tres elementos ausentes». Es también el de menor riesgo técnico y el que permite arrancar el entrenamiento en la semana 3, dejando margen para las 5 semillas y los 8 escenarios completos dentro del plazo de 10 semanas. No requiere GPU.
   - *Condición obligatoria:* al entrenar en un motor de física y medir la línea base en otro, la comparación solo es válida si ambos modelos son equivalentes. El **paquete 3.13 (verificación de equivalencia PyBullet ↔ Gazebo)** —mismo URDF, mismos límites articulares, misma geometría de colisión y escala, desde una fuente única— es obligatorio y debe documentarse en el informe, reportando las diferencias residuales entre motores.
@@ -61,16 +62,16 @@ Registro breve para no reabrir discusiones ya cerradas.
 
 ### 4.1 Estructura de entregables del curso
 
-El curso organiza la entrega en cuatro componentes: electrónico, software/control, diseño mecánico e implementación. Al ser un proyecto sin hardware físico, el componente electrónico se reformula. **Ningún entregable es decorativo:** el diseño mecánico produce la geometría que consume la simulación, y el electrónico justifica el supuesto de percepción del MDP.
+El curso organiza la entrega en cuatro componentes: electrónico, software/control, diseño mecánico e implementación. Como el robot (Magician E6) ya existe con su controlador, el componente electrónico se reformula como diseño de su integración. **Ningún entregable es decorativo:** el diseño mecánico produce la geometría que consume la simulación, y el electrónico justifica el supuesto de percepción del MDP.
 
 | ID | Entregable | Contenido |
 |---|---|---|
-| **E1** | Diseño mecánico | Celda base de *machine tending* de un centro CNC y **biblioteca modular de componentes CAD** —máquina, mesa, utillaje, prensa, carro, pieza en tránsito, obstáculos primitivos— cada uno exportable por separado; parámetros de Denavit-Hartenberg del manipulador de 6 GDL; cinemática directa e inversa; envolvente de trabajo y alcanzabilidad; singularidades de muñeca que fundamentan el espacio de acción Δq. **Los 8 escenarios experimentales se componen a partir de esta biblioteca: es la única fuente de geometría del proyecto.** |
-| **E2** | Electrónico | Diseño de la electrónica de control del manipulador: dimensionamiento de actuadores y reductores para reproducir la envolvente de pares y velocidades; etapa de potencia; unidad de cómputo y microcontrolador; sensado por encoders e instrumentación del vector de observación; arquitectura de comunicación; cadena de seguridad; presupuesto de latencia del lazo. |
-| **E3** | Software y control | Entorno Gymnasium sobre PyBullet; formulación del MDP y recompensa multiobjetivo; entrenamiento SAC desde cero; módulo analítico de distancia mínima validado contra FCL; línea base MoveIt 2 + OMPL; generador paramétrico de escenarios. |
+| **E1** | Diseño mecánico | Celda de *machine tending* de escritorio de un centro CNC y **biblioteca modular de componentes CAD** —máquina, mesa, utillaje, prensa, carro, pieza en tránsito, obstáculos primitivos— cada uno exportable por separado; parámetros de Denavit-Hartenberg del Magician E6; cinemática directa e inversa; envolvente de trabajo y alcanzabilidad; singularidades de muñeca que fundamentan el espacio de acción Δq. **Los 8 escenarios experimentales se componen a partir de esta biblioteca: es la única fuente de geometría del proyecto.** |
+| **E2** | Electrónico | Diseño de la electrónica de control e integración del Magician E6: análisis dinámico del par demandado por las trayectorias; arquitectura de control (controlador, TCP/IP, lazo `ServoJ` de 33 Hz); efector final y carga útil; unidad de cómputo que ejecute la inferencia en 30 ms; sensado de la pose de los obstáculos e instrumentación del vector de observación; comunicación; cadena de seguridad; presupuesto de latencia del lazo. |
+| **E3** | Software y control | Modelo corregido del E6 como fuente única; entorno Gymnasium sobre PyBullet; formulación del MDP y recompensa multiobjetivo; entrenamiento SAC desde cero; módulo analítico de distancia mínima validado contra FCL; línea base MoveIt 2 + OMPL; generador paramétrico de escenarios. |
 | **E4** | Implementación | Demo en vivo con obstáculos propuestos durante la sustentación; tablero comparativo de las 5 métricas; análisis estadístico; informe y repositorio reproducible. |
 
-> **Ningún entregable es decorativo, y los cuatro están enganchados entre sí.** La biblioteca de E1 es la geometría que compone los escenarios del experimento. En E2, la unidad de cómputo debe ejecutar la inferencia de la política entrenada en E3 dentro del período de control, y el dimensionamiento de actuadores se obtiene por dinámica inversa sobre las trayectorias que el propio proyecto genera.
+> **Ningún entregable es decorativo, y los cuatro están enganchados entre sí.** La biblioteca de E1 es la geometría que compone los escenarios del experimento. En E2, la unidad de cómputo debe ejecutar la inferencia de la política entrenada en E3 dentro del período de control de 30 ms que fija el controlador del E6, y el análisis dinámico se obtiene por dinámica inversa sobre las trayectorias que el propio proyecto genera.
 >
 > Este encuadre responde además dos objeciones de la sección 22: «asumes percepción perfecta, eso no existe» —E2 identifica la instrumentación que la haría real— y «¿esto es mecatrónica o informática?», ya que el proyecto integra diseño mecánico, diseño electrónico, control e inteligencia artificial.
 
@@ -111,7 +112,7 @@ Desglosado según la plantilla qué / para qué / cómo / dónde:
 | **QUÉ** | Un sistema de planificación de movimiento reactivo basado en una política de control continuo aprendida mediante aprendizaje por refuerzo profundo para un manipulador industrial de 6 GDL. |
 | **PARA QUÉ** | Para eliminar la dependencia de trayectorias preprogramadas y de la replanificación completa cuando cambia la configuración de obstáculos de la celda, reduciendo el costo de reconfiguración que hoy impide automatizar la producción de alta variedad y bajo volumen. |
 | **CÓMO** | Entrenando una política condicionada a descriptores geométricos analíticos de distancia mínima, con aleatorización de dominio sobre posición, escala y forma; evaluando su generalización ante configuraciones no observadas y comparándola contra RRT-Connect y RRT* de OMPL/MoveIt 2 bajo condiciones equivalentes. |
-| **DÓNDE** | En celdas de manufactura flexible de la industria metalmecánica, particularmente en abastecimiento de máquina (*machine tending*) de centros CNC; validado íntegramente en simulación. |
+| **DÓNDE** | En celdas de manufactura flexible de la industria metalmecánica, particularmente en abastecimiento de máquina (*machine tending*) de centros CNC, modeladas a escala de escritorio sobre un DOBOT Magician E6; validado en simulación, con la política lista para desplegarse en el robot real. |
 
 ### 9. Pregunta de investigación
 
@@ -121,7 +122,7 @@ Desglosado según la plantilla qué / para qué / cómo / dónde:
 
 **Incluye:** modelado del manipulador y la celda en simulación; formulación del MDP (observación, acción, recompensa); entrenamiento de la política con SAC desde cero; implementación de la línea base clásica; protocolo experimental sobre escenarios de complejidad creciente y fuera de distribución; análisis estadístico sobre múltiples semillas.
 
-**Excluye:** percepción artificial y procesamiento de imágenes; colaboración humano-robot y normativa asociada (ISO 10218, ISO/TS 15066); despliegue en manipulador físico y transferencia *sim-to-real*; planificación de tareas y control de bajo nivel.
+**Excluye:** percepción artificial y procesamiento de imágenes; colaboración humano-robot y normativa asociada (ISO 10218, ISO/TS 15066); planificación de tareas y control de bajo nivel. El **despliegue en el Magician E6 físico** queda fuera del alcance obligatorio, como trabajo adicional: el MDP usa el período de control y los límites reales del robot para que sea posible, pero la transferencia *sim-to-real* no es objeto de estudio.
 
 **Supuesto de percepción ideal:** la posición, dimensiones y orientación de los obstáculos se leen directamente del simulador. Los resultados constituyen una cota superior de desempeño. El supuesto se aplica por igual a la política y a la línea base clásica, de modo que la comparación permanece válida.
 
@@ -482,8 +483,11 @@ Por eficiencia de muestreo: SAC es fuera de política y reutiliza experiencia, m
 **«Asumes percepción perfecta. Eso no existe.»**
 Está declarado como supuesto. Los resultados constituyen una cota superior. El supuesto se aplica por igual a la política y a la línea base, de modo que la comparación permanece válida. La degradación ante error de percepción se declara como trabajo futuro.
 
-**«¿Por qué solo simulación?»**
-El objeto de estudio es la política de control, no la transferencia a hardware. Un manipulador físico introduciría holguras, deflexión y errores de calibración que enmascararían el efecto a medir.
+**«¿Por qué solo simulación, si tienen el robot?»**
+El objeto de estudio es la política de control, no la transferencia a hardware. Un manipulador físico introduciría holguras, deflexión y errores de calibración que enmascararían el efecto a medir, y con pocos episodios reales no se puede hacer inferencia estadística. Por eso la comparación formal se hace en simulación. Pero la política se diseña para el E6 real (mismo período de control, mismos límites), y ejecutarla en él es el trabajo adicional previsto.
+
+**«¿Por qué un robot de escritorio si el problema es industrial?»**
+La pregunta de investigación es sobre variabilidad geométrica del entorno, y no depende de la escala: la celda se modela a escala ~1:2 y conserva las mismas relaciones entre tarea y obstáculos. El método solo depende del URDF del robot; cambiar de manipulador es regenerar el modelo y reentrenar. A cambio, el E6 da algo que un UR5e simulado no daba: un robot real donde ejecutar la política.
 
 **«¿Esto es mecatrónica o informática?»**
 Integra al menos tres áreas de la especialidad: control, informática e inteligencia artificial. El modelado cinemático, el cálculo analítico de distancias mínimas entre eslabones y obstáculos, y el análisis de límites articulares y de velocidad son componentes mecatrónicos centrales.
@@ -536,7 +540,8 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 
 **Bloqueantes — confirmar con el profesor:**
 - Completar nombre y código del segundo integrante en el encabezado de este documento y en el formato Excel del curso.
-- Confirmar con el profesor la reformulación del entregable electrónico E2 como arquitectura de sensado y comunicaciones.
+- Confirmar con el profesor la reformulación del entregable electrónico E2 como diseño de la integración del Magician E6.
+- Preguntar al profesor cuánto acceso habrá al E6, su firmware (el SDK exige ≥ V4.4.0.0) y si tiene ventosa o pinza, para el trabajo adicional.
 - Confirmar que el diseño de celda CAD satisface el entregable de diseño mecánico.
 - Confirmar que la demo de software satisface el requisito de producto tangible.
 - Confirmar que el recorte de alcance experimental de la sección 11 es aceptable.
@@ -564,6 +569,8 @@ Datos obtenidos de fragmentos de búsqueda, **pendientes de verificación en fue
 - `semana-04/3.1-contrato-escenarios-y-metricas.md` — contrato de escenarios y definición de las 5 métricas.
 - `semana-04/3.9-configuracion-ompl.md` — configuración de OMPL, verificación y pendientes P1-P6.
 - `semana-04/3.1-propuesta-contrato-v1.1.md` — corrección del contrato de escenarios, aplicada como v1.1; 9 de 19 variantes aún infactibles (v1.2 pendiente).
+- `semana-05/evaluacion-magician-e6.md` — evaluación del Magician E6: modelo oficial, PyBullet, MoveIt y robot real.
+- `semana-05/propuesta-migracion-magician-e6.md` — migración aprobada al E6: MDP, entorno, contrato v2.0, EDT y cronograma.
 - `estado-del-arte/` — las 13 referencias verificadas: BibTeX, lista IEEE, índice con discrepancias y PDFs de acceso abierto.
 
 **Verificaciones ya realizadas (no repetir):**

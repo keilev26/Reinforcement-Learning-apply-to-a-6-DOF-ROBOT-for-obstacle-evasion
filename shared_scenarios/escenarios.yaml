@@ -1,69 +1,93 @@
 # Paquete 3.1 — Contrato de escenarios experimentales.
 # FUENTE ÚNICA de geometría: el entorno de RL (PyBullet) y la línea base
-# (MoveIt 2 / OMPL) componen sus escenas leyendo EXCLUSIVAMENTE de este archivo.
+# (MoveIt 2 / OMPL) componen sus escenas leyendo EXCLUSIVAMENTE de este archivo,
+# a través de shared_scenarios/contrato.py (la misma expansión para ambos).
 #
-# Marco de referencia: origen en la base del pedestal, Z hacia arriba,
-# X hacia el centro CNC, Y hacia la mesa de piezas (regla de la mano derecha).
+# Marco de referencia (desde v2.0): origen en el centro de la base del robot, sobre
+# el plano de apoyo de base_link. Z hacia arriba, X hacia el centro CNC, Y opuesto
+# a la bandeja de piezas. Coincide con el marco base_link del URDF.
 # Unidades: metros y radianes.
 #
-# CONVENCIÓN DE POSES (desde v1.1): 'pose' = [x, y, z, roll, pitch, yaw] del
-# CENTRO GEOMÉTRICO del componente (centro de su caja envolvente; para cilindro
-# y esfera, su centro). Sin excepciones: vale para estructuras y obstáculos.
+# CONVENCIÓN DE POSES: 'pose' = [x, y, z, roll, pitch, yaw] del CENTRO GEOMÉTRICO
+# del componente (centro de su caja envolvente; para cilindro y esfera, su centro).
+# Sin excepciones. Las variantes de cada escenario se declaran EXPLÍCITAS, con sus
+# poses ya calculadas: ningún pipeline deriva geometría por su cuenta.
 #
 # HISTORIAL
-#   1.0 (2026-09-15)  Versión inicial.
-#   1.1 (2026-09-19)  p_place movido 15 cm delante del CNC (en v1.0 caía sobre su
-#                     cara frontal y toda solución chocaba); punto medio de la
-#                     trayectoria y obstáculos de los escenarios 2-7 actualizados;
-#                     convención de poses declarada y celda base expresada por su
-#                     centro. Ver docs/semana-04/3.1-propuesta-contrato-v1.1.md
+#   1.0 (2026-09-15)  Versión inicial (UR5e).
+#   1.1 (2026-09-19)  p_place movido 15 cm delante del CNC; convención de poses.
+#                     Ver docs/semana-04/3.1-propuesta-contrato-v1.1.md
+#   2.0 (2026-09-22)  Cambio de robot al DOBOT Magician E6 (alcance 0.45 m): celda
+#                     de escritorio. Tarea elegida por alcanzabilidad verificada;
+#                     obstáculos apoyados en la mesa y centrados sobre el ARCO que
+#                     recorre la tarea, no sobre la cuerda; efector modelado;
+#                     variantes explícitas. Ver docs/semana-05/3.1-contrato-v2.0.md
 
-version: "1.1"
-fecha: "2026-09-19"
+version: "2.0"
+fecha: "2026-09-22"
 
 # ---------------------------------------------------------------------------
-# Manipulador y tarea nominal
+# Manipulador, efector y tarea nominal
 # ---------------------------------------------------------------------------
 robot:
   tipo: "manipulador de 6 GDL, no redundante"
-  plataforma_referencia: "UR5e"
-  alcance_m: 0.850
-  base_pose: [0.0, 0.0, 0.750, 0.0, 0.0, 0.0]   # sobre pedestal de 0.75 m
+  plataforma: "DOBOT Magician E6"
+  modelo: "ros2_ws/src/rl6gdl_e6_description/urdf/magician_e6.urdf"
+  alcance_m: 0.450
+  base_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+# Efector genérico (ventosa o pinza) montado en tool0, a lo largo de su eje +z.
+# Se modela para no subestimar las colisiones de la muñeca (observación 4 de la v1.1).
+efector:
+  forma: cilindro
+  radio_m: 0.025
+  largo_m: 0.070
+  montado_en: tool0
+  # TCP = punta del efector = tool0 desplazado largo_m sobre su eje +z
 
 tarea_nominal:
-  descripcion: "Abastecimiento de máquina: recoger pieza de la mesa y depositarla en el CNC"
-  p_pick:  {pos: [0.00, -0.55, 0.85], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.559}
-  p_place: {pos: [0.50,  0.00, 0.95], rpy: [3.1416, 0.0, 0.0], alcance_verificado_m: 0.539}
-  q_inicial_rad: [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]   # pose de reposo
+  descripcion: "Abastecimiento de máquina: recoger pieza de la bandeja y dejarla en la zona de carga del CNC"
+  # Poses del TCP. rpy [pi, 0, 0]: herramienta hacia abajo.
+  # Elegidas dentro de la zona de alcance fiable con herramienta hacia abajo
+  # (radio 0.25-0.35 m, altura del TCP 0.02-0.23 m), ver 3.1-contrato-v2.0.md.
+  p_pick:  {pos: [0.00, -0.30, 0.05], rpy: [3.1416, 0.0, 0.0]}
+  p_place: {pos: [0.30,  0.00, 0.10], rpy: [3.1416, 0.0, 0.0]}
+  # Semilla de la cinemática inversa: TCP en (0.25, -0.15, 0.20), herramienta hacia abajo.
+  q_inicial_rad: [1.3289, -0.1023, -1.5824, 0.1138, 1.5708, 1.3289]
 
 # ---------------------------------------------------------------------------
-# Biblioteca de componentes (entregable E1, paquete 1.2)
-# Cada componente se modela una vez y se instancia con pose y escala.
+# Biblioteca de componentes (entregable E1, paquete 1.2), escala de escritorio
+# (~0.53 de la v1.1, la relación de alcances 0.45 / 0.85)
 # ---------------------------------------------------------------------------
 biblioteca:
-  pedestal:        {tipo: estructura, dim: [0.30, 0.30, 0.75]}
-  centro_cnc:      {tipo: estructura, dim: [0.80, 1.20, 1.80]}
-  mesa_piezas:     {tipo: estructura, dim: [0.60, 0.80, 0.75]}
-  utillaje:        {tipo: estructura, dim: [0.25, 0.25, 0.30]}
-  prensa:          {tipo: movil,      dim: [0.25, 0.25, 0.50]}
-  carro:           {tipo: movil,      dim: [0.45, 0.35, 0.60]}
-  pieza_transito:  {tipo: movil,      dim: [0.15, 0.15, 0.15]}
-  # Primitivos de VOLUMEN IDÉNTICO (0.016 m3): aíslan la morfología del tamaño.
-  prisma:          {tipo: primitivo, dim: [0.20, 0.20, 0.40],  volumen_m3: 0.016}
-  cilindro:        {tipo: primitivo, radio: 0.1128, altura: 0.40, volumen_m3: 0.016}
-  esfera:          {tipo: primitivo, radio: 0.1563, volumen_m3: 0.016}
+  mesa_trabajo:    {tipo: estructura, dim: [1.20, 1.00, 0.04]}
+  centro_cnc:      {tipo: estructura, dim: [0.30, 0.50, 0.40]}
+  bandeja_piezas:  {tipo: estructura, dim: [0.20, 0.25, 0.02]}
+  utillaje:        {tipo: estructura, dim: [0.13, 0.13, 0.16]}
+  prensa:          {tipo: movil,      dim: [0.13, 0.13, 0.265]}
+  carro:           {tipo: movil,      dim: [0.24, 0.19, 0.32]}
+  pieza_transito:  {tipo: movil,      dim: [0.08, 0.08, 0.08]}
+  # Primitivos de VOLUMEN IDÉNTICO (0.001024 m3): aíslan la morfología del tamaño.
+  prisma:          {tipo: primitivo, dim: [0.08, 0.08, 0.16], volumen_m3: 0.001024}
+  cilindro:        {tipo: primitivo, radio: 0.0451, altura: 0.16, volumen_m3: 0.001024}
+  esfera:          {tipo: primitivo, radio: 0.0625, volumen_m3: 0.001024}
 
 # Celda base: presente en TODOS los escenarios.
+# La cara superior de la mesa está en z = -0.005, no en 0: la geometría de colisión de
+# la base del robot es conservadora y baja 1.8 mm de su plano de apoyo. Todo lo que se
+# apoya en la mesa tiene su cara inferior en z = -0.005.
 celda_base:
-# (poses por su centro: el pedestal ocupa z 0-0.75, el CNC x 0.65-1.45,
-#  la mesa z 0-0.75)
-  - {componente: pedestal,    pose: [0.00,  0.00, 0.375, 0, 0, 0]}
-  - {componente: centro_cnc,  pose: [1.05,  0.00, 0.900, 0, 0, 0]}
-  - {componente: mesa_piezas, pose: [0.00, -0.75, 0.375, 0, 0, 0]}
+  - {componente: mesa_trabajo,   pose: [0.15, -0.10, -0.025, 0, 0, 0]}
+  - {componente: centro_cnc,     pose: [0.53,  0.00,  0.195, 0, 0, 0]}   # cara frontal en x = 0.38
+  - {componente: bandeja_piezas, pose: [0.00, -0.30,  0.005, 0, 0, 0]}   # cara superior en z = 0.015
 
 # ---------------------------------------------------------------------------
-# Los 8 escenarios. Cada uno = celda_base + obstaculos.
-# El centro (0.250, -0.275, 0.900) es el punto medio de la trayectoria nominal.
+# Los 8 escenarios. Cada variante = celda_base + sus obstáculos.
+#
+# Centro de obstrucción: (0.212, -0.212), el punto medio del ARCO de radio 0.30 m que
+# recorre la tarea al girar J1 de -90° a 0°. En la v1.1 los obstáculos se centraban en
+# la cuerda pick-place, que el brazo no recorre. Los obstáculos se APOYAN en la mesa:
+# son fabricables con las mismas medidas.
 # ---------------------------------------------------------------------------
 escenarios:
 
@@ -78,55 +102,76 @@ escenarios:
     proposito: "Maniobra base de circunvalación"
     nucleo: true
     obstaculos:
-      - {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0], escala: [1.0, 1.0, 1.0]}
+      - {componente: prisma, pose: [0.212, -0.212, 0.075, 0, 0, 0]}
 
   3:
     nombre: "Tres obstáculos concurrentes"
     proposito: "Celda densamente poblada"
     nucleo: false          # extensión
     obstaculos:
-      - {componente: prensa,         pose: [0.250, -0.275, 0.900, 0, 0, 0]}
-      - {componente: carro,          pose: [0.500, -0.500, 0.300, 0, 0, 0.5236]}
-      - {componente: pieza_transito, pose: [0.200, -0.100, 1.000, 0, 0, 0]}
+      - {componente: prensa,         pose: [0.212, -0.212, 0.1275, 0, 0, 0]}
+      - {componente: carro,          pose: [0.330, -0.330, 0.155, 0, 0, 0.5236]}
+      - {componente: pieza_transito, pose: [0.280, -0.120, 0.300, 0, 0, 0]}
 
   4:
     nombre: "Obstáculo desplazado"
     proposito: "Robustez ante traslación del centroide"
     nucleo: true
     eje_de_variabilidad: "posicion"
-    base: {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0]}
-    desplazamientos_m:      # se evalúa uno por episodio, muestreado uniformemente
-      - [ 0.15,  0.00, 0.00]
-      - [-0.15,  0.00, 0.00]
-      - [ 0.00,  0.15, 0.00]
-      - [ 0.00, -0.15, 0.00]
-      - [ 0.10,  0.10, 0.10]
+    # prisma del escenario 2 desplazado en el plano de la mesa (sigue apoyado)
+    variantes:
+      - {etiqueta: "dx=+0.08", obstaculos: [{componente: prisma, pose: [0.292, -0.212, 0.075, 0, 0, 0]}]}
+      - {etiqueta: "dx=-0.08", obstaculos: [{componente: prisma, pose: [0.132, -0.212, 0.075, 0, 0, 0]}]}
+      - {etiqueta: "dy=+0.08", obstaculos: [{componente: prisma, pose: [0.212, -0.132, 0.075, 0, 0, 0]}]}
+      - {etiqueta: "dy=-0.08", obstaculos: [{componente: prisma, pose: [0.212, -0.292, 0.075, 0, 0, 0]}]}
+      - {etiqueta: "d=+0.06,+0.06", obstaculos: [{componente: prisma, pose: [0.272, -0.152, 0.075, 0, 0, 0]}]}
 
   5:
     nombre: "Obstáculo redimensionado"
     proposito: "Adaptación a cambio de dimensiones"
     nucleo: true
     eje_de_variabilidad: "escala"
-    base: {componente: prisma, pose: [0.250, -0.275, 0.900, 0, 0, 0]}
-    factores_de_escala: [0.6, 1.0, 1.5, 2.0]   # isotrópicos
+    # prisma del escenario 2 con escala isotrópica k, apoyado: z = 0.08 k - 0.005
+    variantes:
+      - {etiqueta: "k=0.6", obstaculos: [{componente: prisma, escala: 0.6, pose: [0.212, -0.212, 0.043, 0, 0, 0]}]}
+      - {etiqueta: "k=1.0", obstaculos: [{componente: prisma, escala: 1.0, pose: [0.212, -0.212, 0.075, 0, 0, 0]}]}
+      - {etiqueta: "k=1.5", obstaculos: [{componente: prisma, escala: 1.5, pose: [0.212, -0.212, 0.115, 0, 0, 0]}]}
+      - {etiqueta: "k=2.0", obstaculos: [{componente: prisma, escala: 2.0, pose: [0.212, -0.212, 0.155, 0, 0, 0]}]}
 
   6:
     nombre: "Forma mutada"
     proposito: "Invarianza de la representación geométrica ante morfología"
     nucleo: true
     eje_de_variabilidad: "morfologia"
-    pose_comun: [0.250, -0.275, 0.900, 0, 0, 0]
-    formas: [prisma, cilindro, esfera]
-    control: "los tres primitivos tienen volumen idéntico (0.016 m3): solo varía la forma"
+    control: "los tres primitivos tienen volumen idéntico (0.001024 m3) y se apoyan en la mesa en el mismo (x, y)"
+    variantes:
+      - {etiqueta: "prisma",   obstaculos: [{componente: prisma,   pose: [0.212, -0.212, 0.0750, 0, 0, 0]}]}
+      - {etiqueta: "cilindro", obstaculos: [{componente: cilindro, pose: [0.212, -0.212, 0.0750, 0, 0, 0]}]}
+      - {etiqueta: "esfera",   obstaculos: [{componente: esfera,   pose: [0.212, -0.212, 0.0575, 0, 0, 0]}]}
 
   7:
-    nombre: "Paso estrecho entre dos prismas"
+    nombre: "Paso estrecho entre dos postes"
     proposito: "Prueba de estrés; se espera ventaja del método clásico"
     nucleo: false          # extensión
-    holguras_m: [0.25, 0.30, 0.35]   # ancho de muñeca ~0.09 m
-    obstaculos_por_holgura: >
-      dos prismas centrados en (0.250, -0.275, 0.900), separados en Y por la
-      holgura indicada, es decir en y = -0.275 +/- (holgura/2 + 0.10)
+    prueba: paso_estrecho  # el camino directo CRUZA el paso: se verifica su holgura, no la obstrucción
+    # Dos postes (prisma con escala [1, 1, 0.75]: 0.08 x 0.08 x 0.12 m) a ambos lados del arco
+    # de la tarea, separados en la dirección RADIAL del centro de obstrucción y girados -45°:
+    # la muñeca y el efector (0.05 m de diámetro) pasan entre ellos. Los postes miden 0.12 m y
+    # no 0.16 m para que el antebrazo, que cruza sobre el poste interior, no roce: con 0.16 m
+    # la holgura era de 0.5 mm.
+    variantes:
+      - etiqueta: "holgura=0.08"
+        obstaculos:
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.156, -0.156, 0.055, 0, 0, -0.7854]}
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.269, -0.269, 0.055, 0, 0, -0.7854]}
+      - etiqueta: "holgura=0.10"
+        obstaculos:
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.148, -0.148, 0.055, 0, 0, -0.7854]}
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.276, -0.276, 0.055, 0, 0, -0.7854]}
+      - etiqueta: "holgura=0.13"
+        obstaculos:
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.138, -0.138, 0.055, 0, 0, -0.7854]}
+          - {componente: prisma, escala: [1, 1, 0.75], pose: [0.286, -0.286, 0.055, 0, 0, -0.7854]}
 
   8:
     nombre: "Configuración de utillaje no vista en entrenamiento"
@@ -136,17 +181,22 @@ escenarios:
     restriccion: >
       NINGUNA de estas poses ni combinaciones puede aparecer durante el
       entrenamiento. Es la condición que hace válida la medición de generalización.
+      Cada objeto queda fuera del rango de posiciones del entrenamiento
+      (x 0.132-0.292, y -0.292 a -0.132, apoyado) o no es muestreable en él
+      (utillaje girado, pieza en tránsito suspendida).
     obstaculos:
-      - {componente: utillaje,       pose: [0.450, -0.150, 0.850, 0, 0, 0.7854]}
-      - {componente: prensa,         pose: [0.250, -0.450, 0.900, 0, 0, 0]}
-      - {componente: pieza_transito, pose: [0.550, -0.300, 1.050, 0, 0, 0]}
+      - {componente: utillaje,       pose: [0.240, -0.120, 0.075, 0, 0, 0.7854]}
+      - {componente: prensa,         pose: [0.140, -0.300, 0.1275, 0, 0, 0]}
+      - {componente: pieza_transito, pose: [0.300, -0.200, 0.250, 0, 0, 0]}
 
 # ---------------------------------------------------------------------------
 # Aleatorización de dominio durante el entrenamiento (paquete 3.6)
 # ---------------------------------------------------------------------------
 aleatorizacion_entrenamiento:
   escenarios_de_entrenamiento: [1, 2, 4, 5, 6]
-  posicion_m:   {distribucion: uniforme, rango: [-0.15, 0.15], ejes: [x, y, z]}
+  centro_m: [0.212, -0.212]
+  posicion_m:   {distribucion: uniforme, rango: [-0.08, 0.08], ejes: [x, y]}
   escala:       {distribucion: uniforme, rango: [0.6, 2.0]}
   forma:        {distribucion: categorica, valores: [prisma, cilindro, esfera]}
+  apoyo: "todo obstáculo muestreado se apoya en la mesa: z = semialtura - 0.005"
   excluido: "el escenario 8 nunca se muestrea durante el entrenamiento"
