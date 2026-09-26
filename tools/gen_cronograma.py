@@ -13,7 +13,7 @@ from openpyxl.utils import get_column_letter
 SALIDA = "Cronograma RL Manipulador 6GDL.xlsx"
 N_SEM  = 15
 COL_S1 = 8                      # columna H = semana 1
-COL_LINEA = COL_S1 + 4          # columna L = semana 5: la linea roja va a su izquierda
+COL_LINEA = COL_S1 + 5          # columna M = semana 6: la linea roja va a su izquierda
 
 CALEB = "Caleb Camargo"
 LEO   = "Leonardo Vásquez"
@@ -48,8 +48,8 @@ TAREAS = [
     ("3.5", "Entrenamiento SAC desde cero — escenarios 1 y 2", "Política entrenada v1", CALEB, 9, 9, "P", 0),
     ("3.6", "Aleatorización de dominio (posición, escala, forma) e integración de escenarios 4-5-6", "Dominio aleatorizado", CALEB, 10, 10, "P", 0),
     ("3.7", "Entrenamiento completo: 5 semillas × escenarios núcleo", "Políticas + logs", CALEB, 10, 11, "P", 0),
-    ("3.8", "Workspace ROS 2: ros2_control, MoveIt 2, Gazebo (UR5e en sem. 1-3; E6 y Gazebo Harmonic en sem. 5-6)", "Workspace ROS 2", LEO, 1, 3, "R", 0),
-    ("3.9", "Configuración de OMPL: RRT-Connect y RRT* (UR5e en sem. 4; se vuelve a medir con el E6 en sem. 6)", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
+    ("3.8", "Workspace ROS 2: ros2_control, MoveIt 2, Gazebo (UR5e en sem. 1-3; E6 y Gazebo Harmonic en sem. 5)", "Workspace ROS 2", LEO, 1, 3, "R", 0),
+    ("3.9", "Configuración de OMPL: RRT-Connect y RRT* (UR5e en sem. 4; se vuelve a medir con el E6 en sem. 5)", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
     ("3.10", "moveit_ros_benchmarks para tiempo, longitud y tasa de éxito", "Banco de pruebas OMPL", LEO, 6, 7, "P", 0),
     ("3.11", "Módulo de distancia mínima eslabón-obstáculo, validado contra FCL", "Módulo de distancias", LEO, 7, 8, "P", 0),
     ("3.12", "Generador de escenarios: compone los 8 escenarios desde la biblioteca CAD de E1", "Generador de escenarios", LEO, 8, 8, "P", 0),
@@ -76,12 +76,12 @@ TAREAS = [
 ]
 
 # Paquetes hechos con el UR5e en las semanas 1-4 que se rehacen con el Magician E6.
-# Conservan su barra R y suman esta barra P. Para la ruta critica cuenta lo pendiente (la barra P).
+# Conservan su barra R de las semanas 1-4 y suman esta segunda barra: (inicio, fin, estado).
 REHACER_E6 = {
-    "1.5": (5, 5),
-    "3.1": (5, 5),   # se redacta en la sem. 5; su verificación con MoveIt va en 3.9 (sem. 6)
-    "3.8": (5, 6),
-    "3.9": (6, 6),
+    "1.5": (5, 5, "P"),   # tabla DH del E6: pendiente
+    "3.1": (5, 5, "R"),   # contrato v2.0, verificado en PyBullet y MoveIt
+    "3.8": (5, 5, "R"),   # MoveIt con el E6 y Gazebo Harmonic con ejecución
+    "3.9": (5, 5, "R"),   # OMPL medido con el E6
 }
 
 # Precedencias para el calculo de ruta critica (CPM).
@@ -110,9 +110,9 @@ ACT = [t for t in TAREAS if t[0] != "FASE"]
 # DUR: semanas totales de la fila (lo que muestra el Excel). DUR_CPM: lo que cuenta la ruta crítica.
 DUR = {t[0]: t[5] - t[4] + 1 for t in ACT}
 DUR_CPM = dict(DUR)
-for k, (ini, fin) in REHACER_E6.items():
-    DUR[k] += fin - ini + 1          # la barra R del UR5e más la barra P del E6
-    DUR_CPM[k] = fin - ini + 1       # la ruta crítica solo depende de lo que falta
+for k, (ini, fin, _) in REHACER_E6.items():
+    DUR[k] += fin - ini + 1          # la barra del UR5e más la del E6
+    DUR_CPM[k] = fin - ini + 1       # para la ruta crítica cuenta el trabajo con el E6
 # 3.16 se hizo en un día (2026-09-22), antes que el resto de la semana 5: no ocupa una semana
 # de la ruta crítica. Sin esta excepción el método, que solo cuenta semanas enteras, lo suma como 1.
 DUR_CPM["3.16"] = 0
@@ -237,7 +237,7 @@ for cod, act, ent, resp, s_ini, s_fin, estado, costo in TAREAS:
 
     barras = [(s_ini, s_fin, estado)]
     if cod in REHACER_E6:
-        barras.append((*REHACER_E6[cod], "P"))
+        barras.append(REHACER_E6[cod])
     for i in range(N_SEM):
         c = ws.cell(row=fila, column=COL_S1 + i)
         c.border = Border(left=BORDE, right=BORDE, top=BORDE, bottom=BORDE)
@@ -264,7 +264,7 @@ for col in range(1, 8):
 fila_total = fila
 fila += 2
 
-# linea roja vertical entre semana 4 y 5
+# linea roja vertical entre semana 5 y 6
 for r in range(FILA_H, fila_total + 1):
     c = ws.cell(row=r, column=COL_LINEA); b = c.border
     c.border = Border(left=ROJO, right=b.right, top=b.top, bottom=b.bottom)
@@ -284,13 +284,13 @@ for marca, texto, color, fuente in (("R", "Realizado", VERDE, "FFFFFF"),
     fila += 1
 ws.cell(row=fila, column=2, value="Código y actividad en rojo y negrita: paquete en la RUTA CRÍTICA (holgura cero)").font = Font(bold=True, color="C00000")
 fila += 2
-ws.cell(row=fila, column=1, value="La línea vertical roja marca el corte al cierre de la semana 4, fecha de la presentación de avance.")
+ws.cell(row=fila, column=1, value="La línea vertical roja marca el corte al cierre de la semana 5.")
 ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=7)
 ws.cell(row=fila, column=1).font = Font(italic=True, size=9)
 fila += 1
-ws.cell(row=fila, column=1, value=("Desde la semana 5 el robot es el DOBOT Magician E6. Las filas con R en las semanas 1-4 y P "
-                                   "después se hicieron con el UR5e y se rehacen con el E6. La prueba en el E6 real es trabajo "
-                                   "adicional fuera de este cronograma (EDT, sección 10)."))
+ws.cell(row=fila, column=1, value=("Desde la semana 5 el robot es el DOBOT Magician E6. Las filas con una barra en las semanas 1-4 "
+                                   "y otra en la semana 5 se hicieron con el UR5e y se rehicieron con el E6. La prueba en el E6 "
+                                   "real es trabajo adicional fuera de este cronograma (EDT, sección 10)."))
 ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=7)
 ws.cell(row=fila, column=1).font = Font(italic=True, size=9)
 ws.cell(row=fila, column=1).alignment = Alignment(wrap_text=True, vertical="top")

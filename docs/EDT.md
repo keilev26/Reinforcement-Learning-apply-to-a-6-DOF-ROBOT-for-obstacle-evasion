@@ -210,9 +210,11 @@ El cronograma detallado, fase por fase y paquete por paquete, está en
 Más la fase de documentación: planteamiento del problema, estado del arte, y esta EDT con su
 cronograma.
 
-> 3.8, 3.9 y 1.5 se hicieron con el UR5e. **Conservan su marca de realizado** (el trabajo existió y
-> sus hallazgos se trasladan) y suman una barra programada en las semanas 5-6 para rehacerlos con el
-> E6. Lo mismo el contrato 3.1, que pasa a la v2.0.
+> 3.8, 3.9, 3.1 y 1.5 se hicieron con el UR5e. **Conservan su marca de realizado** de las semanas
+> 1-4 y suman una segunda barra en la semana 5 para rehacerlos con el E6. Al cierre de la semana 5
+> (línea roja del Gantt) están **realizados con el E6** 3.1 (contrato v2.0), 3.8 (MoveIt y Gazebo
+> Harmonic con ejecución), 3.9 (OMPL medido) y 3.16 (modelo). **La tabla DH del E6 (1.5) sigue
+> pendiente.**
 
 ### Desarrollo, semanas 5 a 14
 
