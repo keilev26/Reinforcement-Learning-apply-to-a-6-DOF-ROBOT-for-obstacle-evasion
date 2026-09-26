@@ -212,9 +212,9 @@ cronograma.
 
 > 3.8, 3.9, 3.1 y 1.5 se hicieron con el UR5e. **Conservan su marca de realizado** de las semanas
 > 1-4 y suman una segunda barra en la semana 5 para rehacerlos con el E6. Al cierre de la semana 5
-> (línea roja del Gantt) están **realizados con el E6** 3.1 (contrato v2.0), 3.8 (MoveIt y Gazebo
-> Harmonic con ejecución), 3.9 (OMPL medido) y 3.16 (modelo). **La tabla DH del E6 (1.5) sigue
-> pendiente.**
+> (línea roja del Gantt) están **realizados con el E6** 1.5 (tabla DH), 3.1 (contrato v2.0), 3.8
+> (MoveIt y Gazebo Harmonic con ejecución), 3.9 (OMPL medido) y 3.16 (modelo), además de la celda
+> de escritorio y la biblioteca CAD (1.1 y 1.2).
 
 ### Desarrollo, semanas 5 a 14
 

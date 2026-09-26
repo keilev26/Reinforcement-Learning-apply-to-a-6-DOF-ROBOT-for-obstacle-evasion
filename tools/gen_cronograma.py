@@ -22,11 +22,11 @@ AMBOS = "Ambos"
 # (codigo, actividad, entregable, responsable, sem_ini, sem_fin, estado, costo_soles)
 TAREAS = [
     ("FASE", "FASE 1 — DISEÑO MECÁNICO (E1)", "", "", 0, 0, "", 0),
-    ("1.1", "Celda de machine tending de escritorio para el Magician E6: layout, robot sobre la mesa, envolvente de seguridad", "Layout de celda", LEO, 5, 5, "P", 0),
-    ("1.2", "Biblioteca de componentes CAD a escala de escritorio: centro CNC, mesa, utillaje, prensa, carro, pieza, primitivos", "Biblioteca CAD", LEO, 5, 6, "P", 0),
+    ("1.1", "Celda de machine tending de escritorio para el Magician E6: layout, robot sobre la mesa, envolvente de seguridad", "Layout de celda", LEO, 5, 5, "R", 0),
+    ("1.2", "Biblioteca de componentes CAD a escala de escritorio: centro CNC, mesa, utillaje, prensa, carro, pieza, primitivos", "Biblioteca CAD", LEO, 5, 5, "R", 0),
     ("1.3", "Geometría de colisión simplificada por componente de celda (la del robot: 3.16)", "Mallas de colisión", LEO, 6, 6, "P", 0),
     ("1.4", "Exportación a URDF/SDF con convención de anclaje para componer escenarios", "Componentes URDF/SDF", LEO, 6, 7, "P", 0),
-    ("1.5", "Parámetros de Denavit-Hartenberg; cinemática directa e inversa (UR5e en sem. 4; se rehace para el E6 en sem. 5)", "Tabla DH + ecuaciones", LEO, 4, 4, "R", 0),
+    ("1.5", "Parámetros de Denavit-Hartenberg; cinemática directa e inversa (UR5e en sem. 4; E6 en sem. 5)", "Tabla DH + ecuaciones", LEO, 4, 4, "R", 0),
     ("1.6", "Envolvente de trabajo del E6 y alcanzabilidad de las poses de recogida y depósito", "Mapa de alcanzabilidad", LEO, 6, 7, "P", 0),
     ("1.7", "Análisis de singularidades de muñeca del E6; justificación del espacio de acción Δq", "Análisis de singularidades", LEO, 7, 7, "P", 0),
 
@@ -78,7 +78,7 @@ TAREAS = [
 # Paquetes hechos con el UR5e en las semanas 1-4 que se rehacen con el Magician E6.
 # Conservan su barra R de las semanas 1-4 y suman esta segunda barra: (inicio, fin, estado).
 REHACER_E6 = {
-    "1.5": (5, 5, "P"),   # tabla DH del E6: pendiente
+    "1.5": (5, 5, "R"),   # tabla DH del E6
     "3.1": (5, 5, "R"),   # contrato v2.0, verificado en PyBullet y MoveIt
     "3.8": (5, 5, "R"),   # MoveIt con el E6 y Gazebo Harmonic con ejecución
     "3.9": (5, 5, "R"),   # OMPL medido con el E6
