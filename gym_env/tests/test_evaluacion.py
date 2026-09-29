@@ -58,3 +58,17 @@ def test_plan_fallido_no_es_exito(ev):
     fila = ev.evaluar({"variante": "2", "planner": "prueba", "consulta": 0, "codigo": 99999,
                        "t_computo_ms": 5000.0, "trayectoria": []})
     assert fila["exito"] is False and fila["colisiones"] is None
+
+
+def test_evaluador_de_politica_devuelve_las_5_metricas():
+    """Cadena política -> métricas con un SAC sin entrenar (no se evalúa su desempeño)."""
+    from stable_baselines3 import SAC
+
+    from evaluation.evaluar_linea_base import CAMPOS
+    from evaluation.evaluar_politica import evaluar
+
+    env = EntornoE6()
+    fila = evaluar(SAC("MlpPolicy", env, seed=0, device="cpu"), env, "2", 0)
+    env.close()
+    assert set(fila) == set(CAMPOS)
+    assert fila["t_computo_ms"] > 0 and fila["t_ejecucion_s"] > 0

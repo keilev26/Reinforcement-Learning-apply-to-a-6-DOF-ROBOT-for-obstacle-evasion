@@ -1,0 +1,37 @@
+alcanzabilidad:
+  celdas: 221
+  alcanzables: 105
+  radio_m:
+  - 0.1
+  - 0.4999999999999999
+  altura_tcp_m:
+  - 0.02
+  - 0.38000000000000006
+  azimut_deg: -45.0
+  tarea:
+    p_pick:
+      radio_m: 0.3
+      altura_m: 0.05
+      manipulabilidad: 0.007836137339540928
+      sigma_min: 0.10526550514806386
+    p_place:
+      radio_m: 0.3
+      altura_m: 0.1
+      manipulabilidad: 0.008113390773435303
+      sigma_min: 0.10538208352709198
+singularidades:
+  ceros_J5_deg:
+  - -180
+  - 0
+  - 180
+  ceros_J3_deg:
+  - -180
+  - 0
+  - 30
+  - 167
+  - 180
+  camino_directo:
+    manipulabilidad_min_rel: 0.8025934402521158
+    sigma_min_min: 0.10526550514806386
+    avance_del_minimo_pct: 0
+  dq_max_de_la_accion_rad: 0.05

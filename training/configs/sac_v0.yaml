@@ -1,0 +1,36 @@
+# Configuración de entrenamiento SAC v0 (paquete 3.5). Valores de partida de Stable-Baselines3
+# para control continuo; se ajustan en 3.5-3.7. Cambiar un valor = nueva versión del archivo.
+version: "0"
+
+entorno:
+  escenario: null          # null = escenas aleatorias de entrenamiento (contrato, aleatorizacion_entrenamiento)
+  recompensa: {}           # vacío = RECOMPENSA_V0 de gym_env/entorno.py
+  n_entornos: 4            # procesos en paralelo (SubprocVecEnv)
+
+sac:
+  learning_rate: 3.0e-4
+  buffer_size: 1000000
+  learning_starts: 5000
+  batch_size: 256
+  tau: 0.005
+  gamma: 0.99
+  train_freq: 1
+  # -1 = tantas actualizaciones como transiciones recogidas (n_entornos por llamada): una
+  # actualización por transición, la relación estándar de SAC. Con 1 serían 4 transiciones por
+  # actualización al usar 4 entornos.
+  gradient_steps: -1
+  ent_coef: auto
+  net_arch: [256, 256]
+
+entrenamiento:
+  pasos_totales: 1000000
+  semilla: 0
+
+evaluacion:
+  cada_pasos: 20000        # pasos totales entre evaluaciones
+  episodios_por_variante: 5
+  variantes:               # etiquetas del contrato; el escenario 8 NUNCA se usa durante el entrenamiento
+    - "1"
+    - "2"
+    - "5 k=2.0"
+    - "6 esfera"
