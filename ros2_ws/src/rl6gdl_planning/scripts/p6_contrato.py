@@ -45,6 +45,25 @@ import contrato  # noqa: E402
 
 PASOS_RECTA = 100
 
+# Margen de planificación de la línea base: MoveIt planifica con cada objeto de la escena inflado
+# 2 mm por lado. El evaluador (PyBullet, el mismo para la política) ve los eslabones del robot
+# hasta ~1 mm más cerca que FCL (geometry/validar_fcl.py); sin margen, RRT-Connect entrega
+# trayectorias que rozan a 0 mm según FCL y cuentan como colisión en la evaluación. Con 2 mm de
+# margen FCL garantiza >= 2 mm, es decir >= ~1 mm en PyBullet. La evaluación usa la geometría
+# NOMINAL del contrato. Ver docs/semana-06/3.10-banco-de-pruebas.md.
+MARGEN_PLANIFICACION_M = 0.002
+
+
+def inflar(o: dict, margen: float) -> dict:
+    """Copia del objeto con `margen` añadido por lado (caja, cilindro o esfera)."""
+    if o["forma"] == "caja":
+        dims = [d + 2 * margen for d in o["dims"]]
+    elif o["forma"] == "cilindro":
+        dims = [o["dims"][0] + 2 * margen, o["dims"][1] + margen]
+    else:
+        dims = [o["dims"][0] + margen]
+    return {**o, "dims": dims}
+
 
 def escalado_velocidad() -> float:
     """Escalado de paridad de M4, de config/e6/joint_limits.yaml (MoveIt no lo aplica solo)."""
@@ -115,7 +134,8 @@ class P6(Diag):
             c = CollisionObject(); c.id = o.id; c.header.frame_id = "base_link"
             c.operation = CollisionObject.REMOVE; quitar.append(c)
         s = PlanningScene(); s.is_diff = True
-        s.world.collision_objects.extend(quitar + [a_collision(o) for o in self.celda + obstaculos])
+        s.world.collision_objects.extend(
+            quitar + [a_collision(inflar(o, MARGEN_PLANIFICACION_M)) for o in self.celda + obstaculos])
         rq = ApplyPlanningScene.Request(); rq.scene = s
         self._call("apply_planning_scene", rq); time.sleep(0.8)
 
@@ -143,23 +163,27 @@ class P6(Diag):
             malos += 0 if self._call("check_state_validity", r).valid else 1
         return malos
 
-    def planificar_n(self, qa, qb, n, planner="RRTConnect", tiempo=5.0):
-        """n consultas qa -> qb. Devuelve (éxitos, chocan, t_medio_ms, fallos, longitudes_rad)."""
+    def planificar_una(self, qa, qb, planner="RRTConnect", tiempo=5.0, tolerancia=0.01):
+        """Una consulta qa -> qb con meta articular. Devuelve la MotionPlanResponse."""
         cs = Constraints()
         for nm, v in zip(J, qb):
             jc = JointConstraint(); jc.joint_name = nm; jc.position = v
-            jc.tolerance_above = jc.tolerance_below = 0.01; jc.weight = 1.0
+            jc.tolerance_above = jc.tolerance_below = tolerancia; jc.weight = 1.0
             cs.joint_constraints.append(jc)
+        req = MotionPlanRequest(); req.group_name = GRUPO; req.planner_id = planner
+        req.allowed_planning_time = tiempo; req.num_planning_attempts = 1
+        req.max_velocity_scaling_factor = self.escalado; req.max_acceleration_scaling_factor = 1.0
+        req.start_state = estado(qa)
+        req.goal_constraints.append(cs)
+        p = GetMotionPlan.Request(); p.motion_plan_request = req
+        return self._call("plan_kinematic_path", p, t=tiempo + 20).motion_plan_response
+
+    def planificar_n(self, qa, qb, n, planner="RRTConnect", tiempo=5.0):
+        """n consultas qa -> qb. Devuelve (éxitos, chocan, t_medio_ms, fallos, longitudes_rad)."""
         ok = choca = 0
         tiempos, fallos, longitudes = [], Counter(), []
         for _ in range(n):
-            req = MotionPlanRequest(); req.group_name = GRUPO; req.planner_id = planner
-            req.allowed_planning_time = tiempo; req.num_planning_attempts = 1
-            req.max_velocity_scaling_factor = self.escalado; req.max_acceleration_scaling_factor = 1.0
-            req.start_state = estado(qa)
-            req.goal_constraints.append(cs)
-            p = GetMotionPlan.Request(); p.motion_plan_request = req
-            res = self._call("plan_kinematic_path", p, t=tiempo + 20).motion_plan_response
+            res = self.planificar_una(qa, qb, planner, tiempo)
             if res.error_code.val == 1:
                 ok += 1; tiempos.append(res.planning_time * 1000)
                 pts = res.trajectory.joint_trajectory.points

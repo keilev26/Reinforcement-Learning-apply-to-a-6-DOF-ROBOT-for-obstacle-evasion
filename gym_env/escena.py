@@ -57,12 +57,16 @@ class Escena:
         pos_ef, _ = p.multiplyTransforms(pos, ori, self._ef_offset, [0, 0, 0, 1])
         p.resetBasePositionAndOrientation(self.efector, pos_ef, ori, physicsClientId=self.m.cliente)
 
-    def en_colision(self, q, margen: float = 0.0) -> list[str]:
-        """Contactos en la configuración q: autocolisión, robot y efector contra la escena."""
-        self.fijar_q(q)
+    def en_colision(self, q=None, margen: float = 0.0) -> list[str]:
+        """Contactos en la configuración q (o en la actual si q es None): autocolisión, robot y
+        efector contra la escena."""
+        if q is not None:
+            self.fijar_q(q)
         c = self.m.cliente
         choques = [f"{a}-{b}" for a, b in autocolisiones(self.m, margen)]
-        entorno = [("celda", b) for b in self.celda] + [("obstaculo", b) for b in self.obstaculos]
+        # Cada contacto nombra el objeto concreto (celda:i u obstaculo:i): M2 cuenta por par
+        entorno = [(f"celda:{i}", b) for i, b in enumerate(self.celda)] + \
+                  [(f"obstaculo:{i}", b) for i, b in enumerate(self.obstaculos)]
         for nombre in ESLABONES_MOVILES:
             idx = self.m.eslabones[nombre]
             for tipo, b in entorno:
