@@ -49,7 +49,7 @@ class Evaluacion(BaseCallback):
         self.csv = open(carpeta / "evaluaciones.csv", "w", newline="")
         self.w = csv.writer(self.csv)
         self.w.writerow(["pasos", "variante", "exito", "colisiones_media", "error_pos_mm_mediana",
-                         "pasos_media", "L_cart_media_m"])
+                         "error_ori_rad_mediana", "pasos_media", "L_cart_media_m"])
 
     def _on_step(self) -> bool:
         if self.num_timesteps < self.proxima:
@@ -62,6 +62,7 @@ class Evaluacion(BaseCallback):
             self.w.writerow([self.num_timesteps, etiqueta, f"{exito:.2f}",
                              np.mean([i["colisiones"] for i in infos]),
                              f"{np.median([i['error_pos_m'] for i in infos]) * 1000:.1f}",
+                             f"{np.median([i['error_ori_rad'] for i in infos]):.3f}",
                              np.mean([i["pasos"] for i in infos]),
                              f"{np.mean([i['L_cart_m'] for i in infos]):.3f}"])
             self.logger.record(f"eval/exito_{etiqueta}", exito)
