@@ -28,6 +28,22 @@ from gym_env.entorno import EntornoE6
 RAIZ = Path(__file__).resolve().parents[1]
 
 
+def _fusionar(base: dict, cambios: dict) -> dict:
+    out = dict(base)
+    for k, v in cambios.items():
+        out[k] = _fusionar(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
+def cargar_config(nombre: str) -> dict:
+    """Lee training/configs/<nombre>.yaml. Con `base: <otra>`, hereda de ella y solo cambia lo
+    que declara: cada experimento muestra exactamente en qué difiere."""
+    cfg = yaml.safe_load((RAIZ / "training" / "configs" / f"{nombre}.yaml").read_text())
+    if "base" in cfg:
+        cfg = _fusionar(cargar_config(cfg.pop("base")), cfg)
+    return cfg
+
+
 def episodio(modelo, env, escenario, variante):
     obs, info = env.reset(options={"escenario": escenario, "variante": variante})
     fin = False
@@ -80,8 +96,14 @@ def main():
     ap.add_argument("--config", default="sac_v0")
     ap.add_argument("--pasos", type=int, default=None, help="sobrescribe entrenamiento.pasos_totales")
     ap.add_argument("--semilla", type=int, default=None)
+    ap.add_argument("--hilos", type=int, default=None,
+                    help="hilos de PyTorch; al correr varios entrenamientos a la vez conviene 2-3 "
+                         "por corrida para no sobresuscribir la CPU")
     a = ap.parse_args()
-    cfg = yaml.safe_load((RAIZ / "training" / "configs" / f"{a.config}.yaml").read_text())
+    if a.hilos:
+        import torch
+        torch.set_num_threads(a.hilos)
+    cfg = cargar_config(a.config)
     pasos = a.pasos or cfg["entrenamiento"]["pasos_totales"]
     semilla = cfg["entrenamiento"]["semilla"] if a.semilla is None else a.semilla
 

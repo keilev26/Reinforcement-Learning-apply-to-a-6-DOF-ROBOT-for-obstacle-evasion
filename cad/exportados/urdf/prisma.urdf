@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- Componente "prisma" de la biblioteca del contrato 2.0. Origen = centro geométrico. -->
+<robot name="prisma">
+  <link name="prisma">
+    <visual><geometry><box size="0.08 0.08 0.16"/></geometry></visual>
+    <collision><geometry><box size="0.08 0.08 0.16"/></geometry></collision>
+  </link>
+</robot>

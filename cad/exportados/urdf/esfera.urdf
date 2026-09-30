@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- Componente "esfera" de la biblioteca del contrato 2.0. Origen = centro geométrico. -->
+<robot name="esfera">
+  <link name="esfera">
+    <visual><geometry><sphere radius="0.0625"/></geometry></visual>
+    <collision><geometry><sphere radius="0.0625"/></geometry></collision>
+  </link>
+</robot>

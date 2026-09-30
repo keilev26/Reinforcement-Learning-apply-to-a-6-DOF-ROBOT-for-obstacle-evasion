@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <world name="celda">
+    <!-- Generado desde el contrato 2.0, variante "2" -->
+    <physics name="1ms" type="ignored"><max_step_size>0.001</max_step_size><real_time_factor>1.0</real_time_factor></physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <light type="directional" name="sol"><pose>0 0 3 0 0 0</pose><direction>-0.5 0.1 -0.9</direction>
+      <diffuse>0.8 0.8 0.8 1</diffuse><cast_shadows>true</cast_shadows></light>
+    <model name='mesa_trabajo'><static>true</static><pose>0.15 -0.1 -0.025 0 0 0</pose><link name='link'><collision name='c'><geometry><box><size>1.2 1.0 0.04</size></box></geometry></collision><visual name='v'><geometry><box><size>1.2 1.0 0.04</size></box></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model><model name='centro_cnc'><static>true</static><pose>0.53 0.0 0.195 0 0 0</pose><link name='link'><collision name='c'><geometry><box><size>0.3 0.5 0.4</size></box></geometry></collision><visual name='v'><geometry><box><size>0.3 0.5 0.4</size></box></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model><model name='bandeja_piezas'><static>true</static><pose>0.0 -0.3 0.005 0 0 0</pose><link name='link'><collision name='c'><geometry><box><size>0.2 0.25 0.02</size></box></geometry></collision><visual name='v'><geometry><box><size>0.2 0.25 0.02</size></box></geometry><material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material></visual></link></model><model name='o0_prisma'><static>true</static><pose>0.212 -0.212 0.075 0 0 0</pose><link name='link'><collision name='c'><geometry><box><size>0.08 0.08 0.16</size></box></geometry></collision><visual name='v'><geometry><box><size>0.08 0.08 0.16</size></box></geometry><material><ambient>0.8 0.3 0.2 1</ambient><diffuse>0.8 0.3 0.2 1</diffuse></material></visual></link></model>
+  </world>
+</sdf>

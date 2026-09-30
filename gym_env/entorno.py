@@ -39,7 +39,21 @@ RECOMPENSA_V0 = {
     "tiempo": 0.01,          # por paso
     "colision": 10.0,        # al chocar (termina el episodio)
     "exito": 10.0,           # al llegar (termina el episodio)
+    # Términos de la v1 (paquete 3.4); en 0 la recompensa es exactamente la v0.
+    "precision": 0.0,        # peso del potencial de precisión conjunta posición-orientación
+    "sigma_pos_m": 0.02,     # escala del potencial en posición
+    "sigma_ori_rad": 0.10,   # escala del potencial en orientación
 }
+
+
+def potencial_precision(dist_m: float, ang_rad: float, w: dict) -> float:
+    """Φ = exp(-d/σp) · exp(-θ/σo): vale 1 solo si posición Y orientación están cerca de la meta.
+
+    Entra en la recompensa como diferencia Φ(s') - Φ(s) (moldeado por potencial): da gradiente
+    fuerte cerca de la meta sin cambiar la política óptima. Un bono por paso, en cambio, pagaría
+    por quedarse rondando la meta en vez de terminar el episodio.
+    """
+    return float(np.exp(-dist_m / w["sigma_pos_m"]) * np.exp(-ang_rad / w["sigma_ori_rad"]))
 
 
 class EntornoE6(gym.Env):
@@ -155,7 +169,9 @@ class EntornoE6(gym.Env):
              + w["orientacion"] * (self.err_ang - err_ang)
              - w["proximidad"] * max(0.0, 1.0 - medida.d_min / w["d_seguridad_m"])
              - w["suavidad"] * float(np.sum(((dq - self.dq_prev) / self.dq_max) ** 2)) / 6
-             - w["tiempo"])
+             - w["tiempo"]
+             + w["precision"] * (potencial_precision(dist_meta, err_ang, w)
+                                 - potencial_precision(self.dist_meta, self.err_ang, w)))
         if choco:
             r -= w["colision"]
         if exito:
