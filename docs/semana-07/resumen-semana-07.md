@@ -238,9 +238,56 @@ Implementación:
 - `evaluation/comparar.py`, la prueba, con 2 pruebas sintéticas: detecta la dirección correcta y
   no declara diferencias donde no las hay.
 
-### 5.3 Resultados con la recompensa v1 y aceleración acotada
+### 5.3 Primera aplicación completa del protocolo (recompensa v1 + aceleración acotada)
 
-*(En curso: dos semillas, 300 000 pasos.)*
+**Entrenamiento.** `sac_v1` con el entorno A1: semillas 0 y 1, 300 000 pasos en paralelo
+(`--hilos 2`, ~55 min).
+
+**Resultado: 0 éxitos en ambas semillas.** La misma recompensa **sin** el límite de aceleración
+resolvía 3 de 4 variantes de evaluación a los 300 000 pasos (sección 4.3). Con el límite, las
+políticas se quedan a una mediana de **53-59 mm y 0.18-0.20 rad** de la meta y agotan los 300
+pasos.
+
+**Interpretación.** Es el costo previsto al decidir A1: la política tiene que **anticipar el
+frenado** para detenerse dentro de 5 mm, con cambios de velocidad de como mucho 0.0042 rad por
+paso. 300 000 pasos son el 30 % del entrenamiento previsto para 3.5, y las evaluaciones periódicas
+seguían mejorando (de ~400 mm a ~15-30 mm en las variantes sencillas). **Se continúa el
+entrenamiento hasta 1 M de pasos por semilla** (`training/entrenar_sac.py --desde`), en curso.
+
+**Línea base en las 100 escenas del conjunto de evaluación.** Medida con la CPU libre, para que
+M4 sea comparable:
+
+| Método | M1 éxito | M2 colisiones | M3 cart. (mediana) | M4 cómputo | M4 ejecución | M5 d_min |
+|---|---|---|---|---|---|---|
+| RRT-Connect (3 consultas/escena) | **296/300** | 0 | 0.598 m | 103 ms | 2.06 s | 3.3 mm |
+| LazyPRM\* (1 consulta/escena) | **99/100** | 0 | 0.626 m | 5 043 ms | 2.05 s | 7.7 mm |
+| SAC v1, aceleración acotada, 300 000 pasos (2 semillas) | 0/200 | 15 episodios con colisión | — | 85 ms (300 pasos) | 9.0 s (agota) | — |
+
+Fallas de la línea base:
+- **E074** (prisma k = 1.87, muy cerca de la tarea): MoveIt no encuentra cinemática inversa con el
+  margen de 2 mm (-31) en ninguno de los dos planificadores. Es una consecuencia real de la
+  configuración de la línea base (1 de 100 escenas) y se mantiene en el conjunto.
+- **E008**: un rechazo de `ValidateSolution`.
+
+**Comparación pareada (Wilcoxon, 100 escenas).** El protocolo corre de punta a punta. Con 0 éxitos
+de la política solo se puede comparar M1: la línea base es mejor (p ≈ 10⁻²³ frente a ambos
+planificadores). M3, M4 y M5 no tienen pares.
+
+Hallazgo de la herramienta: con 0 pares, el comparador imprimía "sin diferencia significativa",
+lo que es engañoso. Ahora dice "sin pares: algún método no tuvo éxitos".
+
+Datos:
+- `results/linea_base_evaluacion_20260930_{0648,0651}_metricas.csv` (crudos en `results/raw/`);
+- `results/politica_sac_v1_acel_s{0,1}_300k_{evaluacion,contrato}.csv`;
+- `results/entrenamiento_sac_v1_acel_s{0,1}_300k_evaluaciones.csv`.
+
+**Nota sobre la GPU.** La máquina tiene una RTX 3050 Mobile, pero no se usa:
+- el módulo del driver 580 no está compilado para el kernel 7.0.0-34 (`nvidia-smi` falla);
+- PyTorch está instalado en su versión solo para CPU.
+
+Para activarla hay que reconstruir el módulo (`sudo dkms autoinstall`) y reiniciar, y reinstalar
+PyTorch con CUDA. Solo aceleraría el entrenamiento. La inferencia de M4 se mide en CPU por contrato
+(`metricas.yaml`, `hardware`).
 
 ---
 

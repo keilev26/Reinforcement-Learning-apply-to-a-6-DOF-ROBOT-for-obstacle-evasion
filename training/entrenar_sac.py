@@ -67,6 +67,10 @@ class Evaluacion(BaseCallback):
         self.w.writerow(["pasos", "variante", "exito", "colisiones_media", "error_pos_mm_mediana",
                          "error_ori_rad_mediana", "pasos_media", "L_cart_media_m"])
 
+    def _on_training_start(self) -> None:
+        # Al continuar un modelo el contador no empieza en 0
+        self.proxima = self.num_timesteps + self.cfg["cada_pasos"]
+
     def _on_step(self) -> bool:
         if self.num_timesteps < self.proxima:
             return True
@@ -96,6 +100,9 @@ def main():
     ap.add_argument("--config", default="sac_v0")
     ap.add_argument("--pasos", type=int, default=None, help="sobrescribe entrenamiento.pasos_totales")
     ap.add_argument("--semilla", type=int, default=None)
+    ap.add_argument("--desde", type=Path, default=None,
+                    help="continuar desde un modelo guardado (.zip). El búfer de repetición no se "
+                         "guarda: se vuelve a llenar durante learning_starts pasos")
     ap.add_argument("--hilos", type=int, default=None,
                     help="hilos de PyTorch; al correr varios entrenamientos a la vez conviene 2-3 "
                          "por corrida para no sobresuscribir la CPU")
@@ -116,12 +123,20 @@ def main():
     venv = make_vec_env(EntornoE6, n_envs=E["n_entornos"], seed=semilla, vec_env_cls=SubprocVecEnv,
                         env_kwargs={"escenario": E["escenario"], "recompensa": E["recompensa"]})
     S = cfg["sac"]
-    modelo = SAC("MlpPolicy", venv, learning_rate=S["learning_rate"], buffer_size=S["buffer_size"],
+    if a.desde:
+        modelo = SAC.load(a.desde, env=venv, device="cpu",
+                          tensorboard_log=str(carpeta / "tensorboard"))
+        (carpeta / "continua_desde.txt").write_text(str(a.desde) + "\n")
+        # El búfer no viene guardado: se rellena antes de volver a actualizar
+        modelo.learning_starts = modelo.num_timesteps + S["learning_starts"]
+    else:
+        modelo = SAC("MlpPolicy", venv, learning_rate=S["learning_rate"], buffer_size=S["buffer_size"],
                  learning_starts=S["learning_starts"], batch_size=S["batch_size"], tau=S["tau"],
                  gamma=S["gamma"], train_freq=S["train_freq"], gradient_steps=S["gradient_steps"],
                  ent_coef=S["ent_coef"], policy_kwargs={"net_arch": S["net_arch"]}, seed=semilla,
                  tensorboard_log=str(carpeta / "tensorboard"), verbose=0)
-    modelo.learn(total_timesteps=pasos, callback=Evaluacion(cfg, carpeta), progress_bar=False)
+    modelo.learn(total_timesteps=pasos, callback=Evaluacion(cfg, carpeta), progress_bar=False,
+                 reset_num_timesteps=a.desde is None)
     modelo.save(carpeta / "modelo_final")
     venv.close()
     print(f"modelo en {carpeta}")

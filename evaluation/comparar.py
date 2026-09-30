@@ -60,7 +60,11 @@ def comparar(politica: dict, base: dict, alfa: float = 0.05) -> list[dict]:
         else:
             p = np.nan
         med = float(np.median(dif)) if len(dif) else np.nan
-        if not np.isfinite(p) or p >= alfa:
+        if not pares:
+            veredicto = "sin pares: algún método no tuvo éxitos"
+        elif not np.isfinite(p):
+            veredicto = "pares insuficientes para la prueba"
+        elif p >= alfa:
             veredicto = "sin diferencia significativa"
         else:
             politica_mejor = (med > 0) == (mejor == "mayor")
