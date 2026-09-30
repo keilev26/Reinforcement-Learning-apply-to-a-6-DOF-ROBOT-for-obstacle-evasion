@@ -1,0 +1,9 @@
+Política (2 semillas) frente a LazyPRMstar, 100 escenas pareadas
+
+métrica                        pares   ≠0   política  línea base  dif. med.         p   veredicto
+M1 éxito (fracción)              100   57      0.000       1.000     -1.000  1.65e-13   línea base mejor
+M3 longitud cartesiana (m)        45   45      0.561       0.602     -0.023  4.62e-02   política mejor
+M3 longitud articular (rad)       45   45      2.964       2.633      0.349  1.96e-07   línea base mejor
+M4 cómputo (ms)                   45   45     21.589    5038.733  -5017.543  5.68e-14   política mejor
+M4 ejecución (s)                  45   45      2.040       1.995      0.092  9.28e-02   sin diferencia significativa
+M5 distancia mínima (m)           45   45      0.036       0.008      0.023  7.20e-09   política mejor

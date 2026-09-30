@@ -281,13 +281,75 @@ Datos:
 - `results/politica_sac_v1_acel_s{0,1}_300k_{evaluacion,contrato}.csv`;
 - `results/entrenamiento_sac_v1_acel_s{0,1}_300k_evaluaciones.csv`.
 
-**Nota sobre la GPU.** La máquina tiene una RTX 3050 Mobile, pero no se usa:
-- el módulo del driver 580 no está compilado para el kernel 7.0.0-34 (`nvidia-smi` falla);
-- PyTorch está instalado en su versión solo para CPU.
+### 5.4 Continuación hasta 1 M de pasos: primera comparación con datos en ambas direcciones
 
-Para activarla hay que reconstruir el módulo (`sudo dkms autoinstall`) y reiniciar, y reinstalar
-PyTorch con CUDA. Solo aceleraría el entrenamiento. La inferencia de M4 se mide en CPU por contrato
-(`metricas.yaml`, `hardware`).
+Las dos semillas se continuaron desde los modelos de 300 000 pasos hasta **1 M**
+(`entrenar_sac.py --desde`; el búfer de repetición se rellena antes de volver a actualizar).
+
+**Evolución.** Los primeros éxitos con aceleración acotada aparecen hacia los 320 000-340 000
+pasos. Desde ~900 000, ambas semillas resuelven 3 de 4 variantes de evaluación en la mayoría de
+las evaluaciones. La política queda a **4-10 mm** de la meta: que cuente como éxito depende de caer
+justo por debajo o por encima de los 5 mm, y por eso la tasa oscila entre evaluaciones.
+
+**Las 19 variantes del contrato:** **9/19 en ambas semillas, 0 colisiones en todas**. Resuelve 1,
+2, las tres formas del 6, 4 dx = +0.08, 4 dy = −0.08, y 5 k = 0.6 y k = 1.0. Falla 3, 5 k ≥ 1.5, el 7
+y el **8, pero sin chocar**: sin el límite de aceleración, la política de 300 000 pasos chocaba en
+el 8.
+
+**Las 100 escenas del conjunto de evaluación:**
+
+| | Semilla 0 | Semilla 1 |
+|---|---|---|
+| Éxitos | **44/100** | **43/100** |
+| Por forma: prisma / cilindro / esfera | 11/36 · 12/27 · 21/37 | 12/36 · 11/27 · 20/37 |
+| Episodios con colisión | 9 | 5 |
+| Error de posición final (mediana) | 11.0 mm | 14.7 mm |
+
+**Comparación pareada** (Wilcoxon, por escena; las métricas continuas, en las 45 escenas donde
+ambos métodos tienen éxito). Salida completa en `results/comparacion_sac_v1_1M_vs_*.txt`.
+
+| Métrica | Política (mediana) | RRT-Connect | p | Veredicto | LazyPRM\* | p | Veredicto |
+|---|---|---|---|---|---|---|---|
+| M1 éxito | 44 % | 99 % | 10⁻¹³ | línea base | 99 % | 10⁻¹³ | línea base |
+| M3 cartesiana | 0.561 m | 0.576 m | 0.67 | sin diferencia | 0.602 m | 0.046 | política |
+| M3 articular | 2.96 rad | 2.45 rad | 10⁻¹² | línea base | 2.63 rad | 10⁻⁷ | línea base |
+| **M4 cómputo** | **22 ms** | 91 ms | 10⁻¹⁴ | **política** | 5 039 ms | 10⁻¹⁴ | **política** |
+| **M4 ejecución** | 2.04 s | 1.96 s | 0.30 | **sin diferencia** | 2.00 s | 0.09 | sin diferencia |
+| **M5 holgura** | **36 mm** | 4 mm | 10⁻¹⁴ | **política** | 8 mm | 10⁻⁹ | **política** |
+
+**Lectura (preliminar: 2 semillas, el protocolo pide 3):**
+
+1. **El compromiso que plantea la pregunta de investigación aparece medido.**
+   - La política cuesta **4 veces menos cómputo** que RRT-Connect y **230 veces menos** que LazyPRM\*.
+   - Mantiene **9 veces más holgura** con los obstáculos.
+   - El precio es la fiabilidad: resuelve el 44 % de las escenas frente al 99 % de la línea base, y
+     choca en el 5-9 %.
+2. **Con la paridad de aceleración, el tiempo de ejecución es igual** (p = 0.30). Confirma que la
+   "ventaja" de la sección 4.4 era un artefacto del entorno sin límite de aceleración: la decisión
+   A1 era necesaria.
+3. **La morfología importa** (eje del escenario 6): con la esfera la política acierta el ~55 % de
+   las escenas, y con el prisma y el cilindro, ~30-40 %. Es un resultado directo para la pregunta
+   de investigación.
+4. **Qué sigue:**
+   - la tercera semilla del núcleo;
+   - **currículo (3.6)** para los obstáculos grandes (k ≥ 1.5) y cercanos a la tarea;
+   - revisar si la tolerancia de 5 mm deja al 44 % en un borde artificial: muchas fallas quedan a
+     5-10 mm. **No se cambia la tolerancia para mejorar el número**: se reporta la distribución del
+     error final junto a M1.
+
+Datos: `results/politica_sac_v1_acel_s{0,1}_1M_{evaluacion,contrato}.csv`,
+`results/entrenamiento_sac_v1_acel_s{0,1}_300k-1M_evaluaciones.csv`.
+
+**Nota sobre la GPU (RTX 3050 Mobile, 4 GB).**
+- **Causa del fallo:** el módulo del driver 580 no estaba compilado para el kernel 7.0.0-34. Los
+  restos incompletos del driver 550 en DKMS impedían la compilación automática al actualizar el
+  kernel.
+- **Solución (2026-09-30):** `sudo dkms install nvidia/580.178.04 -k 7.0.0-34-generic` y
+  `sudo modprobe nvidia`, sin reiniciar. `nvidia-smi` ya la ve (CUDA 13.0).
+- **Pendiente:** PyTorch sigue en su versión solo para CPU. Instalar la versión con CUDA exige
+  ~4-5 GB y el disco tiene 1.3 GB libres.
+- **Alcance:** la GPU solo acelera el entrenamiento. La inferencia de M4 se mide en CPU por
+  contrato (`metricas.yaml`, `hardware`).
 
 ---
 
