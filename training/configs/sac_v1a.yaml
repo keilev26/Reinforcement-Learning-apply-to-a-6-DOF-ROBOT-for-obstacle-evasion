@@ -1,0 +1,9 @@
+# 3.4, experimento A: solo reequilibra la orientación frente a la posición.
+# En la v0 la orientación pesaba 1/rad; aquí 5/rad, de modo que salir 0.05 rad de la tolerancia
+# angular cueste lo mismo que ~11 mm de posición (10 · 0.011 / 0.427 ≈ 5 · 0.05).
+version: "1a"
+base: sac_v0
+entorno:
+  escenario: null
+  recompensa: {orientacion: 5.0}
+  n_entornos: 4

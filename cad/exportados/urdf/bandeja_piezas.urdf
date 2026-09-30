@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- Componente "bandeja_piezas" de la biblioteca del contrato 2.0. Origen = centro geométrico. -->
+<robot name="bandeja_piezas">
+  <link name="bandeja_piezas">
+    <visual><geometry><box size="0.2 0.25 0.02"/></geometry></visual>
+    <collision><geometry><box size="0.2 0.25 0.02"/></geometry></collision>
+  </link>
+</robot>

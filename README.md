@@ -52,6 +52,10 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | `docs/semana-05/3.1-contrato-v2.0.md` | Contrato de escenarios v2.0 para el E6 y su verificación en PyBullet y MoveIt |
 | `docs/semana-05/3.8-gazebo-magician-e6.md` | E6 en Gazebo Harmonic: ejecución de la tarea en los 8 escenarios |
 | `docs/semana-05/3.9-ompl-magician-e6.md` | OMPL con el E6: comparación de planificadores y `range` |
+| `docs/semana-06/3.2-3.3-entorno-y-mdp.md` | Entorno Gymnasium del E6 y el MDP; cadena de entrenamiento SAC |
+| `docs/semana-06/3.10-banco-de-pruebas.md` | Las 5 métricas de la línea base con el mismo evaluador que la política |
+| `docs/semana-06/3.11-distancia-minima.md` | Distancia mínima eslabón-obstáculo, validada contra FCL |
+| `docs/semana-06/1.6-1.7-alcanzabilidad-y-singularidades.md` | Alcanzabilidad y singularidades del E6 |
 | `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
@@ -131,6 +135,14 @@ pip install gymnasium stable-baselines3 torch pybullet pyyaml pytest
 
 # Solo para regenerar el modelo del E6 (tools/gen_modelo_e6.py)
 pip install trimesh scipy rtree scikit-image fast-simplification
+# Validación de distancias contra FCL (3.11) y figuras (1.6, 1.7)
+pip install python-fcl matplotlib
+```
+
+```bash
+.venv/bin/python -m training.entrenar_sac --config sac_v0          # entrenamiento SAC (3.5)
+.venv/bin/python -m evaluation.evaluar_politica <modelo.zip>       # 5 métricas de la política
+.venv/bin/python -m evaluation.evaluar_linea_base <crudo.jsonl.gz> # 5 métricas de la línea base
 ```
 
 Pruebas del modelo del robot: `.venv/bin/python -m pytest` desde la raíz.

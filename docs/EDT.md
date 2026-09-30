@@ -216,6 +216,13 @@ cronograma.
 > (MoveIt y Gazebo Harmonic con ejecución), 3.9 (OMPL medido) y 3.16 (modelo), además de la celda
 > de escritorio y la biblioteca CAD (1.1 y 1.2).
 
+> **Semana 6 (2026-09-29).** Realizados: 3.2 y 3.3 (entorno Gym con el MDP; `env.step()`
+> funcionando, que es el hito de la semana), 3.10 (banco de pruebas de la línea base), 3.11
+> (distancia mínima validada contra FCL) y 1.6 y 1.7 (alcanzabilidad y singularidades). 3.3, 3.11
+> y 1.7 estaban programados para la semana 7. Pendientes de la semana: 1.3 y 1.4 (geometría de
+> colisión y exportación de los CAD de la celda). **Con el adelanto, la ruta crítica pasa ahora
+> por 1.3 → 1.4 → 3.12.** Detalle en `semana-06/`.
+
 ### Desarrollo, semanas 5 a 14
 
 | Sem | Persona A | Persona B | Hito verificable |

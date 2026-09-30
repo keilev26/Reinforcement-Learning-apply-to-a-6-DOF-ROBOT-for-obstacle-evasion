@@ -1,0 +1,9 @@
+Política (2 semillas) frente a RRTConnect, 100 escenas pareadas
+
+métrica                        pares   ≠0   política  línea base  dif. med.         p   veredicto
+M1 éxito (fracción)              100   58      0.000       1.000     -1.000  1.57e-13   línea base mejor
+M3 longitud cartesiana (m)        45   45      0.561       0.576      0.006  6.71e-01   sin diferencia significativa
+M3 longitud articular (rad)       45   45      2.964       2.451      0.380  3.98e-12   línea base mejor
+M4 cómputo (ms)                   45   45     21.589      91.308    -69.314  5.68e-14   política mejor
+M4 ejecución (s)                  45   45      2.040       1.956      0.017  3.02e-01   sin diferencia significativa
+M5 distancia mínima (m)           45   45      0.036       0.004      0.033  5.68e-14   política mejor

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- Componente "mesa_trabajo" de la biblioteca del contrato 2.0. Origen = centro geométrico. -->
+<robot name="mesa_trabajo">
+  <link name="mesa_trabajo">
+    <visual><geometry><box size="1.2 1 0.04"/></geometry></visual>
+    <collision><geometry><box size="1.2 1 0.04"/></geometry></collision>
+  </link>
+</robot>

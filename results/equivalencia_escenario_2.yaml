@@ -1,0 +1,21 @@
+variante: '2'
+limites_velocidad_max_dif_rad_s: 0.0
+fk_moveit:
+  configuraciones: 200
+  err_pos_max_m: 4.5695257259513345e-08
+  err_ang_max_rad: 5.817179871260729e-07
+fk_gazebo:
+  configuraciones: 6
+  err_pos_max_m: 8.479315647757295e-07
+  err_ang_max_rad: 7.347405836573041e-06
+  desvio_articular_max_rad: 1.7147394615335543e-12
+escena_objetos: 4
+escena_max_dif_vs_contrato:
+  pybullet: 3.469446951953614e-18
+  moveit: 6.938893903907228e-18
+  gazebo_sdf: 0.0
+escena_objetos_por_motor:
+  pybullet: 4
+  moveit: 4
+  gazebo_sdf: 4
+geometria_robot_pybullet_vs_fcl: error máx. 1.14 mm (paquete 3.11)
