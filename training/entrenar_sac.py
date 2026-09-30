@@ -103,6 +103,8 @@ def main():
     ap.add_argument("--desde", type=Path, default=None,
                     help="continuar desde un modelo guardado (.zip). El búfer de repetición no se "
                          "guarda: se vuelve a llenar durante learning_starts pasos")
+    ap.add_argument("--dispositivo", choices=["auto", "cpu", "cuda"], default="auto",
+                    help="dónde se entrena la red. La evaluación de M4 se hace SIEMPRE en CPU")
     ap.add_argument("--hilos", type=int, default=None,
                     help="hilos de PyTorch; al correr varios entrenamientos a la vez conviene 2-3 "
                          "por corrida para no sobresuscribir la CPU")
@@ -124,7 +126,7 @@ def main():
                         env_kwargs={"escenario": E["escenario"], "recompensa": E["recompensa"]})
     S = cfg["sac"]
     if a.desde:
-        modelo = SAC.load(a.desde, env=venv, device="cpu",
+        modelo = SAC.load(a.desde, env=venv, device=a.dispositivo,
                           tensorboard_log=str(carpeta / "tensorboard"))
         (carpeta / "continua_desde.txt").write_text(str(a.desde) + "\n")
         # El búfer no viene guardado: se rellena antes de volver a actualizar
@@ -134,6 +136,7 @@ def main():
                  learning_starts=S["learning_starts"], batch_size=S["batch_size"], tau=S["tau"],
                  gamma=S["gamma"], train_freq=S["train_freq"], gradient_steps=S["gradient_steps"],
                  ent_coef=S["ent_coef"], policy_kwargs={"net_arch": S["net_arch"]}, seed=semilla,
+                 device=a.dispositivo,
                  tensorboard_log=str(carpeta / "tensorboard"), verbose=0)
     modelo.learn(total_timesteps=pasos, callback=Evaluacion(cfg, carpeta), progress_bar=False,
                  reset_num_timesteps=a.desde is None)

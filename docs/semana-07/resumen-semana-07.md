@@ -346,8 +346,13 @@ Datos: `results/politica_sac_v1_acel_s{0,1}_1M_{evaluacion,contrato}.csv`,
   kernel.
 - **Solución (2026-09-30):** `sudo dkms install nvidia/580.178.04 -k 7.0.0-34-generic` y
   `sudo modprobe nvidia`, sin reiniciar. `nvidia-smi` ya la ve (CUDA 13.0).
-- **Pendiente:** PyTorch sigue en su versión solo para CPU. Instalar la versión con CUDA exige
-  ~4-5 GB y el disco tiene 1.3 GB libres.
+- **PyTorch con CUDA:** instalado (`2.14.1+cu130`). La raíz tenía 3 GB libres, así que el `.venv`
+  se movió a la partición `/data` (339 GB libres) y quedó un **enlace simbólico** `.venv` en el
+  proyecto: todas las rutas siguen iguales.
+- **Medición:** 20 000 pasos de SAC tardan **181 s en CPU y 183 s en GPU**. Sin ganancia: la red es
+  pequeña (256 × 256, lotes de 256) y el tiempo lo consumen la simulación de PyBullet y el bucle de
+  Python. La GPU puede servir para entrenar **varias semillas en paralelo**, dejando la CPU para las
+  simulaciones. `entrenar_sac.py --dispositivo {auto,cpu,cuda}`.
 - **Alcance:** la GPU solo acelera el entrenamiento. La inferencia de M4 se mide en CPU por
   contrato (`metricas.yaml`, `hardware`).
 
