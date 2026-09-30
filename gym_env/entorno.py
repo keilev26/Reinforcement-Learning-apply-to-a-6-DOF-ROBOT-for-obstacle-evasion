@@ -80,6 +80,7 @@ class EntornoE6(gym.Env):
         self.tol_pos, self.tol_ori = term["tolerancia_posicion_m"], term["tolerancia_orientacion_rad"]
         self.w = {**RECOMPENSA_V0, **(recompensa or {})}
         self.escenario, self.variante = escenario, variante
+        self.escala_max = None          # currículo (3.6): lo fija el entrenamiento con set_attr
         self.render_mode = render_mode
 
         self.cliente = p.connect(p.GUI if render_mode == "human" else p.DIRECT)
@@ -139,7 +140,8 @@ class EntornoE6(gym.Env):
             if "obstaculos" in opciones:           # escena dada (conjunto de evaluación)
                 self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
             elif esc_n is None:
-                self.etiqueta, obst = contrato.muestrear_entrenamiento(self.C, self.np_random)
+                self.etiqueta, obst = contrato.muestrear_entrenamiento(self.C, self.np_random,
+                                                                       self.escala_max)
             else:
                 vs = contrato.variantes(self.C, esc_n)
                 self.etiqueta, obst = next((v for v in vs if v[0] == var), vs[0]) if var else vs[0]
@@ -201,6 +203,11 @@ class EntornoE6(gym.Env):
                 "L_art_rad": self.metricas.L_art, "d_min_obstaculos_m": self.metricas.d_min_obst,
                 "t_ejecucion_s": self.pasos * self.dt,
                 "q": self.q.copy()}
+
+    def fijar_escala_max(self, valor) -> None:
+        """Currículo (3.6). Es un método y no un atributo: SB3 envuelve el entorno en un Monitor y
+        `set_attr` fijaría el atributo en el envoltorio, sin llegar aquí."""
+        self.escala_max = valor
 
     def close(self):
         if p.isConnected(self.cliente):

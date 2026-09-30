@@ -91,20 +91,24 @@ def _semialtura(o: dict) -> float:
     return o["dims"][0]
 
 
-def muestrear_entrenamiento(C: dict, rng) -> tuple[str, list[dict]]:
+def muestrear_entrenamiento(C: dict, rng, escala_max: float | None = None) -> tuple[str, list[dict]]:
     """Una escena de entrenamiento según `aleatorizacion_entrenamiento` del contrato.
 
     Se elige uno de los escenarios de entrenamiento con igual probabilidad. El 1 no tiene
     obstáculos; los demás (2, 4, 5 y 6 son el mismo primitivo sobre sus tres ejes de variación)
     dan un primitivo de forma, escala y posición aleatorias, apoyado en la mesa. El escenario 8
     nunca se muestrea.
+
+    `escala_max` (currículo, 3.6) recorta el rango superior de la escala durante el entrenamiento;
+    None = el rango completo del contrato. La evaluación nunca lo usa.
     """
     A = C["aleatorizacion_entrenamiento"]
     n = int(rng.choice(A["escenarios_de_entrenamiento"]))
     if n == 1:
         return "1", []
     forma = str(rng.choice(A["forma"]["valores"]))
-    k = float(rng.uniform(*A["escala"]["rango"]))
+    lo, hi = A["escala"]["rango"]
+    k = float(rng.uniform(lo, hi if escala_max is None else max(lo, min(hi, escala_max))))
     dx, dy = (float(v) for v in rng.uniform(*A["posicion_m"]["rango"], size=2))
     cx, cy = A["centro_m"]
     o = objeto(C, f"o0_{forma}", forma, [cx + dx, cy + dy, 0.0, 0.0, 0.0, 0.0], k)

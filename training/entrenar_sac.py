@@ -54,6 +54,39 @@ def episodio(modelo, env, escenario, variante):
     return info
 
 
+class Curriculo(BaseCallback):
+    """Currículo de escala (3.6): el obstáculo máximo crece linealmente durante el entrenamiento.
+
+    Empieza en `escala_max_inicial` y llega a `escala_max_final` (el rango completo del contrato) al
+    `fraccion` de los pasos totales; después queda fijo. Solo cambia el muestreo de ENTRENAMIENTO:
+    las evaluaciones periódicas y las finales usan siempre las mismas escenas.
+    """
+
+    def __init__(self, cfg: dict, pasos_totales: int):
+        super().__init__()
+        self.c, self.total, self.ultimo = cfg, pasos_totales, None
+
+    def valor(self) -> float:
+        c = self.c
+        avance = min(1.0, self.num_timesteps / (c["fraccion"] * self.total))
+        return c["escala_max_inicial"] + avance * (c["escala_max_final"] - c["escala_max_inicial"])
+
+    def _on_training_start(self) -> None:
+        self._aplicar()
+
+    def _on_step(self) -> bool:
+        if self.num_timesteps % 5000 < self.training_env.num_envs:
+            self._aplicar()
+        return True
+
+    def _aplicar(self) -> None:
+        v = round(self.valor(), 3)
+        if v != self.ultimo:
+            self.training_env.env_method("fijar_escala_max", v)
+            self.logger.record("curriculo/escala_max", v)
+            self.ultimo = v
+
+
 class Evaluacion(BaseCallback):
     """Evalúa la política determinista cada `cada` pasos y guarda una fila por variante."""
 
@@ -138,7 +171,10 @@ def main():
                  ent_coef=S["ent_coef"], policy_kwargs={"net_arch": S["net_arch"]}, seed=semilla,
                  device=a.dispositivo,
                  tensorboard_log=str(carpeta / "tensorboard"), verbose=0)
-    modelo.learn(total_timesteps=pasos, callback=Evaluacion(cfg, carpeta), progress_bar=False,
+    callbacks = [Evaluacion(cfg, carpeta)]
+    if cfg.get("curriculo"):
+        callbacks.append(Curriculo(cfg["curriculo"], pasos))
+    modelo.learn(total_timesteps=pasos, callback=callbacks, progress_bar=False,
                  reset_num_timesteps=a.desde is None)
     modelo.save(carpeta / "modelo_final")
     venv.close()
