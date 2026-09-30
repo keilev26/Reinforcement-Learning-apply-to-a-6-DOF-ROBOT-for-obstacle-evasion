@@ -46,6 +46,12 @@ RECOMPENSA_V0 = {
 }
 
 
+# Recompensa v1 (paquete 3.4, 2026-09-29): la v0 con la orientación reequilibrada y el potencial
+# de precisión. Elegida frente a "solo orientación" en docs/semana-07/resumen-semana-07.md:
+# a 300 000 pasos, 3 de 4 variantes resueltas frente a 0.
+RECOMPENSA_V1 = {**RECOMPENSA_V0, "orientacion": 5.0, "precision": 10.0}
+
+
 def potencial_precision(dist_m: float, ang_rad: float, w: dict) -> float:
     """Φ = exp(-d/σp) · exp(-θ/σo): vale 1 solo si posición Y orientación están cerca de la meta.
 

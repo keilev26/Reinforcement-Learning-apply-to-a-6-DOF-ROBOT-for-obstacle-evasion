@@ -44,7 +44,7 @@ TAREAS = [
     ("3.1", "Contrato de escenarios y definición formal de las 5 métricas (v1.1 UR5e en sem. 4; v2.0 del E6 en sem. 5)", "Contrato de escenarios", AMBOS, 4, 4, "R", 0),
     ("3.2", "Entorno Gymnasium sobre PyBullet con el Magician E6 (Δt = 30 ms, transición cinemática)", "Entorno Gym", CALEB, 6, 6, "R", 0),
     ("3.3", "Formulación del MDP: acción Δq ≤ 0.05 rad, observación de 43 descriptores", "Especificación del MDP", CALEB, 6, 6, "R", 0),
-    ("3.4", "Función de recompensa multiobjetivo: colisión, autocolisión, alcance de meta, suavidad", "Función de recompensa", CALEB, 8, 8, "P", 0),
+    ("3.4", "Función de recompensa multiobjetivo: colisión, autocolisión, alcance de meta, suavidad", "Función de recompensa", CALEB, 7, 7, "R", 0),
     ("3.5", "Entrenamiento SAC desde cero — escenarios 1 y 2", "Política entrenada v1", CALEB, 9, 9, "P", 0),
     ("3.6", "Aleatorización de dominio (posición, escala, forma) e integración de escenarios 4-5-6", "Dominio aleatorizado", CALEB, 10, 10, "P", 0),
     ("3.7", "Entrenamiento completo: 5 semillas × escenarios núcleo", "Políticas + logs", CALEB, 10, 11, "P", 0),
