@@ -30,20 +30,26 @@ def main():
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--tiempo", type=float, default=None,
                     help="presupuesto por consulta (s); por defecto el de metricas.yaml")
+    ap.add_argument("--conjunto", choices=["contrato", "evaluacion"], default="contrato",
+                    help="contrato: variantes del contrato; evaluacion: shared_scenarios/evaluacion.yaml")
     ap.add_argument("--salida", default="")
     a = ap.parse_args()
 
     C = contrato.cargar()
     M = contrato.cargar_metricas()
     tiempo = a.tiempo or M["terminacion"]["timeout_planificacion_s"]
-    todas = {et: obst for n in C["escenarios"] for et, obst in contrato.variantes(C, n)}
+    if a.conjunto == "evaluacion":
+        todas = dict(contrato.escenas_evaluacion())
+    else:
+        todas = {et: obst for n in C["escenarios"] for et, obst in contrato.variantes(C, n)}
     elegidas = [v.strip() for v in a.variantes.split(";")] if a.variantes else list(todas)
     faltan = [v for v in elegidas if v not in todas]
     if faltan:
         sys.exit(f"variantes inexistentes: {faltan}")
 
     fecha = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-    salida = a.salida or str(_raiz_repo() / "results" / "raw" / f"linea_base_{fecha}.jsonl")
+    sufijo = "_evaluacion" if a.conjunto == "evaluacion" else ""
+    salida = a.salida or str(_raiz_repo() / "results" / "raw" / f"linea_base{sufijo}_{fecha}.jsonl")
     rclpy.init(); d = P6(C)
     T = C["tarea_nominal"]
     d.cargar([])

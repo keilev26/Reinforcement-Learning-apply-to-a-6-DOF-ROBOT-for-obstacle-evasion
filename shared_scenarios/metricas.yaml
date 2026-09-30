@@ -8,9 +8,14 @@
 #                     período de control 30 ms (ServoJ), 3 subpasos de revisión de colisión,
 #                     escalado de velocidad 0.8 para la paridad de M4. Decisiones D2-D5 de
 #                     docs/semana-05/propuesta-migracion-magician-e6.md
+#   2.1 (2026-09-29)  Paridad de aceleración (decisión A1): la política no puede cambiar Δq más
+#                     que a_max · Δt² por paso, el mismo límite de 4.72 rad/s² que respeta la
+#                     línea base. Protocolo: la variabilidad sale de las semillas y de un
+#                     conjunto fijo de escenas muestreadas, común a ambos métodos.
+#                     Ver docs/semana-07/resumen-semana-07.md, sección 5.
 
-version: "2.0"
-fecha: "2026-09-22"
+version: "2.1"
+fecha: "2026-09-29"
 
 # ---------------------------------------------------------------------------
 # Criterios de terminación de un episodio
@@ -27,7 +32,12 @@ terminacion:
 # ---------------------------------------------------------------------------
 accion:
   delta_q_max_rad: 0.05               # por paso: 80 % de 2.0944 rad/s x 0.030 s
-  transicion: "cinemática: q <- clip(q + delta_q) dentro de los límites articulares"
+  # Paridad de aceleración (2.1): |Δq_t - Δq_t-1| <= a_max · Δt^2 = 4.72 · 0.03^2 = 0.0042 rad
+  # por articulación. Es el límite que respeta la línea base (TOTG, config/e6/joint_limits.yaml).
+  aceleracion_max_rad_s2: 4.72
+  transicion: >
+    cinemática: Δq se recorta primero al cambio máximo por aceleración respecto del paso anterior,
+    después a delta_q_max_rad, y q <- clip(q + Δq) dentro de los límites articulares
   subpasos_colision: 3                # cada paso se revisa en 3 subpasos (<= 0.017 rad)
   escalado_velocidad_linea_base: 0.8  # mismo techo de velocidad que la política (config/e6/joint_limits.yaml)
 
@@ -102,9 +112,19 @@ m5_distancia_minima:
 # Protocolo estadístico
 # ---------------------------------------------------------------------------
 protocolo:
-  episodios_por_escenario_y_semilla: 100
+  # 2.1: con política determinista y entorno cinemático, repetir una misma escena da siempre el
+  # mismo episodio. La variabilidad sale de (a) las semillas de entrenamiento y (b) un conjunto
+  # fijo de escenas muestreadas de la distribución de entrenamiento, común a ambos métodos.
+  conjunto_evaluacion: "shared_scenarios/evaluacion.yaml"   # generado por tools/generar_evaluacion.py
+  escenas_evaluacion: 100
+  semilla_conjunto: 1000             # distinta de toda semilla de entrenamiento
   semillas_nucleo: 3
   semillas_extension: 5
+  episodios_politica_por_escena_y_semilla: 1      # determinista: más repeticiones no informan
+  consultas_linea_base_por_escena: 3              # el planificador es estocástico
   politica_en_evaluacion: "determinista (sin ruido de exploración)"
-  prueba: "rangos con signo de Wilcoxon, pareada por escenario, frente a la línea base"
+  variantes_fijas: "las 19 del contrato se evalúan además, una vez por semilla"
+  prueba: >
+    rangos con signo de Wilcoxon, pareada POR ESCENA del conjunto de evaluación: el valor de la
+    política es la media entre semillas y el de la línea base la media entre consultas
   nivel_significancia: 0.05

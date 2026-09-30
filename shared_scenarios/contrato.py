@@ -193,3 +193,22 @@ def componente_sdf(C: dict, nombre: str) -> str:
 <!-- Componente "{nombre}" de la biblioteca del contrato {C['version']}. Origen = centro geométrico. -->
 <sdf version="1.9">{modelo_sdf(o, GRIS, con_pose=False)}</sdf>
 """
+
+
+# --------------------------------------------------------------------------- evaluación (4.2)
+
+RUTA_EVALUACION = Path(__file__).resolve().parent / "evaluacion.yaml"
+
+
+def muestrear_con_obstaculo(C: dict, rng) -> tuple[str, list[dict]]:
+    """Como `muestrear_entrenamiento`, pero siempre con obstáculo (escenarios 2, 4, 5 y 6)."""
+    while True:
+        etiqueta, obst = muestrear_entrenamiento(C, rng)
+        if obst:
+            return etiqueta, obst
+
+
+def escenas_evaluacion(ruta=RUTA_EVALUACION) -> list[tuple[str, list[dict]]]:
+    """Conjunto fijo de escenas de evaluación (metricas.yaml, protocolo): [(etiqueta, obstáculos)]."""
+    datos = yaml.safe_load(Path(ruta).read_text())
+    return [(e["etiqueta"], e["obstaculos"]) for e in datos["escenas"]]

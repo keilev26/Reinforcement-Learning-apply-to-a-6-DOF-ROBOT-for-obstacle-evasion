@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from gymnasium.utils.env_checker import check_env
 
+from gym_env.controladores import recta_con_frenado
 from gym_env.entorno import EntornoE6
 
 
@@ -22,11 +23,12 @@ def q_place(env):
 
 
 def recta(env, q_place, **opciones):
-    """Controlador de referencia: línea recta articular hasta la configuración de depósito."""
+    """Controlador de referencia: recta articular con aceleración y frenado hasta q_place."""
     _, info = env.reset(options=opciones)
     terminado = truncado = False
     while not (terminado or truncado):
-        _, _, terminado, truncado, info = env.step(np.clip((q_place - info["q"]) / env.dq_max, -1, 1))
+        a = recta_con_frenado(env, q_place, info["q"], env.dq_prev)
+        _, _, terminado, truncado, info = env.step(a)
     return info
 
 
@@ -45,6 +47,21 @@ def test_accion_acotada(env):
     q0 = info["q"]
     _, _, _, _, info = env.step(np.full(6, 5.0))          # fuera de rango: se recorta a 1
     assert np.max(np.abs(info["q"] - q0)) <= 0.05 + 1e-9
+
+
+def test_aceleracion_acotada(env):
+    """Paridad con la línea base: Δq cambia como mucho a_max·Δt² por paso (metricas.yaml 2.1)."""
+    assert env.ddq_max == pytest.approx(4.72 * 0.03 ** 2)
+    _, info = env.reset(seed=1, options={"escenario": 1})
+    qs = [info["q"]]
+    for a in [np.ones(6)] * 15 + [-np.ones(6)] * 15:               # acelerar y frenar en seco
+        _, _, te, tr, info = env.step(a)
+        qs.append(info["q"])
+        if te or tr:
+            break
+    dq = np.diff(qs, axis=0)
+    assert np.max(np.abs(np.diff(dq, axis=0))) <= env.ddq_max + 1e-9
+    assert np.max(np.abs(dq)) <= env.dq_max + 1e-9
 
 
 def test_reproducible_con_semilla(env):

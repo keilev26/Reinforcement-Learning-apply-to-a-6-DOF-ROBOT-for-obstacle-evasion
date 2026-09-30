@@ -3,7 +3,8 @@
 Tarea: llevar el TCP de p_pick a p_place (contrato v2.0) sin chocar. Todos los parámetros del MDP
 salen de `shared_scenarios/metricas.yaml` y la geometría de `escenarios.yaml`:
 
-  Acción       a ∈ [-1, 1]^6  ->  Δq = a · 0.05 rad, recortada a los límites articulares
+  Acción       a ∈ [-1, 1]^6  ->  Δq = a · 0.05 rad, con |Δq - Δq_anterior| <= 4.72 · 0.03² rad
+               (misma aceleración máxima que la línea base) y recortada a los límites articulares
   Transición   cinemática: q <- q + Δq cada 30 ms (el período de ServoJ del E6 real)
   Colisiones   cada paso se revisa en 3 subpasos (<= 0.017 rad)
   Observación  43 valores, todos calculables en el robot real:
@@ -71,10 +72,12 @@ class EntornoE6(gym.Env):
         self.C, self.M = contrato.cargar(), contrato.cargar_metricas()
         term, acc = self.M["terminacion"], self.M["accion"]
         self.dq_max = acc["delta_q_max_rad"]
+        self.dt = term["periodo_control_s"]
+        # Paridad de aceleración con la línea base (metricas.yaml 2.1)
+        self.ddq_max = acc["aceleracion_max_rad_s2"] * self.dt ** 2
         self.subpasos = acc["subpasos_colision"]
         self.pasos_max = term["pasos_maximos"]
         self.tol_pos, self.tol_ori = term["tolerancia_posicion_m"], term["tolerancia_orientacion_rad"]
-        self.dt = term["periodo_control_s"]
         self.w = {**RECOMPENSA_V0, **(recompensa or {})}
         self.escenario, self.variante = escenario, variante
         self.render_mode = render_mode
@@ -133,7 +136,9 @@ class EntornoE6(gym.Env):
         esc_n = opciones.get("escenario", self.escenario)
         var = opciones.get("variante", self.variante)
         for _ in range(20):
-            if esc_n is None:
+            if "obstaculos" in opciones:           # escena dada (conjunto de evaluación)
+                self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
+            elif esc_n is None:
                 self.etiqueta, obst = contrato.muestrear_entrenamiento(self.C, self.np_random)
             else:
                 vs = contrato.variantes(self.C, esc_n)
@@ -145,7 +150,7 @@ class EntornoE6(gym.Env):
                 q0 = self.esc.ik_tcp(T["p_pick"]["pos"], T["p_pick"]["rpy"], self.q_pick_ref)
             if q0 is not None:
                 break
-            if esc_n is not None:
+            if esc_n is not None or "obstaculos" in opciones:
                 raise RuntimeError(f"{self.etiqueta}: p_pick sin solución libre de colisión")
         self.q = np.array(q0, dtype=float)
         self.metricas.reiniciar(self.q)
@@ -158,7 +163,8 @@ class EntornoE6(gym.Env):
 
     def step(self, accion):
         a = np.clip(np.asarray(accion, dtype=float), -1.0, 1.0)
-        dq = a * self.dq_max
+        # Aceleración acotada: Δq no puede cambiar más de a_max·Δt² respecto del paso anterior
+        dq = np.clip(a * self.dq_max, self.dq_prev - self.ddq_max, self.dq_prev + self.ddq_max)
         q_nuevo = np.clip(self.q + dq, self.m.q_min, self.m.q_max)
         dq = q_nuevo - self.q
 

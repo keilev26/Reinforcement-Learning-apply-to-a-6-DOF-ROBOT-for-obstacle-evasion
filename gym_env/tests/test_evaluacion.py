@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from evaluation.evaluar_linea_base import Evaluador
+from gym_env.controladores import recta_con_frenado
 from gym_env.entorno import EntornoE6
 
 
@@ -24,7 +25,7 @@ def recorrido():
         _, info = env.reset(options={"escenario": escenario, "variante": variante})
         qs, fin = [info["q"]], False
         while not fin:
-            _, _, te, tr, info = env.step(np.clip((q_place - info["q"]) / env.dq_max, -1, 1))
+            _, _, te, tr, info = env.step(recta_con_frenado(env, q_place, info["q"], env.dq_prev))
             qs.append(info["q"]); fin = te or tr
         resultados[variante] = (np.array(qs), info)
     env.close()

@@ -46,6 +46,8 @@ class Evaluador:
             self.M["accion"]["subpasos_colision"], self.M["m2_colisiones"]["histeresis_m"],
             self.C["efector"]["largo_m"])
         self.variantes = {et: obst for n in self.C["escenarios"] for et, obst in contrato.variantes(self.C, n)}
+        if contrato.RUTA_EVALUACION.exists():
+            self.variantes.update(dict(contrato.escenas_evaluacion()))
         T = self.C["tarea_nominal"]
         self.p_meta = T["p_place"]["pos"]
         self.quat_meta = p.getQuaternionFromEuler(T["p_place"]["rpy"])

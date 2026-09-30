@@ -168,7 +168,7 @@ idénticos; ver la decisión abierta de la semana 6). Datos: `results/politica_s
 | M3 longitud cartesiana | 0.56-0.93 m | 0.48-0.73 m | La política es 4-70 % más larga (mediana +29 %) |
 | M4 ejecución | 1.1-2.4 s | 1.3-2.5 s | **No comparable todavía** (4.5) |
 
-### 4.5 Problema de paridad detectado en M4 (decisión pendiente)
+### 4.5 Problema de paridad detectado en M4 → resuelto con la opción A1 (sección 5.1)
 
 En varias variantes la política **ejecuta más rápido** que la línea base aunque su trayectoria es
 más larga. La causa: la línea base respeta el límite de aceleración de 4.72 rad/s² (TOTG), mientras
@@ -182,25 +182,77 @@ está**.
 | **A. Limitar la aceleración en el entorno:** \|Δq_t − Δq_t−1\| ≤ 4.72 · 0.03² = 0.0042 rad | Paridad estricta y fiel al robot real (`ServoJ` también está limitado). Hay que reentrenar. **Recomendada** |
 | B. Mantener el entorno y reportar M4 ejecución con la salvedad | Sin reentrenar, pero la métrica pierde validez |
 
-Es decisión del equipo. Conviene tomarla **antes** de los entrenamientos largos de 3.5.
+**Decisión del equipo (2026-09-29): A1**, aplicada en la sección 5.1.
 
 ### 4.6 Qué sigue (3.5-3.7)
 
-- Entrenar con `sac_v1` hasta 1 M de pasos y 3 semillas, después de decidir 4.5.
+- Entrenar con `sac_v1` hasta 1 M de pasos y 3 semillas, con la aceleración acotada (5.1).
 - Las fallas en 5 k=2.0, 4 dy=+0.08 y 7 apuntan al **currículo** (3.6): más peso a los obstáculos
   grandes y cercanos a la tarea, sin tocar las variantes del escenario 8.
 
 ---
 
-## 5. Estado del cronograma
+## 5. Decisiones aplicadas: paridad de aceleración (A1) y protocolo estadístico
+
+### 5.1 Paridad de aceleración (decisión A1)
+
+**Problema (sección 4.5).** La línea base respeta 4.72 rad/s² (TOTG) y el entorno solo limitaba la
+velocidad: la política podía pasar de 0 a 1.67 rad/s en un paso, unos 55 rad/s², 12 veces el
+límite. Por eso "ejecutaba más rápido" con trayectorias más largas. El tiempo de ejecución (M4) no
+era comparable.
+
+**Cambio.** `metricas.yaml` 2.1 declara `aceleracion_max_rad_s2: 4.72`. El entorno recorta cada
+paso a |Δq_t − Δq_t−1| ≤ 4.72 · 0.03² = **0.0042 rad** por articulación, antes del tope de
+velocidad. La acción sigue siendo Δq acotado (el MDP aprobado). La observación ya incluía el Δq
+anterior, así que la política ve su velocidad y sabe cuánto puede cambiarla.
+
+**Verificación.**
+- `test_aceleracion_acotada`: acelerando y frenando en seco, ningún paso cambia Δq en más de
+  0.0042 rad.
+- El controlador de referencia (recta articular con perfil trapezoidal, `gym_env/controladores.py`)
+  resuelve el espacio libre y el paso estrecho en **39 pasos (1.17 s)**. Con los mismos límites,
+  el mínimo teórico para llegar exactamente a la meta es de ~1.3 s: la política termina al entrar
+  en la tolerancia de 5 mm, sin completar el último frenado. **Asimetría residual: ~0.1 s a favor
+  de la política**, que se declara.
+
+### 5.2 Protocolo estadístico (recomendación de la semana 6)
+
+**Problema.** Con política determinista y entorno cinemático, las "100 repeticiones por escenario"
+de una misma variante son 100 copias del mismo episodio.
+
+**Cambio (`metricas.yaml` 2.1, `protocolo`).**
+
+| Elemento | Definición |
+|---|---|
+| Conjunto de evaluación | **100 escenas fijas** muestreadas de la distribución de entrenamiento, siempre con obstáculo, con semilla 1000 (distinta de las de entrenamiento). Versionado en `shared_scenarios/evaluacion.yaml` y generado por `tools/generar_evaluacion.py` |
+| Composición | 36 prismas, 27 cilindros y 37 esferas; se descartaron 4 escenas donde la tarea era infactible |
+| Política | 1 episodio por escena y semilla (determinista); 3 semillas en el núcleo |
+| Línea base | 3 consultas por escena (el planificador es estocástico) |
+| Comparación | Wilcoxon **pareado por escena**: política = media entre semillas, línea base = media entre consultas. Las métricas continuas solo en escenas donde ambos métodos tienen éxito |
+| Variantes fijas | Las 19 del contrato se siguen evaluando, una vez por semilla, para los análisis por escenario (el 8 es el de generalización) |
+
+Implementación:
+- `contrato.escenas_evaluacion()`, fuente única de las escenas;
+- `EntornoE6.reset(options={"obstaculos": ...})`;
+- `evaluar_politica.py --conjunto evaluacion` y `benchmark_linea_base.py --conjunto evaluacion`;
+- `evaluation/comparar.py`, la prueba, con 2 pruebas sintéticas: detecta la dirección correcta y
+  no declara diferencias donde no las hay.
+
+### 5.3 Resultados con la recompensa v1 y aceleración acotada
+
+*(En curso: dos semillas, 300 000 pasos.)*
+
+---
+
+## 6. Estado del cronograma
 
 - Semana 7: 1.3, 1.4, 3.4, 3.12 y 3.13 marcados como realizados.
 - **La ruta crítica baja de 14 a 13 semanas**: el proyecto gana una semana de holgura antes de la
   sustentación. Ahora pasa por la cadena de RL: 3.5 → 3.6 → 3.7.
-- **Decisiones pendientes para el equipo:** paridad de aceleración en M4 (sección 4.5, conviene
-  decidirla antes de 3.5) y repetición de episodios en el protocolo estadístico (semana 6).
+- **Decisiones tomadas:** paridad de aceleración (A1) y protocolo estadístico por escenas
+  muestreadas, ambas aplicadas en la sección 5.
 
-## 6. Reproducir
+## 7. Reproducir
 
 ```bash
 # 3.13 (con Gazebo + MoveIt corriendo: ros2 launch rl6gdl_e6_gazebo gazebo_e6.launch.py escenario:=2)
