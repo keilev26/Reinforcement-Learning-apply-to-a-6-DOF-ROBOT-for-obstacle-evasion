@@ -351,8 +351,10 @@ Datos: `results/politica_sac_v1_acel_s{0,1}_1M_{evaluacion,contrato}.csv`,
   proyecto: todas las rutas siguen iguales.
 - **Medición:** 20 000 pasos de SAC tardan **181 s en CPU y 183 s en GPU**. Sin ganancia: la red es
   pequeña (256 × 256, lotes de 256) y el tiempo lo consumen la simulación de PyBullet y el bucle de
-  Python. La GPU puede servir para entrenar **varias semillas en paralelo**, dejando la CPU para las
-  simulaciones. `entrenar_sac.py --dispositivo {auto,cpu,cuda}`.
+  Python. `entrenar_sac.py --dispositivo {auto,cpu,cuda}`.
+- **Corrección (semana 8):** aquí se supuso que la GPU serviría para varias corridas en paralelo.
+  **La medición dice lo contrario**: dos corridas en GPU alcanzan ~35 pasos/s cada una, frente a ~95
+  en CPU (ver `../semana-08/resumen-semana-08.md`, sección 1). Para este proyecto se entrena en CPU.
 - **Alcance:** la GPU solo acelera el entrenamiento. La inferencia de M4 se mide en CPU por
   contrato (`metricas.yaml`, `hardware`).
 
