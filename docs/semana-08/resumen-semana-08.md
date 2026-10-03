@@ -89,3 +89,30 @@ se ve en PyBullet.
 - **README:** el flujo de trabajo ya describe el trabajo directo en `main`.
 - **Entrenamiento:** el relanzamiento de la tercera semilla y del currículo desde los 780 000 pasos quedó **sin hacer** por falta de
   CPU; los modelos de 780 000 pasos siguen en `training/runs/`.
+
+## 7. Las 5 métricas y el análisis de generalización (4.1 y 4.3)
+
+Documento: `generalizacion-y-metricas.md`; herramienta: `tools/analisis_generalizacion.py`.
+
+- **Tabla de las 5 métricas** para política (2 semillas), RRT-Connect y LazyPRM\*, en las 100 escenas y en las 19
+  variantes, con intervalos de Wilson. Política: 44 % y 43 % de éxito (IC 95 % de 35 a 54); línea base: 98.7 % y 99 %.
+- **El tamaño del obstáculo es el factor dominante**: la política pasa de 68 % (k de 0.6 a 0.9) a 17 % (k de 1.8 a 2.0);
+  RRT-Connect no se ve afectado. La forma importa (prisma 32 %, cilindro 43 %, esfera 55 %); la posición no.
+- **Las dos semillas coinciden**: 42 escenas las resuelven ambas, 3 una y 55 ninguna, así que los fallos son sistemáticos.
+- **Fuera de la distribución de entrenamiento (escenarios 3, 7 y 8) la política resuelve 0 de 5 variantes**; dentro, 9 de 14.
+- **Corrección a una afirmación anterior**: no es cierto que muchas fallas queden a 5-10 mm de la meta. Subir la
+  tolerancia a 10 mm añade 0 y 3 puntos; los fallos son sobre todo escenas en las que la política no llega (84 y 91 %).
+  Corregido también en `../semana-07/resumen-semana-07.md`.
+
+## 8. Preparación del entrenamiento para la PC potente
+
+Documento: `entrenamiento-pc-potente.md`.
+
+- **Conjunto de validación propio** (`shared_scenarios/validacion.yaml`, 50 escenas, semilla 2000) y callback que guarda el
+  **mejor punto** de cada corrida, de modo que el modelo no se elige mirando las 100 escenas de evaluación.
+- **`training/lanzar_barrido.py`** y tres barridos: exploratorio (8 corridas de 300 000 pasos), núcleo (6 corridas de 1 M:
+  `sac_v1` y `sac_v1c` × 3 semillas) y extensión (semillas 3 y 4). Omite lo ya completado y resume los resultados.
+- **`training/benchmark_pc.py`**: mide en 5-8 min dispositivo, paralelismo y velocidad esperados en la máquina nueva.
+- `--set` y `--etiqueta` en el entrenamiento; `requirements-entrenamiento.txt` con las versiones exactas.
+- Se verificó que `evaluacion.yaml` sigue **idéntico byte a byte** tras refactorizar su generador. 90 pruebas pasan.
+- **No se entrenó nada**: la CPU de este equipo está ocupada y la tercera semilla y el currículo siguen en 780 000 pasos.

@@ -29,3 +29,6 @@ evaluacion:
     - "2"
     - "5 k=2.0"
     - "6 esfera"
+  validacion:
+    archivo: shared_scenarios/validacion.yaml
+    cada_pasos: 50000

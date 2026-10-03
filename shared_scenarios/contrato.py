@@ -161,6 +161,7 @@ def componente_sdf(C: dict, nombre: str) -> str:
 
 
 RUTA_EVALUACION = Path(__file__).resolve().parent / "evaluacion.yaml"
+RUTA_VALIDACION = Path(__file__).resolve().parent / "validacion.yaml"
 
 
 def muestrear_con_obstaculo(C: dict, rng) -> tuple[str, list[dict]]:

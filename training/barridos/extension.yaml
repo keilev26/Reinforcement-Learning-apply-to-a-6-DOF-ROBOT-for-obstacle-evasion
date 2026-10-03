@@ -1,0 +1,9 @@
+comunes:
+  pasos: 1000000
+  dispositivo: auto
+  hilos: 2
+corridas:
+  - {config: sac_v1, semilla: 3}
+  - {config: sac_v1, semilla: 4}
+  - {config: sac_v1c, semilla: 3}
+  - {config: sac_v1c, semilla: 4}

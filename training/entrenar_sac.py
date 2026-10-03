@@ -1,6 +1,8 @@
 import argparse
+import copy
 import csv
 import datetime
+import json
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +13,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
 from gym_env.entorno import EntornoE6
+from gym_env.escena import contrato
 
 RAIZ = Path(__file__).resolve().parents[1]
 
@@ -27,6 +30,48 @@ def cargar_config(nombre: str) -> dict:
     if "base" in cfg:
         cfg = _fusionar(cargar_config(cfg.pop("base")), cfg)
     return cfg
+
+
+def interpretar(valor: str):
+    try:
+        return json.loads(valor)
+    except ValueError:
+        return yaml.safe_load(valor)
+
+
+def aplicar_cambios(cfg: dict, cambios: list[str]) -> dict:
+    out = copy.deepcopy(cfg)
+    for cambio in cambios:
+        clave, separador, valor = cambio.partition("=")
+        if not separador:
+            raise ValueError(f"cambio sin '=': {cambio}")
+        *ruta, hoja = clave.split(".")
+        nodo = out
+        for k in ruta:
+            if not isinstance(nodo.get(k), dict):
+                raise KeyError(f"clave desconocida: {clave}")
+            nodo = nodo[k]
+        if hoja not in nodo:
+            raise KeyError(f"clave desconocida: {clave}")
+        nodo[hoja] = interpretar(valor)
+    return out
+
+
+def criterio_mejor(nuevo: dict, mejor: dict | None) -> bool:
+    if mejor is None:
+        return True
+    clave = lambda m: (m["exito"], -m["colision"], -m["error_mm"])
+    return clave(nuevo) > clave(mejor)
+
+
+def episodio_escena(modelo, env, etiqueta, obstaculos):
+    obs, info = env.reset(options={"obstaculos": obstaculos, "etiqueta": etiqueta})
+    fin = False
+    while not fin:
+        a, _ = modelo.predict(obs, deterministic=True)
+        obs, _, te, tr, info = env.step(a)
+        fin = te or tr
+    return info
 
 
 def episodio(modelo, env, escenario, variante):
@@ -105,6 +150,53 @@ class Evaluacion(BaseCallback):
         self.env.close()
 
 
+class Validacion(BaseCallback):
+
+    def __init__(self, cfg, carpeta: Path):
+        super().__init__()
+        v = cfg["evaluacion"]["validacion"]
+        ruta = Path(v["archivo"])
+        self.escenas = contrato.escenas_evaluacion(ruta if ruta.is_absolute() else RAIZ / ruta)
+        self.cada, self.carpeta, self.mejor, self.ultimo = v["cada_pasos"], carpeta, None, -1
+        self.env = EntornoE6(recompensa=cfg["entorno"]["recompensa"])
+        self.csv = open(carpeta / "validacion.csv", "w", newline="")
+        self.w = csv.writer(self.csv)
+        self.w.writerow(["pasos", "exito", "colision", "error_pos_mm_mediana", "pasos_media", "es_mejor"])
+
+    def _on_training_start(self) -> None:
+        self.proxima = self.num_timesteps + self.cada
+
+    def _validar(self) -> None:
+        infos = [episodio_escena(self.model, self.env, et, ob) for et, ob in self.escenas]
+        m = {"pasos": int(self.num_timesteps), "exito": float(np.mean([i["exito"] for i in infos])),
+             "colision": float(np.mean([i["colisiones"] > 0 for i in infos])),
+             "error_mm": float(np.median([i["error_pos_m"] for i in infos]) * 1000),
+             "pasos_media": float(np.mean([i["pasos"] for i in infos]))}
+        es_mejor = criterio_mejor(m, self.mejor)
+        if es_mejor:
+            self.mejor = m
+            self.model.save(self.carpeta / "mejor")
+            (self.carpeta / "mejor.json").write_text(json.dumps(m))
+        self.w.writerow([m["pasos"], f"{m['exito']:.3f}", f"{m['colision']:.3f}", f"{m['error_mm']:.1f}",
+                         f"{m['pasos_media']:.1f}", int(es_mejor)])
+        self.csv.flush()
+        self.ultimo = self.num_timesteps
+        self.logger.record("validacion/exito", m["exito"])
+        self.logger.record("validacion/colision", m["colision"])
+
+    def _on_step(self) -> bool:
+        if self.num_timesteps >= self.proxima:
+            self.proxima += self.cada
+            self._validar()
+        return True
+
+    def _on_training_end(self) -> None:
+        if self.num_timesteps != self.ultimo:
+            self._validar()
+        self.csv.close()
+        self.env.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="sac_v0")
@@ -115,6 +207,10 @@ def main():
                          "guarda: se vuelve a llenar durante learning_starts pasos")
     ap.add_argument("--dispositivo", choices=["auto", "cpu", "cuda"], default="auto",
                     help="dónde se entrena la red. La evaluación de M4 se hace SIEMPRE en CPU")
+    ap.add_argument("--set", dest="cambios", action="append", default=[], metavar="CLAVE=VALOR",
+                    help="cambia un valor de la configuración, p. ej. sac.learning_rate=0.0001 o "
+                         "sac.net_arch=[512,512]; repetible")
+    ap.add_argument("--etiqueta", default="", help="se añade al nombre de la carpeta de la corrida")
     ap.add_argument("--hilos", type=int, default=None,
                     help="hilos de PyTorch; al correr varios entrenamientos a la vez conviene 2-3 "
                          "por corrida para no sobresuscribir la CPU")
@@ -122,14 +218,16 @@ def main():
     if a.hilos:
         import torch
         torch.set_num_threads(a.hilos)
-    cfg = cargar_config(a.config)
+    cfg = aplicar_cambios(cargar_config(a.config), a.cambios)
     pasos = a.pasos or cfg["entrenamiento"]["pasos_totales"]
     semilla = cfg["entrenamiento"]["semilla"] if a.semilla is None else a.semilla
 
     fecha = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-    carpeta = RAIZ / "training" / "runs" / f"{a.config}_s{semilla}_{fecha}"
+    nombre = f"{a.config}_{a.etiqueta}" if a.etiqueta else a.config
+    carpeta = RAIZ / "training" / "runs" / f"{nombre}_s{semilla}_{fecha}"
     carpeta.mkdir(parents=True, exist_ok=True)
-    (carpeta / "config.yaml").write_text(yaml.safe_dump({**cfg, "pasos_usados": pasos, "semilla_usada": semilla}))
+    (carpeta / "config.yaml").write_text(yaml.safe_dump(
+        {**cfg, "pasos_usados": pasos, "semilla_usada": semilla, "cambios": a.cambios}))
 
     E = cfg["entorno"]
     venv = make_vec_env(EntornoE6, n_envs=E["n_entornos"], seed=semilla, vec_env_cls=SubprocVecEnv,
@@ -148,11 +246,14 @@ def main():
                  device=a.dispositivo,
                  tensorboard_log=str(carpeta / "tensorboard"), verbose=0)
     callbacks = [Evaluacion(cfg, carpeta)]
+    if cfg["evaluacion"].get("validacion"):
+        callbacks.append(Validacion(cfg, carpeta))
     if cfg.get("curriculo"):
         callbacks.append(Curriculo(cfg["curriculo"], pasos))
     modelo.learn(total_timesteps=pasos, callback=callbacks, progress_bar=False,
                  reset_num_timesteps=a.desde is None)
     modelo.save(carpeta / "modelo_final")
+    (carpeta / "estado.json").write_text(json.dumps({"pasos_totales": int(modelo.num_timesteps)}))
     venv.close()
     print(f"modelo en {carpeta}")
 

@@ -56,7 +56,7 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | `docs/semana-06/3.10-banco-de-pruebas.md` | Las 5 métricas de la línea base con el mismo evaluador que la política |
 | `docs/semana-06/3.11-distancia-minima.md` | Distancia mínima eslabón-obstáculo, validada contra FCL |
 | `docs/semana-06/1.6-1.7-alcanzabilidad-y-singularidades.md` | Alcanzabilidad y singularidades del E6 |
-| `docs/semana-08/` | Resumen de la semana 8, guion de demostración en vivo y análisis de pares |
+| `docs/semana-08/` | Resumen de la semana 8, guion de demostración, análisis de pares, generalización y métricas, y guía de entrenamiento en la PC potente |
 | `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
@@ -133,7 +133,7 @@ source install/setup.zsh
 
 # Entorno de Python para el entrenamiento
 python3 -m venv .venv && source .venv/bin/activate
-pip install gymnasium stable-baselines3 torch pybullet pyyaml pytest
+pip install -r requirements-entrenamiento.txt && pip install torch==2.14.1
 
 # Solo para regenerar el modelo del E6 (tools/gen_modelo_e6.py)
 pip install trimesh scipy rtree scikit-image fast-simplification

@@ -1,0 +1,14 @@
+comunes:
+  pasos: 300000
+  dispositivo: auto
+  hilos: 2
+  semilla: 0
+corridas:
+  - {config: sac_v1c, semilla: 0, etiqueta: base}
+  - {config: sac_v1c, semilla: 0, etiqueta: lr1e-4, cambios: {sac.learning_rate: 0.0001}}
+  - {config: sac_v1c, semilla: 0, etiqueta: lr1e-3, cambios: {sac.learning_rate: 0.001}}
+  - {config: sac_v1c, semilla: 0, etiqueta: red512x2, cambios: {sac.net_arch: [512, 512]}}
+  - {config: sac_v1c, semilla: 0, etiqueta: red256x3, cambios: {sac.net_arch: [256, 256, 256]}}
+  - {config: sac_v1c, semilla: 0, etiqueta: lote1024, cambios: {sac.batch_size: 1024}}
+  - {config: sac_v1c, semilla: 0, etiqueta: gamma995, cambios: {sac.gamma: 0.995}}
+  - {config: sac_v1c, semilla: 0, etiqueta: tau01, cambios: {sac.tau: 0.01}}
