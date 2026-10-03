@@ -17,18 +17,33 @@ from gym_env.robot_e6 import ModeloE6, autocolisiones, fijar_q  # noqa: E402
 ESLABONES_MOVILES = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6"]
 
 
-def crear_objeto(cliente: int, o: dict) -> int:
-    """Cuerpo estático de PyBullet para un objeto de escena del contrato."""
+# Colores solo para el visor (no afectan a la colisión): celda gris, obstáculo naranja, efector azul
+COLOR_CELDA = (0.72, 0.72, 0.72, 1.0)
+COLOR_OBSTACULO = (0.92, 0.42, 0.18, 1.0)
+COLOR_EFECTOR = (0.20, 0.40, 0.85, 1.0)
+
+
+def crear_objeto(cliente: int, o: dict, color=COLOR_CELDA) -> int:
+    """Cuerpo estático de PyBullet para un objeto de escena del contrato.
+
+    La forma de colisión sale de `o`; la visual es la misma forma con `color`.
+    """
     if o["forma"] == "caja":
-        forma = p.createCollisionShape(p.GEOM_BOX, halfExtents=[d / 2 for d in o["dims"]],
-                                       physicsClientId=cliente)
+        mitad = [d / 2 for d in o["dims"]]
+        forma = p.createCollisionShape(p.GEOM_BOX, halfExtents=mitad, physicsClientId=cliente)
+        visual = p.createVisualShape(p.GEOM_BOX, halfExtents=mitad, rgbaColor=color,
+                                     physicsClientId=cliente)
     elif o["forma"] == "cilindro":
         altura, radio = o["dims"]
         forma = p.createCollisionShape(p.GEOM_CYLINDER, radius=radio, height=altura,
                                        physicsClientId=cliente)
+        visual = p.createVisualShape(p.GEOM_CYLINDER, radius=radio, length=altura, rgbaColor=color,
+                                     physicsClientId=cliente)
     else:
         forma = p.createCollisionShape(p.GEOM_SPHERE, radius=o["dims"][0], physicsClientId=cliente)
-    return p.createMultiBody(0, forma, basePosition=o["pose"][:3],
+        visual = p.createVisualShape(p.GEOM_SPHERE, radius=o["dims"][0], rgbaColor=color,
+                                     physicsClientId=cliente)
+    return p.createMultiBody(0, forma, visual, basePosition=o["pose"][:3],
                              baseOrientation=p.getQuaternionFromEuler(o["pose"][3:6]),
                              physicsClientId=cliente)
 
@@ -42,12 +57,12 @@ class Escena:
         self.obstaculos: list[int] = []
         ef = contrato.objeto_efector(self.C)
         self._ef_offset = ef["pose"][:3]
-        self.efector = crear_objeto(modelo.cliente, dict(ef, pose=[0, 0, 0, 0, 0, 0]))
+        self.efector = crear_objeto(modelo.cliente, dict(ef, pose=[0, 0, 0, 0, 0, 0]), COLOR_EFECTOR)
 
     def poner_obstaculos(self, objetos: list[dict]) -> None:
         for b in self.obstaculos:
             p.removeBody(b, physicsClientId=self.m.cliente)
-        self.obstaculos = [crear_objeto(self.m.cliente, o) for o in objetos]
+        self.obstaculos = [crear_objeto(self.m.cliente, o, COLOR_OBSTACULO) for o in objetos]
 
     def fijar_q(self, q) -> None:
         """Coloca el robot y lleva el efector a su sitio sobre tool0."""

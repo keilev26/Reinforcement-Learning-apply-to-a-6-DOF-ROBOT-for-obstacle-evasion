@@ -55,3 +55,24 @@ Se lanzaron primero dos en GPU y se relanzaron en CPU al medir el ritmo (secció
 ## 4. Resultados
 
 *(En curso.)*
+
+## 5. Demostración en vivo (preparación)
+
+Para mostrar los avances se construyeron dos herramientas. Guion completo, con escenas recomendadas y
+plan B: `guion-demostracion.md`.
+
+- **`tools/visor_politica.py`**: visor de PyBullet que recorre las 19 variantes del contrato, las 100
+  escenas de evaluación o escenas de entrenamiento con el teclado, y ejecuta la política a tiempo
+  real. Con `--linea-base` dibuja en amarillo el camino que planificó RRT-Connect para la misma
+  escena (datos ya medidos) y deja la política en verde. Verificado: sus resultados coinciden con la
+  evaluación (2: éxito a 4.7 mm; 8: 38.9 mm sin llegar; esfera: 4.4 mm).
+- **`tools/demo_gazebo.sh <escenario> [variante]`**: un solo comando que levanta Gazebo con ventana, el
+  E6, los controladores y MoveIt, ejecuta recoger → depositar y mide; permite repetir y al salir cierra
+  todo el grupo de procesos. **Rechaza etiquetas mal escritas**, que el launch aceptaba usando en
+  silencio la primera variante. Probado de punta a punta: 0 de 842 estados en colisión, sin errores y sin
+  procesos sobrantes al salir.
+- **Colores en la escena de PyBullet** (celda gris, obstáculo naranja, efector azul): solo cambian lo
+  visual; las 80 pruebas siguen pasando.
+
+Límite declarado: la política entrenada **no corre en Gazebo/ROS** (no existe el nodo puente); en vivo
+se ve en PyBullet.
