@@ -1,0 +1,20 @@
+variante,s0,s1,rrt,escenario,grupo
+1,1.0,1.0,1.0,1,dentro de la distribución
+2,1.0,1.0,1.0,2,dentro de la distribución
+3,0.0,0.0,1.0,3,fuera de la distribución
+4 dx=+0.08,1.0,1.0,1.0,4,dentro de la distribución
+4 dx=-0.08,0.0,0.0,1.0,4,dentro de la distribución
+4 dy=+0.08,0.0,0.0,1.0,4,dentro de la distribución
+4 dy=-0.08,1.0,1.0,1.0,4,dentro de la distribución
+"4 d=+0.06,+0.06",0.0,0.0,1.0,4,dentro de la distribución
+5 k=0.6,1.0,1.0,0.8,5,dentro de la distribución
+5 k=1.0,1.0,1.0,1.0,5,dentro de la distribución
+5 k=1.5,0.0,0.0,1.0,5,dentro de la distribución
+5 k=2.0,0.0,0.0,1.0,5,dentro de la distribución
+6 prisma,1.0,1.0,1.0,6,dentro de la distribución
+6 cilindro,1.0,1.0,1.0,6,dentro de la distribución
+6 esfera,1.0,1.0,1.0,6,dentro de la distribución
+7 holgura=0.08,0.0,0.0,1.0,7,fuera de la distribución
+7 holgura=0.10,0.0,0.0,1.0,7,fuera de la distribución
+7 holgura=0.13,0.0,0.0,1.0,7,fuera de la distribución
+8,0.0,0.0,1.0,8,fuera de la distribución

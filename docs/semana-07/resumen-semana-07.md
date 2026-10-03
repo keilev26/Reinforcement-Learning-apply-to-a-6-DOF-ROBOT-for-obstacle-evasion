@@ -337,6 +337,11 @@ ambos métodos tienen éxito). Salida completa en `results/comparacion_sac_v1_1M
      5-10 mm. **No se cambia la tolerancia para mejorar el número**: se reporta la distribución del
      error final junto a M1.
 
+> **Corrección (semana 8).** La sospecha de que muchas fallas quedaban a 5-10 mm de la meta **no se
+> sostiene** en las 100 escenas: subir la tolerancia de 5 a 10 mm añade 0 y 3 puntos a las dos
+> semillas, y los fallos son sobre todo escenas en las que la política no llega. Solo ocurría en las 4
+> variantes fáciles que se evalúan durante el entrenamiento. Ver `../semana-08/generalizacion-y-metricas.md`.
+
 Datos: `results/politica_sac_v1_acel_s{0,1}_1M_{evaluacion,contrato}.csv`,
 `results/entrenamiento_sac_v1_acel_s{0,1}_300k-1M_evaluaciones.csv`.
 
