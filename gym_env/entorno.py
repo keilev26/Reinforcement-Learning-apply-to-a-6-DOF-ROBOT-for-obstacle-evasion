@@ -1,26 +1,3 @@
-"""Paquetes 3.2 y 3.3 — Entorno Gymnasium del Magician E6 con el MDP del proyecto.
-
-Tarea: llevar el TCP de p_pick a p_place (contrato v2.0) sin chocar. Todos los parámetros del MDP
-salen de `shared_scenarios/metricas.yaml` y la geometría de `escenarios.yaml`:
-
-  Acción       a ∈ [-1, 1]^6  ->  Δq = a · 0.05 rad, con |Δq - Δq_anterior| <= 4.72 · 0.03² rad
-               (misma aceleración máxima que la línea base) y recortada a los límites articulares
-  Transición   cinemática: q <- q + Δq cada 30 ms (el período de ServoJ del E6 real)
-  Colisiones   cada paso se revisa en 3 subpasos (<= 0.017 rad)
-  Observación  43 valores, todos calculables en el robot real:
-                 q normalizado (6) · Δq anterior / Δq_max (6) · error de posición / L (3)
-                 · error de orientación como cuaternión (4) · distancia / d_max por eslabón (6)
-                 · dirección unitaria al obstáculo más cercano por eslabón (18)
-  Fin          éxito (5 mm y 0.05 rad) o colisión: terminated; 300 pasos: truncated
-
-La recompensa es la v0, para que el entorno funcione de punta a punta. La formal es el paquete 3.4
-(semana 8); sus pesos se pasan en `recompensa=` sin tocar este archivo.
-
-Uso:
-    env = EntornoE6()                                   # escenas aleatorias de entrenamiento
-    env = EntornoE6(escenario=5, variante="5 k=2.0")    # una variante fija del contrato
-    obs, info = env.reset(seed=0)
-"""
 import gymnasium as gym
 import numpy as np
 import pybullet as p
@@ -30,36 +7,25 @@ from geometry.distancia import D_MAX, ESLABONES_OBSERVADOS, MedidorDistancias
 from gym_env.escena import ESLABONES_MOVILES, Escena, contrato
 from gym_env.robot_e6 import cargar_e6
 
-# Recompensa v0. Longitudes normalizadas por L, la longitud de la tarea (propuesta, sección 1.2.6).
 RECOMPENSA_V0 = {
-    "progreso": 10.0,        # por cada L de acercamiento del TCP a la meta
-    "orientacion": 1.0,      # por cada rad de reducción del error angular
-    "d_seguridad_m": 0.02,   # umbral de la penalización por proximidad (~0.05 L)
-    "proximidad": 1.0,       # penalización máxima por paso al tocar el umbral de 0 m
-    "suavidad": 0.05,        # por el cambio de acción (Δq - Δq_anterior)^2 normalizado
-    "tiempo": 0.01,          # por paso
-    "colision": 10.0,        # al chocar (termina el episodio)
-    "exito": 10.0,           # al llegar (termina el episodio)
-    # Términos de la v1 (paquete 3.4); en 0 la recompensa es exactamente la v0.
-    "precision": 0.0,        # peso del potencial de precisión conjunta posición-orientación
-    "sigma_pos_m": 0.02,     # escala del potencial en posición
-    "sigma_ori_rad": 0.10,   # escala del potencial en orientación
+    "progreso": 10.0,
+    "orientacion": 1.0,
+    "d_seguridad_m": 0.02,
+    "proximidad": 1.0,
+    "suavidad": 0.05,
+    "tiempo": 0.01,
+    "colision": 10.0,
+    "exito": 10.0,
+    "precision": 0.0,
+    "sigma_pos_m": 0.02,
+    "sigma_ori_rad": 0.10,
 }
 
 
-# Recompensa v1 (paquete 3.4, 2026-09-29): la v0 con la orientación reequilibrada y el potencial
-# de precisión. Elegida frente a "solo orientación" en docs/semana-07/resumen-semana-07.md:
-# a 300 000 pasos, 3 de 4 variantes resueltas frente a 0.
 RECOMPENSA_V1 = {**RECOMPENSA_V0, "orientacion": 5.0, "precision": 10.0}
 
 
 def potencial_precision(dist_m: float, ang_rad: float, w: dict) -> float:
-    """Φ = exp(-d/σp) · exp(-θ/σo): vale 1 solo si posición Y orientación están cerca de la meta.
-
-    Entra en la recompensa como diferencia Φ(s') - Φ(s) (moldeado por potencial): da gradiente
-    fuerte cerca de la meta sin cambiar la política óptima. Un bono por paso, en cambio, pagaría
-    por quedarse rondando la meta en vez de terminar el episodio.
-    """
     return float(np.exp(-dist_m / w["sigma_pos_m"]) * np.exp(-ang_rad / w["sigma_ori_rad"]))
 
 
@@ -73,14 +39,13 @@ class EntornoE6(gym.Env):
         term, acc = self.M["terminacion"], self.M["accion"]
         self.dq_max = acc["delta_q_max_rad"]
         self.dt = term["periodo_control_s"]
-        # Paridad de aceleración con la línea base (metricas.yaml 2.1)
         self.ddq_max = acc["aceleracion_max_rad_s2"] * self.dt ** 2
         self.subpasos = acc["subpasos_colision"]
         self.pasos_max = term["pasos_maximos"]
         self.tol_pos, self.tol_ori = term["tolerancia_posicion_m"], term["tolerancia_orientacion_rad"]
         self.w = {**RECOMPENSA_V0, **(recompensa or {})}
         self.escenario, self.variante = escenario, variante
-        self.escala_max = None          # currículo (3.6): lo fija el entrenamiento con set_attr
+        self.escala_max = None
         self.render_mode = render_mode
 
         self.cliente = p.connect(p.GUI if render_mode == "human" else p.DIRECT)
@@ -89,8 +54,6 @@ class EntornoE6(gym.Env):
         eslabones = {n: (self.m.cuerpo, self.m.eslabones[n]) for n in ESLABONES_OBSERVADOS if n != "efector"}
         eslabones["efector"] = (self.esc.efector, -1)
         self.medidor = MedidorDistancias(self.cliente, eslabones)
-        # M2, M3 y M5 con el mismo contador que usa el evaluador de la línea base. M5 abarca
-        # todos los eslabones móviles y el efector, no solo los observados.
         todos = {n: (self.m.cuerpo, self.m.eslabones[n]) for n in ESLABONES_MOVILES}
         todos["efector"] = (self.esc.efector, -1)
         self.metricas = ContadorMetricas(
@@ -107,21 +70,17 @@ class EntornoE6(gym.Env):
             raise RuntimeError("p_pick sin cinemática inversa libre de colisión en la celda vacía")
 
         self.action_space = gym.spaces.Box(-1.0, 1.0, (6,), np.float32)
-        # Todas las componentes quedan en [-1, 1] salvo el error de posición / L: el TCP nunca está
-        # a más de ~0.95 m de la meta (2.2 L). Se recorta a [-3, 3] por seguridad.
         n = len(ESLABONES_OBSERVADOS)
         self.observation_space = gym.spaces.Box(-3.0, 3.0, (6 + 6 + 3 + 4 + n + 3 * n,), np.float32)
 
-    # ------------------------------------------------------------------ geometría de la tarea
 
     def _errores(self):
         pos, quat = self.metricas.tcp()
-        d = p.getDifferenceQuaternion(quat, self.quat_meta)      # rotación de la actual a la meta
+        d = p.getDifferenceQuaternion(quat, self.quat_meta)
         d = np.array(d) if d[3] >= 0 else -np.array(d)
         ang = 2 * np.arctan2(np.linalg.norm(d[:3]), d[3])
         return self.p_meta - pos, d, float(ang), pos
 
-    # ------------------------------------------------------------------ observación
 
     def _observar(self, medida):
         e_pos, e_quat, _, _ = self._errores()
@@ -129,7 +88,6 @@ class EntornoE6(gym.Env):
         return np.concatenate([q_norm, self.dq_prev / self.dq_max, e_pos / self.L, e_quat,
                                medida.distancia / D_MAX, medida.direccion.ravel()]).clip(-3, 3).astype(np.float32)
 
-    # ------------------------------------------------------------------ API de Gymnasium
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
@@ -137,7 +95,7 @@ class EntornoE6(gym.Env):
         esc_n = opciones.get("escenario", self.escenario)
         var = opciones.get("variante", self.variante)
         for _ in range(20):
-            if "obstaculos" in opciones:           # escena dada (conjunto de evaluación)
+            if "obstaculos" in opciones:
                 self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
             elif esc_n is None:
                 self.etiqueta, obst = contrato.muestrear_entrenamiento(self.C, self.np_random,
@@ -165,7 +123,6 @@ class EntornoE6(gym.Env):
 
     def step(self, accion):
         a = np.clip(np.asarray(accion, dtype=float), -1.0, 1.0)
-        # Aceleración acotada: Δq no puede cambiar más de a_max·Δt² respecto del paso anterior
         dq = np.clip(a * self.dq_max, self.dq_prev - self.ddq_max, self.dq_prev + self.ddq_max)
         q_nuevo = np.clip(self.q + dq, self.m.q_min, self.m.q_max)
         dq = q_nuevo - self.q
@@ -205,8 +162,6 @@ class EntornoE6(gym.Env):
                 "q": self.q.copy()}
 
     def fijar_escala_max(self, valor) -> None:
-        """Currículo (3.6). Es un método y no un atributo: SB3 envuelve el entorno en un Monitor y
-        `set_attr` fijaría el atributo en el envoltorio, sin llegar aquí."""
         self.escala_max = valor
 
     def close(self):

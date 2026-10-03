@@ -1,18 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.8: ejecuta la tarea del contrato en Gazebo y mide si se ejecuta lo que se planificó.
-
-Con gazebo_e6.launch.py corriendo (Gazebo + gz_ros2_control + MoveIt), para la variante elegida:
-  estado actual -> p_pick -> p_place, cada tramo planificado con RRT-Connect y ejecutado en
-  brazo_controller. Por tramo reporta:
-    - resultado de la ejecución;
-    - error de seguimiento máximo del controlador (brazo_controller/controller_state);
-    - error articular final respecto de la meta;
-    - error de posición del TCP respecto del contrato (cinemática directa + efector);
-    - estados EJECUTADOS en colisión: cada /joint_states recibido durante la ejecución se revisa
-      contra la escena. Es la prueba de que el seguimiento no saca al brazo del camino revisado.
-
-Uso: ejecutar_e6.py [--escenario 2] [--variante "5 k=2.0"]
-"""
 import argparse, math, os, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -79,7 +65,6 @@ class Ejecutor(P6):
         rclpy.spin_until_future_complete(self, f, timeout_sec=10)
         r = f.result().get_result_async()
         rclpy.spin_until_future_complete(self, r, timeout_sec=60)
-        # dejar llegar los últimos estados
         fin = time.time() + 0.5
         while time.time() < fin:
             rclpy.spin_once(self, timeout_sec=0.05)
@@ -87,8 +72,6 @@ class Ejecutor(P6):
         return r.result().result.error_code.val
 
     def ejecutados_en_colision(self):
-        # /joint_states llega a 250 Hz (update_rate del controller_manager): se revisa 1 de
-        # cada 2, cada 8 ms (<= 0.014 rad a 1.67 rad/s, la resolución del planificador)
         muestra = self.grabados[::2]
         return sum(not self.valido(q) for q in muestra), len(muestra)
 
@@ -97,7 +80,6 @@ class Ejecutor(P6):
         rs = RobotState(); rs.joint_state.name = J; rs.joint_state.position = list(q); r.robot_state = rs
         f = self._call("compute_fk", r).pose_stamped[0].pose
         o = f.orientation
-        # eje z de tool0 (tercera columna de la matriz de rotación del cuaternión)
         z = (2 * (o.x * o.z + o.w * o.y), 2 * (o.y * o.z - o.w * o.x), 1 - 2 * (o.x ** 2 + o.y ** 2))
         largo = self.C["efector"]["largo_m"]
         return [f.position.x + z[0] * largo, f.position.y + z[1] * largo, f.position.z + z[2] * largo]

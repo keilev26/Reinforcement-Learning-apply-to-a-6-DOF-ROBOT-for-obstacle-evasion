@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""Diagnostico de los pendientes P1-P3 del paquete 3.9.
-
-Para cada consulta planifica y, si hay solucion, VALIDA INDEPENDIENTEMENTE la
-trayectoria devuelta: la interpola finamente y comprueba cada estado contra la
-escena con /check_state_validity. Asi se distingue entre:
-  - un plan rechazado cuya trayectoria era realmente segura  (artefacto), y
-  - un plan rechazado cuya trayectoria ejecutable si choca   (rechazo correcto).
-
-Uso:
-  diagnostico_pendientes.py --escala 1.0 --meta articular --n 20
-  diagnostico_pendientes.py --escala 1.0 --meta pose --planners RRTstar --dcc 0
-"""
 import argparse, math, os, statistics, sys, time
 from collections import Counter
 
@@ -32,15 +20,12 @@ from perfil_robot import PERFIL, ROBOT
 GRUPO = PERFIL["grupo"]
 TCP = PERFIL["tcp"]
 J = PERFIL["articulaciones"]
-# Consultas del diagnóstico de la semana 4: solo tienen sentido con el UR5e (RL6GDL_ROBOT=ur5e).
-# Con el E6, la verificación equivalente la hace p6_contrato.py sobre el contrato de escenarios.
 Q0 = [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]
 Q1 = [1.2, -1.0472, 1.0472, -1.5708, -1.5708, 0.0]
-POSE_OBS = [0.422, 0.450, 0.473]          # punto medio real del recorrido del TCP
-DIM_OBS = [0.20, 0.20, 0.40]              # prisma del escenario 2 del contrato
-# Tolerancias de meta del contrato 3.1 (shared_scenarios/metricas.yaml)
+POSE_OBS = [0.422, 0.450, 0.473]
+DIM_OBS = [0.20, 0.20, 0.40]
 TOL_POS_M, TOL_ORI_RAD, TOL_ART_RAD = 0.010, 0.050, 0.010
-PASO_INTERP = 0.02                        # rad, maximo salto articular al validar
+PASO_INTERP = 0.02
 
 CODIGOS = {1: "OK", 99999: "FAILURE", -1: "PLANNING_FAILED", -2: "INVALID_MOTION_PLAN",
            -6: "TIMED_OUT", -10: "START_IN_COLLISION", -12: "GOAL_IN_COLLISION",
@@ -63,7 +48,6 @@ class Diag(Node):
         rclpy.spin_until_future_complete(self, f, timeout_sec=t)
         return f.result()
 
-    # ---------- escena ----------
     def escena(self, escala):
         r = GetPlanningScene.Request()
         r.components.components = PlanningSceneComponents.WORLD_OBJECT_NAMES
@@ -86,7 +70,6 @@ class Diag(Node):
         r = ApplyPlanningScene.Request(); r.scene = s
         self._call("apply_planning_scene", r)
         time.sleep(0.8)
-        # verificacion: la pose debe ser la pedida
         r = GetPlanningScene.Request()
         r.components.components = (PlanningSceneComponents.WORLD_OBJECT_NAMES |
                                    PlanningSceneComponents.WORLD_OBJECT_GEOMETRY)
@@ -97,16 +80,14 @@ class Diag(Node):
                 sys.exit("ERROR: el obstaculo no quedo en la pose pedida; medicion invalida")
         return len(objs)
 
-    # ---------- validez de estados ----------
     def valido(self, q):
         r = GetStateValidity.Request(); r.group_name = GRUPO
         rs = RobotState(); rs.joint_state.name = J; rs.joint_state.position = list(q)
-        rs.is_diff = True   # conserva los cuerpos adjuntos de la escena (el efector)
+        rs.is_diff = True
         r.robot_state = rs
         return self._call("check_state_validity", r).valid
 
     def validar_trayectoria(self, puntos):
-        """Devuelve (estados_revisados, estados_en_colision)."""
         revisados = colision = 0
         prev = None
         for pt in puntos:
@@ -124,7 +105,6 @@ class Diag(Node):
             prev = q
         return revisados, colision
 
-    # ---------- metas ----------
     def meta_articular(self):
         cs = Constraints()
         for n, v in zip(J, Q1):
@@ -151,7 +131,6 @@ class Diag(Node):
         cs.position_constraints.append(pc); cs.orientation_constraints.append(oc)
         return cs
 
-    # ---------- planificador ----------
     def fijar(self, planner, claves, valores):
         r = SetPlannerParams.Request()
         r.pipeline_id = "ompl"; r.planner_config = planner; r.group = GRUPO; r.replace = False

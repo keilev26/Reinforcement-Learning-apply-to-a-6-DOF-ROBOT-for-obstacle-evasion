@@ -1,4 +1,3 @@
-# Cinemática inversa del Magician E6 para MoveIt (paquete 3.8).
 manipulador:
   kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
   kinematics_solver_search_resolution: 0.005

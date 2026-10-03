@@ -1,8 +1,3 @@
-"""Robot activo para los scripts de la línea base: grupo de MoveIt, articulaciones y TCP.
-
-Se elige con la variable de entorno RL6GDL_ROBOT (por defecto 'e6'). 'ur5e' reproduce las
-mediciones de la semana 4, hechas con planning_test.launch.py.
-"""
 import os
 
 PERFILES = {

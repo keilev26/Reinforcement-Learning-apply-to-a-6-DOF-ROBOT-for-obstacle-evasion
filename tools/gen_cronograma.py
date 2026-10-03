@@ -1,25 +1,16 @@
-"""Genera el cronograma Gantt de 15 semanas a partir de la EDT y calcula la ruta critica.
-
-Regenerar tras cada avance:  python3 tools/gen_cronograma.py
-Para actualizar el avance, cambiar el estado en TAREAS (R = realizado, P = programado).
-
-La ruta critica se calcula por el metodo CPM sobre las dependencias declaradas en PRED.
-Si una dependencia esta mal, la ruta critica sale mal: revisar PRED antes de confiar en ella.
-"""
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 SALIDA = "Cronograma RL Manipulador 6GDL.xlsx"
 N_SEM  = 15
-COL_S1 = 8                      # columna H = semana 1
-COL_LINEA = COL_S1 + 5          # columna M = semana 6: la linea roja va a su izquierda
+COL_S1 = 8
+COL_LINEA = COL_S1 + 5
 
 CALEB = "Caleb Camargo"
 LEO   = "Leonardo Vásquez"
 AMBOS = "Ambos"
 
-# (codigo, actividad, entregable, responsable, sem_ini, sem_fin, estado, costo_soles)
 TAREAS = [
     ("FASE", "FASE 1 — DISEÑO MECÁNICO (E1)", "", "", 0, 0, "", 0),
     ("1.1", "Celda de machine tending de escritorio para el Magician E6: layout, robot sobre la mesa, envolvente de seguridad", "Layout de celda", LEO, 5, 5, "R", 0),
@@ -75,17 +66,13 @@ TAREAS = [
     ("5.6", "Sustentación del proyecto", "Presentación final", AMBOS, 15, 15, "P", 0),
 ]
 
-# Paquetes hechos con el UR5e en las semanas 1-4 que se rehacen con el Magician E6.
-# Conservan su barra R de las semanas 1-4 y suman esta segunda barra: (inicio, fin, estado).
 REHACER_E6 = {
-    "1.5": (5, 5, "R"),   # tabla DH del E6
-    "3.1": (5, 5, "R"),   # contrato v2.0, verificado en PyBullet y MoveIt
-    "3.8": (5, 5, "R"),   # MoveIt con el E6 y Gazebo Harmonic con ejecución
-    "3.9": (5, 5, "R"),   # OMPL medido con el E6
+    "1.5": (5, 5, "R"),
+    "3.1": (5, 5, "R"),
+    "3.8": (5, 5, "R"),
+    "3.9": (5, 5, "R"),
 }
 
-# Precedencias para el calculo de ruta critica (CPM).
-# REVISAR: la ruta critica solo es tan buena como estas dependencias.
 PRED = {
     "1.1": ["3.1"], "1.2": ["1.1"], "1.3": ["1.1"], "1.4": ["1.3"],
     "1.5": ["3.16"], "1.6": ["1.5"], "1.7": ["1.6"],
@@ -107,17 +94,13 @@ PRED = {
 }
 
 ACT = [t for t in TAREAS if t[0] != "FASE"]
-# DUR: semanas totales de la fila (lo que muestra el Excel). DUR_CPM: lo que cuenta la ruta crítica.
 DUR = {t[0]: t[5] - t[4] + 1 for t in ACT}
 DUR_CPM = dict(DUR)
 for k, (ini, fin, _) in REHACER_E6.items():
-    DUR[k] += fin - ini + 1          # la barra del UR5e más la del E6
-    DUR_CPM[k] = fin - ini + 1       # para la ruta crítica cuenta el trabajo con el E6
-# 3.16 se hizo en un día (2026-09-22), antes que el resto de la semana 5: no ocupa una semana
-# de la ruta crítica. Sin esta excepción el método, que solo cuenta semanas enteras, lo suma como 1.
+    DUR[k] += fin - ini + 1
+    DUR_CPM[k] = fin - ini + 1
 DUR_CPM["3.16"] = 0
 
-# ---------- CPM: pasada hacia adelante y hacia atras ----------
 def cpm():
     ES, EF = {}, {}
     pendientes = list(DUR_CPM)
@@ -157,11 +140,9 @@ def cpm():
 ES, EF, LS, LF, HOLGURA, DURACION = cpm()
 CRITICAS = {k for k, h in HOLGURA.items() if h == 0}
 
-# ---------- porcentajes por duracion ----------
 total_dur = sum(DUR.values())
 PCT = {k: DUR[k] / total_dur for k in DUR}
 
-# ---------- estilos ----------
 AZUL, AZUL_MED = "1F3864", "2E5A9C"
 VERDE, GRIS_AZUL = "70AD47", "9DC3E6"
 AMBAR = "FFE699"
@@ -251,7 +232,6 @@ for cod, act, ent, resp, s_ini, s_fin, estado, costo in TAREAS:
 
 fila_fin = fila - 1
 
-# total de costo y porcentaje
 ws.cell(row=fila, column=2, value="TOTAL").font = Font(bold=True)
 ct = ws.cell(row=fila, column=6, value=sum(PCT.values())); ct.number_format = "0.0%"
 ct.font = Font(bold=True); ct.alignment = Alignment(horizontal="center")
@@ -264,12 +244,10 @@ for col in range(1, 8):
 fila_total = fila
 fila += 2
 
-# linea roja vertical entre semana 5 y 6
 for r in range(FILA_H, fila_total + 1):
     c = ws.cell(row=r, column=COL_LINEA); b = c.border
     c.border = Border(left=ROJO, right=b.right, top=b.top, bottom=b.bottom)
 
-# leyenda
 ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=3)
 c = ws.cell(row=fila, column=1, value="LEYENDA")
 c.font = Font(bold=True, color="FFFFFF"); c.fill = PatternFill("solid", fgColor=AZUL)
@@ -298,7 +276,6 @@ ws.row_dimensions[fila].height = 40
 
 ws.freeze_panes = ws.cell(row=FILA_H + 1, column=COL_S1)
 
-# ---------- hoja de ruta critica ----------
 w2 = wb.create_sheet("Ruta crítica")
 w2.column_dimensions["A"].width = 8
 w2.column_dimensions["B"].width = 62
@@ -333,8 +310,6 @@ for cod, act, *_ in ACT:
 wb.save(SALIDA)
 
 def cadena_critica():
-    """Camino real: desde la actividad que cierra el proyecto, hacia atras
-    por predecesoras criticas que encadenan (EF del predecesor == ES del sucesor)."""
     fin_k = max(CRITICAS, key=lambda k: EF[k])
     camino = [fin_k]
     while True:

@@ -1,5 +1,3 @@
-"""Pruebas del contrato de escenarios v2.0 tal como lo compone PyBullet."""
-
 import math
 
 import numpy as np
@@ -10,7 +8,7 @@ from gym_env.escena import Escena, contrato
 from gym_env.robot_e6 import cargar_e6
 
 C = contrato.cargar()
-Z_MESA = -0.005          # cara superior de la mesa de trabajo
+Z_MESA = -0.005
 SUSPENDIDOS = {"pieza_transito"}
 
 
@@ -35,7 +33,6 @@ def test_primitivos_de_igual_volumen():
 
 
 def _base(o) -> float:
-    """z de la cara inferior del objeto (solo giros en yaw, como en el contrato)."""
     z = o["pose"][2]
     if o["forma"] == "caja":
         return z - o["dims"][2] / 2
@@ -46,7 +43,6 @@ def _base(o) -> float:
 
 @pytest.mark.parametrize("n", range(1, 9))
 def test_obstaculos_apoyados_en_la_mesa(n):
-    """Los obstáculos son fabricables: se apoyan en la mesa, salvo la pieza en tránsito."""
     for etiqueta, obstaculos in contrato.variantes(C, n):
         for o in obstaculos:
             if o["id"].split("_", 1)[1] in SUSPENDIDOS:

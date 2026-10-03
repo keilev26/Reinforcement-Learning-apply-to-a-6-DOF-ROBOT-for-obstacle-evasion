@@ -1,26 +1,11 @@
 #!/usr/bin/env python3
-"""Paquete 3.9 con el Magician E6: compara planificadores y barre parámetros sobre el contrato v2.0.
-
-Para cada variante elegida del contrato, planifica pick -> place n veces con cada planificador y
-reporta éxito, trayectorias que chocan en la validación independiente (0.02 rad), tiempo de
-planificación y longitud articular. Las configuraciones de pick y place se calculan una vez por
-variante, así que todos los planificadores resuelven exactamente la misma consulta.
-
-Requiere planning_e6.launch.py corriendo. Los planificadores deben estar declarados en
-config/ompl_planning_e6.yaml.
-
-Uso:
-  medir_planificadores.py --planners RRTConnect,RRTstar,LazyPRMstar,RRT --n 10
-  medir_planificadores.py --planners RRTConnect --set range=1.0 --etiqueta "range 1.0"
-  medir_planificadores.py --variantes "2;5 k=2.0;8"
-"""
 import argparse, os, statistics, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rclpy
 from p6_contrato import P6, contrato
 
-VARIANTES = "2;5 k=2.0;8"   # obstáculo nominal, el más grande del núcleo, y el fuera de distribución
+VARIANTES = "2;5 k=2.0;8"
 
 
 def main():

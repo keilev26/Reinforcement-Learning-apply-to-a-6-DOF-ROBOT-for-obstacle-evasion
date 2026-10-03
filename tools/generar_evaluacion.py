@@ -1,13 +1,3 @@
-"""Protocolo estadístico (metricas.yaml 2.1): genera el conjunto FIJO de escenas de evaluación.
-
-Muestrea escenas de la distribución de entrenamiento (siempre con obstáculo: el espacio libre ya
-está entre las variantes fijas del contrato) con una semilla propia, distinta de las de
-entrenamiento. Descarta las escenas donde p_pick o p_place no tienen cinemática inversa libre de
-colisión: ninguna de los dos métodos podría resolverlas. Escribe shared_scenarios/evaluacion.yaml,
-que se versiona: la política y la línea base se evalúan exactamente en las mismas escenas.
-
-Uso: .venv/bin/python tools/generar_evaluacion.py
-"""
 import sys
 from pathlib import Path
 
@@ -17,8 +7,8 @@ import yaml
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from gym_env.escena import Escena, contrato  # noqa: E402
-from gym_env.robot_e6 import cargar_e6  # noqa: E402
+from gym_env.escena import Escena, contrato
+from gym_env.robot_e6 import cargar_e6
 
 
 def main():

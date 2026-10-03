@@ -1,16 +1,3 @@
-"""Las 5 métricas del contrato (metricas.yaml v2.0), con UN SOLO código para ambos métodos.
-
-El entorno de RL llama a `ContadorMetricas.paso()` en cada paso de la política; el evaluador de la
-línea base reproduce cada trayectoria de MoveIt, remuestreada al mismo período de control, y llama
-al mismo método. Así M2, M3 y M5 no pueden diferir por cómo se calculan.
-
-  M1 éxito        TCP a <= 5 mm y 0.05 rad de la meta, sin colisiones y dentro del presupuesto
-  M2 colisiones   entradas en contacto por par (eslabón, objeto), con histéresis de 5 mm,
-                  revisadas en 3 subpasos por período
-  M3 longitud     cartesiana del TCP (m) y articular (rad), sobre la trayectoria ejecutada
-  M4 tiempo       cómputo y ejecución, por separado (los da cada método)
-  M5 d_min        mínima distancia de robot y efector a los obstáculos de la variante
-"""
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -21,8 +8,8 @@ from geometry.distancia import MedidorDistancias
 
 @dataclass
 class ContadorMetricas:
-    escena: object                    # gym_env.escena.Escena
-    medidor_obst: MedidorDistancias   # distancias a los obstáculos (M5)
+    escena: object
+    medidor_obst: MedidorDistancias
     subpasos: int
     histeresis_m: float
     largo_efector_m: float
@@ -48,7 +35,6 @@ class ContadorMetricas:
         return np.array(pos) + z * self.largo_efector_m, np.array(quat)
 
     def paso(self, q_ant, q_nuevo) -> bool:
-        """Avanza un período de control de q_ant a q_nuevo. Devuelve si hubo contacto."""
         q_ant, q_nuevo = np.asarray(q_ant, float), np.asarray(q_nuevo, float)
         dq = q_nuevo - q_ant
         hubo = False
@@ -57,7 +43,6 @@ class ContadorMetricas:
             contactos = set(self.escena.en_colision())
             self.colisiones += len(contactos - self._activos)
             hubo |= bool(contactos)
-            # Un par deja de estar en contacto solo al separarse más que la histéresis
             if self._activos:
                 cerca = set(self.escena.en_colision(margen=self.histeresis_m))
                 self._activos = (self._activos | contactos) & cerca
@@ -74,7 +59,6 @@ class ContadorMetricas:
 
 
 def remuestrear(tiempos, qs, periodo: float) -> np.ndarray:
-    """Trayectoria articular remuestreada a período fijo por interpolación lineal (M3)."""
     tiempos, qs = np.asarray(tiempos, float), np.asarray(qs, float)
     t = np.arange(0.0, tiempos[-1] + 1e-9, periodo)
     if t[-1] < tiempos[-1]:
@@ -83,7 +67,6 @@ def remuestrear(tiempos, qs, periodo: float) -> np.ndarray:
 
 
 def error_meta(pos, quat, p_meta, quat_meta) -> tuple[float, float]:
-    """(error de posición en m, error angular en rad) del TCP respecto de la meta."""
     d = p.getDifferenceQuaternion(quat, quat_meta)
     ang = 2 * np.arctan2(np.linalg.norm(d[:3]), abs(d[3]))
     return float(np.linalg.norm(np.asarray(p_meta) - pos)), float(ang)

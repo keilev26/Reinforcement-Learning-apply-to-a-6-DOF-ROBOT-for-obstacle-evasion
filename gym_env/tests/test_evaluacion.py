@@ -1,5 +1,3 @@
-"""Pruebas del evaluador de métricas (paquete 3.10): un solo código para ambos métodos."""
-
 import numpy as np
 import pytest
 
@@ -15,7 +13,6 @@ def ev():
 
 @pytest.fixture(scope="module")
 def recorrido():
-    """Trayectoria de la recta articular pick -> place ejecutada en el entorno, con sus métricas."""
     env = EntornoE6()
     T = env.C["tarea_nominal"]
     env.esc.poner_obstaculos([])
@@ -34,7 +31,6 @@ def recorrido():
 
 @pytest.mark.parametrize("variante", ["1", "7 holgura=0.08"])
 def test_mismas_metricas_que_el_entorno(ev, recorrido, variante):
-    """La MISMA trayectoria da las MISMAS M2, M3 y M5 en el entorno y en el evaluador."""
     (qs, info), dt = recorrido[0][variante], recorrido[1]
     registro = {"variante": variante, "planner": "prueba", "consulta": 0, "codigo": 1,
                 "t_computo_ms": 0.0,
@@ -48,7 +44,6 @@ def test_mismas_metricas_que_el_entorno(ev, recorrido, variante):
 
 
 def test_trayectoria_que_atraviesa_el_obstaculo(ev, recorrido):
-    """La recta del espacio libre, evaluada con el prisma del escenario 2, debe contar colisión."""
     (qs, _), dt = recorrido[0]["1"], recorrido[1]
     fila = ev.evaluar({"variante": "2", "planner": "prueba", "consulta": 0, "codigo": 1,
                        "t_computo_ms": 0.0, "trayectoria": [[i * dt, *q] for i, q in enumerate(qs)]})
@@ -62,7 +57,6 @@ def test_plan_fallido_no_es_exito(ev):
 
 
 def test_evaluador_de_politica_devuelve_las_5_metricas():
-    """Cadena política -> métricas con un SAC sin entrenar (no se evalúa su desempeño)."""
     from stable_baselines3 import SAC
 
     from evaluation.evaluar_linea_base import CAMPOS

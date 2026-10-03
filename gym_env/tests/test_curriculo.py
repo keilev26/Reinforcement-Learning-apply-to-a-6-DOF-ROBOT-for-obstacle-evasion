@@ -1,5 +1,3 @@
-"""Currículo de escala (3.6): recorta el muestreo de entrenamiento, nunca el de evaluación."""
-
 import re
 
 import numpy as np
@@ -30,7 +28,6 @@ def test_sin_curriculo_se_cubre_el_rango_completo():
 
 
 def test_el_entorno_recibe_el_curriculo_como_metodo():
-    """SB3 envuelve el entorno en un Monitor: debe ser un método, no un atributo (set_attr falla)."""
     env = EntornoE6()
     env.fijar_escala_max(1.0)
     assert env.escala_max == 1.0
@@ -45,7 +42,6 @@ def test_el_entorno_recibe_el_curriculo_como_metodo():
 
 
 def test_la_evaluacion_no_usa_el_curriculo():
-    """Las escenas de evaluación son fijas: el currículo no las toca."""
     escenas = contrato.escenas_evaluacion()
     assert len(escenas) == 100
     assert max(o["dims"][0] for _, obst in escenas for o in obst) > 0.1

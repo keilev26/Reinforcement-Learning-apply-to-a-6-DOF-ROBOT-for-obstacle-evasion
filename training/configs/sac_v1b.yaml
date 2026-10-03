@@ -1,5 +1,3 @@
-# 3.4, experimento B: orientación reequilibrada (como A) + potencial de precisión conjunta.
-# Φ = exp(-d/0.02 m) · exp(-θ/0.10 rad), con peso 10: el mismo que el bono de éxito.
 version: "1b"
 base: sac_v0
 entorno:

@@ -1,49 +1,22 @@
-# Paquete 3.1 — Definición operativa de las 5 métricas.
-# FUENTE ÚNICA: la política de RL y la línea base clásica leen de aquí.
-# Cambiar un valor aquí invalida toda comparación hecha con el valor anterior.
-#
-# HISTORIAL
-#   1.0 (2026-09-15)  Versión inicial (UR5e).
-#   2.0 (2026-09-22)  Magician E6: tolerancia de posición 10 -> 5 mm, 500 -> 300 pasos,
-#                     período de control 30 ms (ServoJ), 3 subpasos de revisión de colisión,
-#                     escalado de velocidad 0.8 para la paridad de M4. Decisiones D2-D5 de
-#                     docs/semana-05/propuesta-migracion-magician-e6.md
-#   2.1 (2026-09-29)  Paridad de aceleración (decisión A1): la política no puede cambiar Δq más
-#                     que a_max · Δt² por paso, el mismo límite de 4.72 rad/s² que respeta la
-#                     línea base. Protocolo: la variabilidad sale de las semillas y de un
-#                     conjunto fijo de escenas muestreadas, común a ambos métodos.
-#                     Ver docs/semana-07/resumen-semana-07.md, sección 5.
-
 version: "2.1"
 fecha: "2026-09-29"
 
-# ---------------------------------------------------------------------------
-# Criterios de terminación de un episodio
-# ---------------------------------------------------------------------------
 terminacion:
-  tolerancia_posicion_m: 0.005        # 5 mm: 1.2 % de la tarea (0.43 m); 10 mm eran 1.5 % en el UR5e
-  tolerancia_orientacion_rad: 0.050   # ~2.9 deg: 2*acos(|<q_tcp, q_goal>|)
-  pasos_maximos: 300                  # 9 s a 30 ms: límite del episodio para el agente de RL
-  timeout_planificacion_s: 5.0        # presupuesto de OMPL por consulta
-  periodo_control_s: 0.030            # período de ServoJ del Magician E6 (33 Hz)
+  tolerancia_posicion_m: 0.005
+  tolerancia_orientacion_rad: 0.050
+  pasos_maximos: 300
+  timeout_planificacion_s: 5.0
+  periodo_control_s: 0.030
 
-# ---------------------------------------------------------------------------
-# Acción y transición del MDP (compartidas con la línea base por la paridad de M4)
-# ---------------------------------------------------------------------------
 accion:
-  delta_q_max_rad: 0.05               # por paso: 80 % de 2.0944 rad/s x 0.030 s
-  # Paridad de aceleración (2.1): |Δq_t - Δq_t-1| <= a_max · Δt^2 = 4.72 · 0.03^2 = 0.0042 rad
-  # por articulación. Es el límite que respeta la línea base (TOTG, config/e6/joint_limits.yaml).
+  delta_q_max_rad: 0.05
   aceleracion_max_rad_s2: 4.72
   transicion: >
     cinemática: Δq se recorta primero al cambio máximo por aceleración respecto del paso anterior,
     después a delta_q_max_rad, y q <- clip(q + Δq) dentro de los límites articulares
-  subpasos_colision: 3                # cada paso se revisa en 3 subpasos (<= 0.017 rad)
-  escalado_velocidad_linea_base: 0.8  # mismo techo de velocidad que la política (config/e6/joint_limits.yaml)
+  subpasos_colision: 3
+  escalado_velocidad_linea_base: 0.8
 
-# ---------------------------------------------------------------------------
-# M1 — Tasa de éxito  [adimensional, 0..1]
-# ---------------------------------------------------------------------------
 m1_tasa_exito:
   definicion: >
     Fracción de episodios que satisfacen SIMULTÁNEAMENTE las tres condiciones:
@@ -52,24 +25,18 @@ m1_tasa_exito:
     (c) se alcanza antes de pasos_maximos (RL) o antes del timeout (clásico).
   agregacion: "por escenario y semilla; se reporta media y desviación entre semillas"
 
-# ---------------------------------------------------------------------------
-# M2 — Número de colisiones  [entero, conteo por episodio]
-# ---------------------------------------------------------------------------
 m2_colisiones:
-  umbral_contacto_m: 0.0              # distancia de separacion <= 0 cuenta como colision
-  histeresis_m: 0.005                 # debe superarse para volver a contar el mismo par
+  umbral_contacto_m: 0.0
+  histeresis_m: 0.005
   conteo: "por par (eslabón, objeto) y por ENTRADA en contacto, no por paso de simulación"
   pares_evaluados:
     - eslabon_obstaculo
-    - eslabon_eslabon               # autocolisión
+    - eslabon_eslabon
     - eslabon_suelo
     - eslabon_estructura_celda
   pares_excluidos: "los desactivados en la matriz de colisión permitida (eslabones adyacentes)"
   motor: "FCL sobre las mallas de colisión, evaluado en cada subpaso (accion.subpasos_colision)"
 
-# ---------------------------------------------------------------------------
-# M3 — Longitud de trayectoria
-# ---------------------------------------------------------------------------
 m3_longitud:
   primaria: "cartesiana"
   cartesiana_m: "L_cart = suma de ||p(t_k+1) - p(t_k)||_2 sobre el TCP"
@@ -80,9 +47,6 @@ m3_longitud:
     Se calculan sobre la trayectoria EJECUTADA, remuestreada a periodo_control_s.
     El TCP es la punta del efector (escenarios.yaml, efector), no tool0.
 
-# ---------------------------------------------------------------------------
-# M4 — Tiempo  (dos magnitudes, NO se suman)
-# ---------------------------------------------------------------------------
 m4_tiempo:
   t_computo_ms:
     rl: "suma de los tiempos de inferencia de la política a lo largo del episodio"
@@ -96,9 +60,6 @@ m4_tiempo:
       ambos métodos; de lo contrario la comparación de este valor no es válida
   hardware: "misma máquina para ambos métodos, CPU, sin GPU. Declarar modelo en el informe"
 
-# ---------------------------------------------------------------------------
-# M5 — Distancia mínima a los obstáculos  [m]
-# ---------------------------------------------------------------------------
 m5_distancia_minima:
   definicion: >
     d_min = mínimo, sobre todos los pasos del episodio y sobre todos los pares
@@ -108,20 +69,14 @@ m5_distancia_minima:
   signo: "valor negativo indica penetración"
   agregacion: "se reporta el mínimo por episodio; por escenario, media y desviación de esos mínimos"
 
-# ---------------------------------------------------------------------------
-# Protocolo estadístico
-# ---------------------------------------------------------------------------
 protocolo:
-  # 2.1: con política determinista y entorno cinemático, repetir una misma escena da siempre el
-  # mismo episodio. La variabilidad sale de (a) las semillas de entrenamiento y (b) un conjunto
-  # fijo de escenas muestreadas de la distribución de entrenamiento, común a ambos métodos.
-  conjunto_evaluacion: "shared_scenarios/evaluacion.yaml"   # generado por tools/generar_evaluacion.py
+  conjunto_evaluacion: "shared_scenarios/evaluacion.yaml"
   escenas_evaluacion: 100
-  semilla_conjunto: 1000             # distinta de toda semilla de entrenamiento
+  semilla_conjunto: 1000
   semillas_nucleo: 3
   semillas_extension: 5
-  episodios_politica_por_escena_y_semilla: 1      # determinista: más repeticiones no informan
-  consultas_linea_base_por_escena: 3              # el planificador es estocástico
+  episodios_politica_por_escena_y_semilla: 1
+  consultas_linea_base_por_escena: 3
   politica_en_evaluacion: "determinista (sin ruido de exploración)"
   variantes_fijas: "las 19 del contrato se evalúan además, una vez por semilla"
   prueba: >

@@ -1,5 +1,3 @@
-"""Pruebas del generador de escenarios (3.12) y de la exportación de componentes (1.4)."""
-
 import xml.etree.ElementTree as ET
 
 import numpy as np
@@ -14,7 +12,6 @@ VARIANTES = [(n, et, obst) for n in C["escenarios"] for et, obst in contrato.var
 
 @pytest.mark.parametrize("n,etiqueta,obst", VARIANTES, ids=[v[1] for v in VARIANTES])
 def test_mundo_gazebo_igual_al_contrato(n, etiqueta, obst):
-    """El mundo SDF de cada variante contiene exactamente los objetos del contrato."""
     et, sdf = contrato.mundo_sdf(C, n, etiqueta)
     assert et == etiqueta
     mundo = ET.fromstring(sdf).find("world")
@@ -37,12 +34,11 @@ def test_mundo_gazebo_igual_al_contrato(n, etiqueta, obst):
 
 @pytest.mark.parametrize("nombre", list(C["biblioteca"]))
 def test_componente_urdf_anclado_en_su_centro(nombre, tmp_path):
-    """Cada componente exportado carga en PyBullet con su caja envolvente centrada en el origen."""
     ruta = tmp_path / f"{nombre}.urdf"
     ruta.write_text(contrato.componente_urdf(C, nombre))
     c = p.connect(p.DIRECT)
     b = p.loadURDF(str(ruta), useFixedBase=True, physicsClientId=c)
     lo, hi = p.getAABB(b, -1, physicsClientId=c)
     p.disconnect(c)
-    np.testing.assert_allclose(np.add(lo, hi) / 2, 0.0, atol=2e-3)     # centro en el origen
-    ET.fromstring(contrato.componente_sdf(C, nombre))                  # SDF bien formado
+    np.testing.assert_allclose(np.add(lo, hi) / 2, 0.0, atol=2e-3)
+    ET.fromstring(contrato.componente_sdf(C, nombre))

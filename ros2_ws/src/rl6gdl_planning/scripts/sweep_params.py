@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.9 — Barrido de parametros de OMPL.
-
-Justifica empiricamente los valores de range y longest_valid_segment_fraction
-en vez de fijarlos por intuicion. Cambia los parametros en caliente via
-/set_planner_params, sin relanzar move_group.
-"""
 import statistics, sys, time
 import rclpy
 from rclpy.node import Node
@@ -23,7 +17,7 @@ PRISMA_DIM, PRISMA_POSE = [0.20,0.20,0.40], [0.422,0.450,0.473]
 
 N = 10
 TIEMPO = 5.0
-RANGOS = [0.5, 1.0, 2.0, 5.76]        # 5.76 = default de OMPL (0.2 x extension)
+RANGOS = [0.5, 1.0, 2.0, 5.76]
 LVSF   = [0.005, 0.020]
 
 

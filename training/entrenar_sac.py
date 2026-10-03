@@ -1,16 +1,3 @@
-"""Paquete 3.5 — Entrenamiento SAC del Magician E6.
-
-Lee la configuración de training/configs/<nombre>.yaml, entrena con Stable-Baselines3 sobre
-`gym_env.entorno.EntornoE6` y evalúa periódicamente la política determinista sobre variantes del
-contrato (nunca el escenario 8: es la prueba de generalización y no puede verse al entrenar).
-
-Salidas en training/runs/<config>_s<semilla>_<fecha>/ (no se versiona):
-  modelo_final.zip, modelos intermedios, evaluaciones.csv, tensorboard/
-
-Uso:
-  .venv/bin/python -m training.entrenar_sac --config sac_v0
-  .venv/bin/python -m training.entrenar_sac --config sac_v0 --pasos 20000 --semilla 1
-"""
 import argparse
 import csv
 import datetime
@@ -36,8 +23,6 @@ def _fusionar(base: dict, cambios: dict) -> dict:
 
 
 def cargar_config(nombre: str) -> dict:
-    """Lee training/configs/<nombre>.yaml. Con `base: <otra>`, hereda de ella y solo cambia lo
-    que declara: cada experimento muestra exactamente en qué difiere."""
     cfg = yaml.safe_load((RAIZ / "training" / "configs" / f"{nombre}.yaml").read_text())
     if "base" in cfg:
         cfg = _fusionar(cargar_config(cfg.pop("base")), cfg)
@@ -55,12 +40,6 @@ def episodio(modelo, env, escenario, variante):
 
 
 class Curriculo(BaseCallback):
-    """Currículo de escala (3.6): el obstáculo máximo crece linealmente durante el entrenamiento.
-
-    Empieza en `escala_max_inicial` y llega a `escala_max_final` (el rango completo del contrato) al
-    `fraccion` de los pasos totales; después queda fijo. Solo cambia el muestreo de ENTRENAMIENTO:
-    las evaluaciones periódicas y las finales usan siempre las mismas escenas.
-    """
 
     def __init__(self, cfg: dict, pasos_totales: int):
         super().__init__()
@@ -88,7 +67,6 @@ class Curriculo(BaseCallback):
 
 
 class Evaluacion(BaseCallback):
-    """Evalúa la política determinista cada `cada` pasos y guarda una fila por variante."""
 
     def __init__(self, cfg, carpeta: Path):
         super().__init__()
@@ -101,7 +79,6 @@ class Evaluacion(BaseCallback):
                          "error_ori_rad_mediana", "pasos_media", "L_cart_media_m"])
 
     def _on_training_start(self) -> None:
-        # Al continuar un modelo el contador no empieza en 0
         self.proxima = self.num_timesteps + self.cfg["cada_pasos"]
 
     def _on_step(self) -> bool:
@@ -162,7 +139,6 @@ def main():
         modelo = SAC.load(a.desde, env=venv, device=a.dispositivo,
                           tensorboard_log=str(carpeta / "tensorboard"))
         (carpeta / "continua_desde.txt").write_text(str(a.desde) + "\n")
-        # El búfer no viene guardado: se rellena antes de volver a actualizar
         modelo.learning_starts = modelo.num_timesteps + S["learning_starts"]
     else:
         modelo = SAC("MlpPolicy", venv, learning_rate=S["learning_rate"], buffer_size=S["buffer_size"],

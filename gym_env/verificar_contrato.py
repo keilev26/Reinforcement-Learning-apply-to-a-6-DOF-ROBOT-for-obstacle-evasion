@@ -1,14 +1,3 @@
-"""Prueba de aceptación del contrato 3.1 en PyBullet (la parte que no requiere planificar).
-
-Para cada variante de los 8 escenarios comprueba, con el robot, el efector y la celda del contrato:
-  1. que p_pick y p_place tengan cinemática inversa libre de colisión;
-  2. que los obstáculos obstruyan de verdad el camino directo, usando las MISMAS configuraciones
-     de referencia del escenario 1 (así no se confunde el efecto del obstáculo con un cambio de
-     rama de la cinemática inversa).
-La planificación con RRT-Connect la verifica p6_contrato.py en MoveIt, con la misma geometría.
-
-Uso: .venv/bin/python -m gym_env.verificar_contrato [--escenarios 1,2,...]
-"""
 import argparse
 
 import numpy as np
@@ -25,7 +14,6 @@ def estados_en_colision(esc: Escena, qa, qb) -> int:
 
 
 def holgura_recta(esc: Escena, qa, qb) -> float:
-    """Distancia mínima (m) del robot y el efector a los obstáculos a lo largo del camino directo."""
     d = np.inf
     for i in range(PASOS_RECTA + 1):
         esc.fijar_q(qa + (qb - qa) * i / PASOS_RECTA)

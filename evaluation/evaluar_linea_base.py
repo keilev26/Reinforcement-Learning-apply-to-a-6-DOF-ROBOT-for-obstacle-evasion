@@ -1,19 +1,3 @@
-"""Paquete 3.10 — Las 5 métricas de la línea base, calculadas con el MISMO código que la política.
-
-Lee las trayectorias crudas de `benchmark_linea_base.py` (results/raw/linea_base_*.jsonl), las
-remuestrea al período de control del contrato (30 ms) y las reproduce en PyBullet con
-`evaluation.metricas.ContadorMetricas`, el mismo contador que usa el entorno de RL.
-
-  M1  éxito: plan encontrado dentro del presupuesto (código 1), TCP final a <= 5 mm y 0.05 rad
-      de p_place, y M2 = 0
-  M2  entradas en contacto (3 subpasos por período, histéresis de 5 mm)
-  M3  longitud cartesiana del TCP (m) y articular (rad)
-  M4  t_computo_ms (tiempo de planificación de OMPL) y t_ejecucion_s (duración de la trayectoria)
-  M5  distancia mínima a los obstáculos de la variante (m)
-
-Uso: .venv/bin/python -m evaluation.evaluar_linea_base results/raw/linea_base_<fecha>.jsonl[.gz]
-Escribe results/linea_base_<fecha>_metricas.csv y un resumen por variante y planificador.
-"""
 import argparse
 import csv
 import gzip
@@ -69,8 +53,6 @@ class Evaluador:
         for qa, qb in zip(qs, qs[1:]):
             self.cont.paso(qa, qb)
         e_pos, e_ori = error_meta(*self.cont.tcp(), self.p_meta, self.quat_meta)
-        # El plan existe (código 1) solo si OMPL lo encontró dentro del presupuesto. No se compara
-        # t_computo con el presupuesto: los planificadores anytime (LazyPRM*, RRT*) lo agotan siempre.
         exito = (e_pos <= term["tolerancia_posicion_m"] and e_ori <= term["tolerancia_orientacion_rad"]
                  and self.cont.colisiones == 0)
         return {**fila, "exito": exito, "colisiones": self.cont.colisiones, "L_cart_m": self.cont.L_cart,

@@ -1,10 +1,3 @@
-"""Referencia en FCL para validar `geometry/distancia.py` (paquete 3.11).
-
-Reconstruye en FCL la MISMA geometría que ve PyBullet: las piezas convexas de colisión de cada
-eslabón (leídas del URDF de la fuente única) como mallas BVH, que es como las representa MoveIt,
-y los objetos del contrato como primitivas de FCL. Las poses de los eslabones se toman de la
-cinemática directa de PyBullet, para comparar solo el cálculo de distancia.
-"""
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -38,7 +31,6 @@ def geometria_primitiva(o: dict):
 
 class ReferenciaFCL:
     def __init__(self, ruta_urdf: Path):
-        """Lee del URDF las mallas de colisión de cada eslabón (una BVH por pieza)."""
         raiz = ET.parse(ruta_urdf).getroot()
         paquete = Path(ruta_urdf).resolve().parents[1]
         self.piezas: dict[str, list[fcl.BVHModel]] = {}
@@ -46,7 +38,7 @@ class ReferenciaFCL:
             piezas = []
             for col in link.findall("collision"):
                 uri = col.find("geometry/mesh").get("filename")
-                ruta = paquete / uri.split("/", 3)[3]          # package://<paquete>/<resto>
+                ruta = paquete / uri.split("/", 3)[3]
                 piezas.append(_bvh(trimesh.load(ruta)))
             if piezas:
                 self.piezas[link.get("name")] = piezas
@@ -63,8 +55,6 @@ class ReferenciaFCL:
 
     @staticmethod
     def distancia(a: list[fcl.CollisionObject], b: list[fcl.CollisionObject]) -> tuple[float, bool]:
-        """(distancia mínima, hay contacto). FCL con mallas BVH no da profundidad de penetración:
-        con contacto la distancia es 0 o negativa y lo que se compara es el booleano."""
         d, contacto = np.inf, False
         for oa in a:
             for ob in b:

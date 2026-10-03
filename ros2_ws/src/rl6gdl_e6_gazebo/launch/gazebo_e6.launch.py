@@ -1,13 +1,3 @@
-"""Magician E6 en Gazebo Harmonic con gz_ros2_control y, opcionalmente, MoveIt (paquete 3.8).
-
-El mundo se genera con `contrato.mundo_sdf` (shared_scenarios/contrato.py), la MISMA expansión
-que usan PyBullet y MoveIt: celda base + obstáculos de la variante elegida.
-
-Uso:
-  ros2 launch rl6gdl_e6_gazebo gazebo_e6.launch.py                       # escenario 1, sin GUI
-  ros2 launch rl6gdl_e6_gazebo gazebo_e6.launch.py escenario:=2 gui:=true
-  ros2 launch rl6gdl_e6_gazebo gazebo_e6.launch.py escenario:=5 variante:="5 k=2.0"
-"""
 import os
 import sys
 import tempfile
@@ -26,7 +16,6 @@ PAQUETE = "rl6gdl_e6_gazebo"
 
 
 def _contrato():
-    """shared_scenarios/contrato.py desde la raíz del repositorio (el launch se instala por symlink)."""
     for padre in Path(__file__).resolve().parents:
         if (padre / "shared_scenarios" / "contrato.py").exists():
             sys.path.insert(0, str(padre / "shared_scenarios"))
@@ -40,11 +29,9 @@ def launch_setup(context):
     contrato = _contrato()
     C = contrato.cargar()
 
-    # Mundo desde el contrato
     mundo = Path(tempfile.gettempdir()) / f"rl6gdl_e6_escenario_{arg('escenario')}.sdf"
     mundo.write_text(contrato.mundo_sdf(C, int(arg("escenario")), arg("variante") or None)[1])
 
-    # Robot: xacro con el efector del contrato; mallas con rutas absolutas (como ur_simulation_gz)
     compartido = get_package_share_directory(PAQUETE)
     descripcion = get_package_share_directory("rl6gdl_e6_description")
     urdf = xacro.process_file(
@@ -69,7 +56,6 @@ def launch_setup(context):
                arguments=["joint_state_broadcaster", "-c", "/controller_manager"])
     brazo = Node(package="controller_manager", executable="spawner", output="screen",
                  arguments=["brazo_controller", "-c", "/controller_manager"])
-    # Los controladores se cargan cuando el robot ya existe en Gazebo
     tras_crear = RegisterEventHandler(OnProcessExit(target_action=crear, on_exit=[jsb, brazo]))
 
     acciones = [rsp, gz, crear, reloj, tras_crear]

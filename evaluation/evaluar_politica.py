@@ -1,13 +1,3 @@
-"""Las 5 métricas de una política entrenada, en el mismo formato que la línea base (paquete 4.1).
-
-La política determinista se ejecuta en `EntornoE6` sobre variantes del contrato. M2, M3 y M5 salen
-del mismo contador que usa el evaluador de la línea base; M4 cómputo es la suma de los tiempos de
-inferencia de la política en el episodio (metricas.yaml), y M4 ejecución, pasos × 30 ms.
-
-Uso:
-  .venv/bin/python -m evaluation.evaluar_politica training/runs/<corrida>/modelo_final.zip
-  .venv/bin/python -m evaluation.evaluar_politica <modelo.zip> --variantes "2;8" --episodios 3
-"""
 import argparse
 import csv
 import time
@@ -22,7 +12,6 @@ from gym_env.escena import contrato
 
 
 def evaluar(modelo, env, variante: str, consulta: int, obstaculos=None) -> dict:
-    """Un episodio determinista en una variante del contrato, o en una escena dada (obstaculos)."""
     if obstaculos is None:
         opciones = {"escenario": int(variante.split()[0]), "variante": variante}
     else:

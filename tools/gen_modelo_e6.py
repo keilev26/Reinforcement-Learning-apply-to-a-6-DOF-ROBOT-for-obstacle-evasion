@@ -1,39 +1,4 @@
 #!/usr/bin/env python3
-"""Genera el modelo corregido del DOBOT Magician E6: fuente única para PyBullet, MoveIt y Gazebo.
-
-Parte del URDF oficial de Dobot (repositorio DOBOT_6Axis_ROS2_V4, licencia MIT, commit fijado
-abajo) y escribe el paquete ROS 2 `ros2_ws/src/rl6gdl_e6_description/` con estas correcciones:
-
-  1. Masas: el CAD oficial calculó las masas con densidad ~1000 kg/m3 (valor por defecto sin
-     material) sobre carcasas huecas, y suman 0.94 kg. Se escalan uniformemente hasta los 7.2 kg
-     de la ficha técnica. El escalado uniforme conserva los centros de masa y multiplica las
-     inercias por el mismo factor. Es una ESTIMACIÓN declarada.
-  2. Velocidad articular: 2.0944 rad/s (120 grados/s, ficha oficial) en lugar del marcador 300.
-  3. Par: el fabricante no lo publica. Se estima por dinámica inversa (gravedad, velocidad y
-     aceleración máximas, con la carga útil de 0.75 kg), por un margen de 2, en lugar del
-     marcador 300. Es una ESTIMACIÓN: solo la usan los controladores de simulación.
-  4. Mallas visuales reducidas a ~15 000 triángulos por eslabón (las originales suman 368 000).
-  5. Mallas de colisión: cada eslabón se rellena (las mallas oficiales son carcasas huecas y
-     abiertas) y se descompone en <= 4 piezas convexas con V-HACD; se usa la descomposición solo
-     si reduce el exceso sobre la malla real frente a la envolvente única. Cada pieza es un elemento
-     <collision> propio: PyBullet usa la envolvente convexa de cada malla, y como cada pieza ya
-     es convexa, PyBullet y FCL (MoveIt) ven exactamente la misma geometría.
-  6. Raíz en `base_link` apoyada en z = 0 (se elimina la elevación arbitraria de 3 cm del
-     `world_joint` oficial) y se añade el marco `tool0` en la cara de la brida.
-  7. Se eliminan los bloques de Gazebo Classic (`gravity=false`, `gazebo_ros2_control`).
-  8. Matriz de colisiones permitidas calculada sobre esta geometría, para que ambos motores
-     excluyan exactamente los mismos pares. Se escribe como YAML (PyBullet) y como SRDF (MoveIt),
-     con el grupo `manipulador` de base_link a tool0.
-
-La cinemática (orígenes y ejes de las articulaciones, límites de posición) NO se modifica: el
-generador verifica que la cinemática directa coincide con la oficial antes de escribir.
-
-Uso:
-    .venv/bin/python tools/gen_modelo_e6.py [--fuente RUTA_AL_REPO_DOBOT]
-
-Dependencias (solo para regenerar; cargar el modelo solo requiere pybullet):
-    pip install trimesh scipy rtree scikit-image fast-simplification
-"""
 
 import argparse
 import contextlib
@@ -53,7 +18,7 @@ import trimesh
 import yaml
 
 REPO_DOBOT = "https://github.com/Dobot-Arm/DOBOT_6Axis_ROS2_V4.git"
-COMMIT_DOBOT = "ec201c40d5db63185a3593ec9c39f80fe25aa527"  # 2026-09-03
+COMMIT_DOBOT = "ec201c40d5db63185a3593ec9c39f80fe25aa527"
 
 RAIZ = Path(__file__).resolve().parents[1]
 PAQUETE = "rl6gdl_e6_description"
@@ -62,24 +27,21 @@ DESTINO = RAIZ / "ros2_ws" / "src" / PAQUETE
 ESLABONES = ["base_link", "Link1", "Link2", "Link3", "Link4", "Link5", "Link6"]
 ARTICULACIONES = [f"joint{i}" for i in range(1, 7)]
 
-# Ficha técnica oficial (dobot-robots.com, Magician E6)
 MASA_TOTAL_KG = 7.2
-VELOCIDAD_MAX_RAD_S = round(float(np.deg2rad(120.0)), 4)  # 2.0944
+VELOCIDAD_MAX_RAD_S = round(float(np.deg2rad(120.0)), 4)
 CARGA_UTIL_KG = 0.75
-ACELERACION_MAX_RAD_S2 = 4.72  # joint_limits.yaml de me6_moveit (oficial)
+ACELERACION_MAX_RAD_S2 = 4.72
 MARGEN_PAR = 2.0
-ESFUERZO_MIN_NM = 1.0          # piso para que ningún controlador de simulación quede sin par
+ESFUERZO_MIN_NM = 1.0
 
 TRIANGULOS_VISUAL = 15000
-PASO_VOXEL_M = 0.002       # relleno de las carcasas huecas
-VHACD_PROFUNDIDAD = 2      # 2 etapas de corte -> <= 4 piezas convexas por eslabón
+PASO_VOXEL_M = 0.002
+VHACD_PROFUNDIDAD = 2
 VHACD_RESOLUCION = 400000
-MEJORA_MIN_MM = 3.0        # la descomposición se usa solo si reduce el exceso al menos esto
+MEJORA_MIN_MM = 3.0
 MUESTRAS_ACM = 5000
 SEMILLA = 0
 
-
-# --------------------------------------------------------------------------- fuente oficial
 
 def obtener_fuente(ruta: Path | None) -> Path:
     if ruta:
@@ -102,16 +64,12 @@ def leer_urdf_oficial(fuente: Path) -> ET.Element:
 
 
 def urdf_oficial_plano(raiz: ET.Element, dir_mallas: Path) -> str:
-    """URDF oficial sin tocar, con rutas absolutas, para comparar la cinemática."""
     texto = ET.tostring(raiz, encoding="unicode")
     return texto.replace("file://$(find cra_description)/meshes/me6/", f"{dir_mallas}/")
 
 
-# --------------------------------------------------------------------------- mallas
-
 @contextlib.contextmanager
 def silenciar_stdout():
-    """V-HACD imprime su progreso desde C: hay que redirigir el descriptor, no sys.stdout."""
     sys.stdout.flush()
     copia = os.dup(1)
     with open(os.devnull, "w") as nulo:
@@ -144,7 +102,6 @@ def piezas_colision(src: Path, tmp: Path) -> list[trimesh.Trimesh]:
     with silenciar_stdout():
         p.vhacd(str(entrada), str(salida), str(tmp / "vhacd.log"), resolution=VHACD_RESOLUCION,
                 depth=VHACD_PROFUNDIDAD, concavity=0.0, maxNumVerticesPerCH=64)
-    # El OBJ de V-HACD trae una pieza convexa por cada 'o'
     vertices, piezas, caras = [], [], None
     for linea in salida.read_text().splitlines():
         if linea.startswith("o "):
@@ -159,11 +116,6 @@ def piezas_colision(src: Path, tmp: Path) -> list[trimesh.Trimesh]:
 
 
 def sobresale_mm(piezas: list[trimesh.Trimesh], original: trimesh.Trimesh) -> float:
-    """Percentil 95 de cuánto sobresale la superficie EXTERIOR de colisión respecto de la malla real.
-
-    Las caras de corte entre piezas quedan dentro del cuerpo y no cuentan: se descartan los puntos
-    que caen dentro de otra pieza.
-    """
     pts = []
     for i, pz in enumerate(piezas):
         muestra = pz.sample(max(500, 4000 // len(piezas)), seed=SEMILLA)
@@ -174,8 +126,6 @@ def sobresale_mm(piezas: list[trimesh.Trimesh], original: trimesh.Trimesh) -> fl
     pts = np.vstack(pts)
     return float(np.percentile(trimesh.proximity.closest_point(original, pts)[1], 95) * 1000)
 
-
-# --------------------------------------------------------------------------- URDF
 
 def escribir_urdf(raiz_oficial: ET.Element, factor_masa: float, colisiones: dict[str, int],
                   z_brida: float, esfuerzo: dict[str, float]) -> str:
@@ -216,7 +166,6 @@ def escribir_urdf(raiz_oficial: ET.Element, factor_masa: float, colisiones: dict
                 f'    <limit lower="{lim.get("lower")}" upper="{lim.get("upper")}" '
                 f'effort="{esfuerzo[nombre]:.1f}" velocity="{VELOCIDAD_MAX_RAD_S}"/>',
                 "  </joint>"]
-    # tool0 lleva una inercia despreciable: sin <inertial>, PyBullet le asigna 1 kg por defecto
     out += ['  <link name="tool0">',
             '    <inertial><mass value="1e-6"/>'
             '<inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9"/></inertial>',
@@ -246,8 +195,6 @@ def indices(cuerpo: int) -> tuple[list[int], dict[str, int]]:
     return art, links
 
 
-# --------------------------------------------------------------------------- verificaciones
-
 def verificar_cinematica(urdf_oficial: Path, urdf_nuevo: Path, rng) -> float:
     a = p.loadURDF(str(urdf_oficial), useFixedBase=True)
     b = p.loadURDF(str(urdf_nuevo), useFixedBase=True)
@@ -261,14 +208,13 @@ def verificar_cinematica(urdf_oficial: Path, urdf_nuevo: Path, rng) -> float:
         for ja, jb, v in zip(art_a, art_b, q):
             p.resetJointState(a, ja, v)
             p.resetJointState(b, jb, v)
-        # El oficial cuelga base_link de world a 3 cm de altura: se compara respecto de base_link
         base_a = np.array(p.getLinkState(a, links_a["base_link"], computeForwardKinematics=True)[4])
         pa = np.array(p.getLinkState(a, links_a["Link6"], computeForwardKinematics=True)[4])
         pb = np.array(p.getLinkState(b, links_b["Link6"], computeForwardKinematics=True)[4])
         qa = p.getLinkState(a, links_a["Link6"])[5]
         qb = p.getLinkState(b, links_b["Link6"])[5]
         d = p.getDifferenceQuaternion(qa, qb)
-        giro = 2 * np.arctan2(np.linalg.norm(d[:3]), abs(d[3]))  # error angular, en rad
+        giro = 2 * np.arctan2(np.linalg.norm(d[:3]), abs(d[3]))
         peor = max(peor, np.linalg.norm((pa - base_a) - pb), giro)
     p.removeBody(a)
     p.removeBody(b)
@@ -276,12 +222,6 @@ def verificar_cinematica(urdf_oficial: Path, urdf_nuevo: Path, rng) -> float:
 
 
 def estimar_esfuerzo(urdf: Path, rng) -> dict[str, float]:
-    """Par máximo por articulación por dinámica inversa: gravedad + velocidad + aceleración.
-
-    La carga útil se suma a la masa de Link6 (su centro de masa está a 8 mm de la brida). Las
-    posturas, velocidades y aceleraciones se muestrean dentro de los límites: velocidad de la ficha
-    técnica y aceleración de `joint_limits.yaml` de `me6_moveit` (el fabricante no publica otra).
-    """
     cuerpo = p.loadURDF(str(urdf), useFixedBase=True)
     art, links = indices(cuerpo)
     masa6 = p.getDynamicsInfo(cuerpo, links["Link6"])[0]
@@ -303,7 +243,6 @@ def estimar_esfuerzo(urdf: Path, rng) -> dict[str, float]:
 
 
 def matriz_colisiones(urdf: Path, rng) -> list[dict]:
-    """Pares que nunca deben evaluarse: adyacentes y los que están en contacto en toda postura."""
     cuerpo = p.loadURDF(str(urdf), useFixedBase=True, flags=p.URDF_USE_SELF_COLLISION)
     art, links = indices(cuerpo)
     lo = np.array([p.getJointInfo(cuerpo, j)[8] for j in art])
@@ -333,7 +272,6 @@ def matriz_colisiones(urdf: Path, rng) -> list[dict]:
 
 
 def escribir_srdf(pares: list[dict]) -> str:
-    """SRDF de MoveIt: grupo, postura de reposo y la MISMA matriz de colisiones que el YAML."""
     out = ['<?xml version="1.0"?>',
            "<!-- GENERADO por tools/gen_modelo_e6.py desde colisiones_permitidas.yaml. No editar. -->",
            '<robot name="magician_e6">',
@@ -351,10 +289,8 @@ def escribir_srdf(pares: list[dict]) -> str:
     return "\n".join(out)
 
 
-# --------------------------------------------------------------------------- principal
-
 def main():
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(description="Genera el modelo corregido del DOBOT Magician E6: fuente única para PyBullet, MoveIt y Gazebo.")
     ap.add_argument("--fuente", type=Path, help="clon local de DOBOT_6Axis_ROS2_V4")
     args = ap.parse_args()
 
@@ -387,7 +323,6 @@ def main():
             descompuesta = piezas_colision(src, tmp)
             s_env = sobresale_mm(envolvente, original)
             s_desc = sobresale_mm(descompuesta, original)
-            # Más piezas cuestan tiempo de cálculo: solo se usan si reducen el exceso de verdad
             piezas = descompuesta if s_desc <= s_env - MEJORA_MIN_MM else envolvente
             for k, pz in enumerate(piezas):
                 pz.export(DESTINO / "meshes" / "collision" / f"{nombre}_{k}.stl")
@@ -400,10 +335,8 @@ def main():
             print(f"{nombre:9s} visual {tri:6d} tri · sobresale p95: envolvente {s_env:4.1f} mm, "
                   f"{len(descompuesta)} piezas {s_desc:4.1f} mm -> usa {len(piezas)}")
 
-        # tool0 en la cara de la brida: el punto más alto de Link6 sobre su eje z
         z_brida = float(trimesh.load(dir_mallas / "Link6.STL").bounds[1][2])
 
-        # Primera pasada con par provisional, para poder calcular el par por dinámica inversa
         provisional = {n: 1.0 for n in ARTICULACIONES}
         texto = escribir_urdf(oficial, factor, colisiones, z_brida, provisional)
         esfuerzo = estimar_esfuerzo(urdf_resuelto(texto, tmp), rng)

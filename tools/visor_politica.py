@@ -1,26 +1,3 @@
-"""Visor de escenarios y de la política entrenada en PyBullet (demostración en vivo).
-
-Recorre un conjunto de escenas con el teclado y, si se da un modelo, ejecuta la política SAC
-(determinista) en cada una, a tiempo real (30 ms por paso). Con --linea-base dibuja en amarillo el
-camino del TCP que planificó RRT-Connect para la MISMA escena (datos ya medidos, results/raw/),
-y la política deja su camino en verde.
-
-Conjuntos (--conjunto):
-  contrato      las 19 variantes del contrato (el escenario 8 es la prueba de generalización)
-  evaluacion    las 100 escenas fijas de evaluación (E001 a E100)
-  entrenamiento escenas aleatorias de entrenamiento; el número de escena es la semilla
-
-Teclas (con la ventana de PyBullet enfocada):
-  n o →   escena siguiente        p o ←   escena anterior
-  r       repetir la escena       espacio  pausa
-  q       salir
-
-Uso:
-  .venv/bin/python tools/visor_politica.py --modelo training/runs/sac_v1_s0_20260930_0705/modelo_final.zip
-  .venv/bin/python tools/visor_politica.py --modelo <zip> --conjunto evaluacion --escena E074 --linea-base
-  .venv/bin/python tools/visor_politica.py --conjunto contrato          # solo ver las escenas, sin política
-  .venv/bin/python tools/visor_politica.py --modelo <zip> --sin-ventana --captura /data/tmp/visor
-"""
 import argparse
 import gzip
 import json
@@ -33,8 +10,8 @@ import pybullet as p
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from gym_env.entorno import EntornoE6  # noqa: E402
-from gym_env.escena import contrato  # noqa: E402
+from gym_env.entorno import EntornoE6
+from gym_env.escena import contrato
 
 VERDE, AMARILLO, ROJO, BLANCO, CELESTE = (0.1, 0.7, 0.2), (0.95, 0.75, 0.0), (0.85, 0.15, 0.15), (1, 1, 1), (0.2, 0.5, 0.9)
 LINEA_BASE = {"contrato": "linea_base_20260929_0025.jsonl.gz",
@@ -47,7 +24,6 @@ def modelo_por_defecto() -> Path | None:
 
 
 def lista_escenas(conjunto: str, C: dict):
-    """[(etiqueta, opciones de reset)] del conjunto."""
     if conjunto == "contrato":
         return [(et, {"escenario": int(et.split()[0]), "variante": et})
                 for n in C["escenarios"] for et, _ in contrato.variantes(C, n)]
@@ -57,7 +33,6 @@ def lista_escenas(conjunto: str, C: dict):
 
 
 def cargar_linea_base(conjunto: str) -> dict:
-    """{etiqueta: trayectoria [[t, q1..q6], ...]} del primer plan exitoso de RRT-Connect."""
     ruta = RAIZ / "results" / "raw" / LINEA_BASE.get(conjunto, "")
     if conjunto not in LINEA_BASE or not ruta.exists():
         return {}
@@ -89,7 +64,6 @@ class Visor:
             p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0, physicsClientId=self.cl)
             p.resetDebugVisualizerCamera(1.25, 55, -28, [0.18, -0.12, 0.08], physicsClientId=self.cl)
 
-    # ------------------------------------------------------------------ dibujo
     def escribir(self, clave, texto, pos, color=BLANCO, tam=1.4):
         self.texto[clave] = p.addUserDebugText(texto, pos, textColorRGB=color, textSize=tam,
                                                replaceItemUniqueId=self.texto.get(clave, -1),
@@ -118,7 +92,6 @@ class Visor:
         for a_, b_ in zip(pts, pts[1:]):
             p.addUserDebugLine(a_, b_, AMARILLO, 3, physicsClientId=self.cl)
 
-    # ------------------------------------------------------------------ teclado
     def tecla(self):
         ev = p.getKeyboardEvents(physicsClientId=self.cl)
         def apretada(*codigos):
@@ -135,7 +108,6 @@ class Visor:
             return "pausa"
         return None
 
-    # ------------------------------------------------------------------ un episodio
     def episodio(self, i):
         etiqueta, opc = self.escenas[i]
         env = self.env
@@ -155,7 +127,7 @@ class Visor:
             self.escribir("leyenda", "amarillo: RRT-Connect   verde: política", [-0.25, 0.35, 0.45], AMARILLO, 1.0)
 
         prev, fin, pausa = env.metricas.tcp()[0], False, False
-        if self.modelo is None and self.a.sin_ventana:        # prueba sin política: solo dibujar la escena
+        if self.modelo is None and self.a.sin_ventana:
             self.resultado = ("SOLO ESCENA", {"error_pos_m": info["error_pos_m"], "pasos": 0})
             if self.a.captura:
                 self.captura(i)
@@ -171,7 +143,7 @@ class Visor:
                 time.sleep(0.05)
                 continue
             if self.modelo is None:
-                time.sleep(0.2)             # sin política: solo se ve la escena
+                time.sleep(0.2)
                 continue
             a, _ = self.modelo.predict(obs, deterministic=True)
             obs, _, te, tr, info = env.step(a)
@@ -207,7 +179,6 @@ class Visor:
         from PIL import Image
         Image.fromarray(np.reshape(rgb, (h, w, 4))[:, :, :3].astype(np.uint8)).save(carpeta / f"escena_{i:03d}.png")
 
-    # ------------------------------------------------------------------ bucle principal
     def correr(self):
         i = 0
         if self.a.escena:
@@ -233,7 +204,7 @@ class Visor:
                 pass
             elif r == "sig":
                 i = (i + 1) % len(self.escenas)
-            else:                            # "fin": esperar la siguiente orden o avanzar solo
+            else:
                 limite = time.time() + (self.a.auto if self.a.auto else 1e9)
                 orden = None
                 while orden is None and time.time() < limite:
@@ -246,7 +217,9 @@ class Visor:
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(description="Visor de escenarios y de la política entrenada en PyBullet",
+                                 epilog="Teclas: n o flecha derecha = siguiente; p o flecha izquierda = anterior; "
+                                        "r = repetir; espacio = pausa; q = salir")
     ap.add_argument("--modelo", type=Path, default=None, help="modelo SAC (.zip); sin él solo se ven las escenas")
     ap.add_argument("--conjunto", choices=["contrato", "evaluacion", "entrenamiento"], default="contrato")
     ap.add_argument("--escena", default="", help="etiqueta (p. ej. E074, '5 k=2.0', 8) o, en entrenamiento, la semilla")

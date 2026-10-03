@@ -1,8 +1,3 @@
-"""Escenas del contrato 3.1 en PyBullet: celda, obstáculos y efector del Magician E6.
-
-La geometría sale de `shared_scenarios/contrato.py`, la misma expansión que usa la línea base
-en MoveIt. Aquí solo se traduce cada objeto a un cuerpo de PyBullet.
-"""
 import sys
 from pathlib import Path
 
@@ -10,24 +5,19 @@ import numpy as np
 import pybullet as p
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "shared_scenarios"))
-import contrato  # noqa: E402
+import contrato
 
-from gym_env.robot_e6 import ModeloE6, autocolisiones, fijar_q  # noqa: E402
+from gym_env.robot_e6 import ModeloE6, autocolisiones, fijar_q
 
 ESLABONES_MOVILES = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6"]
 
 
-# Colores solo para el visor (no afectan a la colisión): celda gris, obstáculo naranja, efector azul
 COLOR_CELDA = (0.72, 0.72, 0.72, 1.0)
 COLOR_OBSTACULO = (0.92, 0.42, 0.18, 1.0)
 COLOR_EFECTOR = (0.20, 0.40, 0.85, 1.0)
 
 
 def crear_objeto(cliente: int, o: dict, color=COLOR_CELDA) -> int:
-    """Cuerpo estático de PyBullet para un objeto de escena del contrato.
-
-    La forma de colisión sale de `o`; la visual es la misma forma con `color`.
-    """
     if o["forma"] == "caja":
         mitad = [d / 2 for d in o["dims"]]
         forma = p.createCollisionShape(p.GEOM_BOX, halfExtents=mitad, physicsClientId=cliente)
@@ -49,7 +39,6 @@ def crear_objeto(cliente: int, o: dict, color=COLOR_CELDA) -> int:
 
 
 class Escena:
-    """Celda base + obstáculos de una variante + efector que sigue a tool0."""
 
     def __init__(self, modelo: ModeloE6, C: dict | None = None):
         self.m, self.C = modelo, C or contrato.cargar()
@@ -65,7 +54,6 @@ class Escena:
         self.obstaculos = [crear_objeto(self.m.cliente, o, COLOR_OBSTACULO) for o in objetos]
 
     def fijar_q(self, q) -> None:
-        """Coloca el robot y lleva el efector a su sitio sobre tool0."""
         fijar_q(self.m, q)
         pos, ori = p.getLinkState(self.m.cuerpo, self.m.tool0, computeForwardKinematics=True,
                                   physicsClientId=self.m.cliente)[4:6]
@@ -73,13 +61,10 @@ class Escena:
         p.resetBasePositionAndOrientation(self.efector, pos_ef, ori, physicsClientId=self.m.cliente)
 
     def en_colision(self, q=None, margen: float = 0.0) -> list[str]:
-        """Contactos en la configuración q (o en la actual si q es None): autocolisión, robot y
-        efector contra la escena."""
         if q is not None:
             self.fijar_q(q)
         c = self.m.cliente
         choques = [f"{a}-{b}" for a, b in autocolisiones(self.m, margen)]
-        # Cada contacto nombra el objeto concreto (celda:i u obstaculo:i): M2 cuenta por par
         entorno = [(f"celda:{i}", b) for i, b in enumerate(self.celda)] + \
                   [(f"obstaculo:{i}", b) for i, b in enumerate(self.obstaculos)]
         for nombre in ESLABONES_MOVILES:
@@ -90,7 +75,6 @@ class Escena:
         for tipo, b in entorno:
             if p.getClosestPoints(self.efector, b, margen, physicsClientId=c):
                 choques.append(f"efector-{tipo}")
-        # El efector va pegado a Link6: se revisa contra el resto del brazo
         for nombre in ESLABONES_MOVILES[:-1]:
             if p.getClosestPoints(self.efector, self.m.cuerpo, margen,
                                   linkIndexB=self.m.eslabones[nombre], physicsClientId=c):
@@ -98,10 +82,6 @@ class Escena:
         return choques
 
     def ik_tcp(self, pos, rpy, semilla, intentos: int = 30, rng=None):
-        """Configuración libre de colisión con el TCP en (pos, rpy), o None.
-
-        Prueba primero desde la semilla y después desde semillas aleatorias.
-        """
         rng = rng or np.random.default_rng(0)
         c = self.m.cliente
         objetivo = contrato.tool0_desde_tcp(self.C, pos, rpy)

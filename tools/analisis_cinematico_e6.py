@@ -1,17 +1,3 @@
-"""Paquetes 1.6 y 1.7 — Alcanzabilidad y singularidades del Magician E6 para la tarea del contrato.
-
-1.6  Mapa de alcanzabilidad con la herramienta hacia abajo y el efector del contrato: para cada
-     (radio, altura del TCP) se busca una cinemática inversa libre de colisión con la celda, y se
-     registra la manipulabilidad de la solución. Se marcan p_pick y p_place.
-1.7  Singularidades: manipulabilidad de Yoshikawa w = |det J| (J de 6x6 en el TCP) al barrer J5
-     (muñeca) y J3 (codo), y a lo largo del camino directo de la tarea. Justifica la acción Δq:
-     en una singularidad el control cartesiano pide velocidades articulares que divergen (1/σ_min),
-     mientras que Δq está acotado por construcción.
-
-Uso: .venv/bin/python tools/analisis_cinematico_e6.py
-Salidas: results/figures/1.6_alcanzabilidad_e6.png, results/figures/1.7_singularidades_e6.png,
-         results/analisis_cinematico_e6.yaml
-"""
 import sys
 from pathlib import Path
 
@@ -25,10 +11,9 @@ from matplotlib.colors import LinearSegmentedColormap
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from gym_env.escena import Escena, contrato  # noqa: E402
-from gym_env.robot_e6 import cargar_e6, fijar_q  # noqa: E402
+from gym_env.escena import Escena, contrato
+from gym_env.robot_e6 import cargar_e6, fijar_q
 
-# Paleta de referencia (modo claro): una sola rampa azul para magnitud, tinta neutra para texto
 SUPERFICIE, TINTA, TINTA_2, TENUE, REJILLA = "#fcfcfb", "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
 AZUL = "#2a78d6"
 RAMPA = LinearSegmentedColormap.from_list(
@@ -69,10 +54,9 @@ def main():
     T = C["tarea_nominal"]
     semilla = np.array(T["q_inicial_rad"])
 
-    # ---------------------------------------------------------------- 1.6 alcanzabilidad
     radios = np.arange(0.10, 0.5001, 0.025)
     alturas = np.arange(0.02, 0.3801, 0.03)
-    azimut = -np.pi / 4                        # dirección del centro de obstrucción
+    azimut = -np.pi / 4
     w = np.full((len(alturas), len(radios)), np.nan)
     for i, z in enumerate(alturas):
         for j, r in enumerate(radios):
@@ -114,7 +98,6 @@ def main():
     fig.savefig(salida / "1.6_alcanzabilidad_e6.png", dpi=160)
     plt.close(fig)
 
-    # ---------------------------------------------------------------- 1.7 singularidades
     q_pick = esc.ik_tcp(T["p_pick"]["pos"], T["p_pick"]["rpy"], semilla)
     q_place = esc.ik_tcp(T["p_place"]["pos"], T["p_place"]["rpy"], semilla)
     base = (q_pick + q_place) / 2
@@ -155,7 +138,6 @@ def main():
     fig.savefig(salida / "1.7_singularidades_e6.png", dpi=160)
     plt.close(fig)
 
-    # Singularidades: mínimos locales de |det J| por debajo del 1 % del máximo
     def ceros(v):
         r = v / ref
         idx = [i for i in range(len(r)) if r[i] < 0.01

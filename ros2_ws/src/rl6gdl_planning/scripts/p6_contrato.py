@@ -1,20 +1,4 @@
 #!/usr/bin/env python3
-"""Verificación de la línea base con la geometría y las poses REALES del contrato 3.1.
-
-Expande cada escenario de shared_scenarios/escenarios.yaml en TODAS sus variantes, con
-shared_scenarios/contrato.py (la misma expansión que usa PyBullet), y para cada una comprueba:
-  1. que p_pick y p_place tengan cinemática inversa libre de colisión, con el efector adjunto;
-  2. que el obstáculo obstruya de verdad el camino directo (usando las MISMAS configuraciones
-     articulares del escenario 1, para no confundir el efecto del obstáculo con un cambio de
-     rama de la cinemática inversa). En el escenario de paso estrecho, que el camino lo cruce;
-  3. que RRT-Connect planifique pick -> place y que ninguna trayectoria choque en la
-     validación independiente.
-
-Contrato >= 2.0 (Magician E6): las poses de la tarea son del TCP, la punta del efector.
-Requiere planning_e6.launch.py corriendo.
-
-Uso: p6_contrato.py [<escenarios.yaml>] [--escenarios 1,2,...] [--n 5]
-"""
 import argparse, math, os, sys, time
 from collections import Counter
 from pathlib import Path
@@ -32,7 +16,6 @@ from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion
 
 
 def _raiz_repo() -> Path:
-    """Raíz del repositorio: el script corre desde src/ o desde install/ (symlink)."""
     for base in (Path(__file__).resolve(), Path(os.path.abspath(__file__))):
         for padre in base.parents:
             if (padre / "shared_scenarios" / "contrato.py").exists():
@@ -41,21 +24,14 @@ def _raiz_repo() -> Path:
 
 
 sys.path.insert(0, str(_raiz_repo() / "shared_scenarios"))
-import contrato  # noqa: E402
+import contrato
 
 PASOS_RECTA = 100
 
-# Margen de planificación de la línea base: MoveIt planifica con cada objeto de la escena inflado
-# 2 mm por lado. El evaluador (PyBullet, el mismo para la política) ve los eslabones del robot
-# hasta ~1 mm más cerca que FCL (geometry/validar_fcl.py); sin margen, RRT-Connect entrega
-# trayectorias que rozan a 0 mm según FCL y cuentan como colisión en la evaluación. Con 2 mm de
-# margen FCL garantiza >= 2 mm, es decir >= ~1 mm en PyBullet. La evaluación usa la geometría
-# NOMINAL del contrato. Ver docs/semana-06/3.10-banco-de-pruebas.md.
 MARGEN_PLANIFICACION_M = 0.002
 
 
 def inflar(o: dict, margen: float) -> dict:
-    """Copia del objeto con `margen` añadido por lado (caja, cilindro o esfera)."""
     if o["forma"] == "caja":
         dims = [d + 2 * margen for d in o["dims"]]
     elif o["forma"] == "cilindro":
@@ -66,7 +42,6 @@ def inflar(o: dict, margen: float) -> dict:
 
 
 def escalado_velocidad() -> float:
-    """Escalado de paridad de M4, de config/e6/joint_limits.yaml (MoveIt no lo aplica solo)."""
     import yaml
     from ament_index_python.packages import get_package_share_directory
     ruta = Path(get_package_share_directory("rl6gdl_planning")) / "config" / "e6" / "joint_limits.yaml"
@@ -101,7 +76,6 @@ def a_collision(o, marco="base_link"):
 
 
 def estado(q) -> RobotState:
-    # is_diff: conserva el efector adjunto a la escena
     rs = RobotState(); rs.is_diff = True
     rs.joint_state.name = J; rs.joint_state.position = list(q)
     return rs
@@ -164,7 +138,6 @@ class P6(Diag):
         return malos
 
     def planificar_una(self, qa, qb, planner="RRTConnect", tiempo=5.0, tolerancia=0.01):
-        """Una consulta qa -> qb con meta articular. Devuelve la MotionPlanResponse."""
         cs = Constraints()
         for nm, v in zip(J, qb):
             jc = JointConstraint(); jc.joint_name = nm; jc.position = v
@@ -179,7 +152,6 @@ class P6(Diag):
         return self._call("plan_kinematic_path", p, t=tiempo + 20).motion_plan_response
 
     def planificar_n(self, qa, qb, n, planner="RRTConnect", tiempo=5.0):
-        """n consultas qa -> qb. Devuelve (éxitos, chocan, t_medio_ms, fallos, longitudes_rad)."""
         ok = choca = 0
         tiempos, fallos, longitudes = [], Counter(), []
         for _ in range(n):
@@ -209,7 +181,6 @@ def main():
     print(f"\nContrato {C['version']} | p_pick {T['p_pick']['pos']} | "
           f"p_place {T['p_place']['pos']} | RRT-Connect x{a.n} por variante")
 
-    # Configuraciones de referencia: las del escenario 1 (solo la celda)
     d.cargar([])
     ref = (d.ik("p_pick", T["q_inicial_rad"]), d.ik("p_place", T["q_inicial_rad"]))
     if None in ref:

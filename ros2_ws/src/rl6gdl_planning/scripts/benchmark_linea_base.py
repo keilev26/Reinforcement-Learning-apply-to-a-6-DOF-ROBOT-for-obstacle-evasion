@@ -1,21 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.10 — Banco de pruebas de la línea base: corre las consultas y guarda las trayectorias.
-
-Este script solo PLANIFICA y guarda datos crudos. Las 5 métricas las calcula
-`evaluation/evaluar_linea_base.py` en el `.venv`, reproduciendo cada trayectoria con el mismo
-contador que usa el entorno de RL (`evaluation/metricas.py`). Así ambos métodos se miden con el
-mismo código, en lugar de confiar en las métricas propias de cada herramienta.
-
-Se prefirió esto a `moveit_ros_benchmarks`: mide tiempo, longitud y éxito, pero no M2 ni M5 con la
-definición del contrato, y depende de `warehouse_ros_mongo` (riesgo ya previsto en la EDT).
-
-Salida: una línea JSON por consulta en results/raw/linea_base_<fecha>.jsonl con la variante, el
-planificador, el código de resultado, el tiempo de cómputo y la trayectoria [[t, q1..q6], ...].
-
-Uso (con planning_e6.launch.py corriendo):
-  benchmark_linea_base.py --n 10
-  benchmark_linea_base.py --planners RRTConnect,LazyPRMstar --variantes "2;5 k=2.0;8" --n 20
-"""
 import argparse, datetime, json, os, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -71,8 +54,6 @@ def main():
                         registro.update(codigo=-31, t_computo_ms=None, trayectoria=[])
                     else:
                         t0 = time.perf_counter()
-                        # Meta articular a 0.001 rad: con 0.01 rad el TCP quedaba a ~3 mm de mediana y
-                        # 14 % de los planes excedían los 5 mm de M1 por la propia tolerancia de la meta
                         res = d.planificar_una(qa, qb, pl, tiempo, tolerancia=0.001)
                         registro["t_pared_ms"] = (time.perf_counter() - t0) * 1000
                         jt = res.trajectory.joint_trajectory

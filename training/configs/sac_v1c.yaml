@@ -1,10 +1,6 @@
-# 3.6, experimento de currículo de escala: igual a sac_v1 (recompensa v1, aceleración acotada) salvo
-# que el obstáculo máximo crece de k = 1.0 a k = 2.0 durante la primera mitad del entrenamiento.
-# Motivo: sac_v1 no resuelve los obstáculos grandes (k >= 1.5) ni los cercanos a la tarea.
-# La evaluación no cambia: las mismas 100 escenas y las 19 variantes del contrato.
 version: "1c"
 base: sac_v1
 curriculo:
   escala_max_inicial: 1.0
-  escala_max_final: 2.0     # = rango completo del contrato
-  fraccion: 0.5             # del total de pasos
+  escala_max_final: 2.0
+  fraccion: 0.5

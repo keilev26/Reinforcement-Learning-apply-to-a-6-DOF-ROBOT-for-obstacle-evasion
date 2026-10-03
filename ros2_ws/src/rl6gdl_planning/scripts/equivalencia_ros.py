@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.13 (lado ROS): recoge lo que ven MoveIt y Gazebo para compararlo con PyBullet.
-
-Con gazebo_e6.launch.py corriendo (Gazebo + MoveIt en modo ejecución), escribe un JSON con:
-  fk       cinemática directa de MoveIt (KDL) para eslabones y tool0 en N configuraciones aleatorias
-  limites  límites articulares que usa MoveIt (URDF + joint_limits.yaml)
-  escena   objetos de la escena de planificación de MoveIt para una variante del contrato
-  gazebo   para K configuraciones libres de colisión: el estado articular que alcanza Gazebo y las
-           poses de los eslabones que reporta el propio Gazebo (`gz model`)
-La comparación la hace `evaluation/verificar_equivalencia.py` en el .venv.
-
-Uso: equivalencia_ros.py --variante 2 --n-fk 200 --n-gazebo 6
-"""
 import argparse, json, math, os, re, subprocess, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +18,6 @@ ESLABONES = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6", "tool0"]
 
 
 def pose_gz(eslabon: str):
-    """Pose de un eslabón según Gazebo: ([x, y, z], [roll, pitch, yaw]) en el marco del mundo."""
     salida = subprocess.run(["gz", "model", "-m", "magician_e6", "-l", eslabon],
                             capture_output=True, text=True, timeout=20).stdout
     bloque = salida.split("- Pose [ XYZ (m) ] [ RPY (rad) ]:")[1]
@@ -111,7 +98,6 @@ def main():
              "fk": [{"q": list(q), "poses": d.fk(q)} for q in qs],
              "limites_velocidad": d.limites(), "escena": d.escena(), "gazebo": []}
 
-    # Configuraciones para Gazebo: alrededor del camino de la tarea, solo las libres de colisión
     T = C["tarea_nominal"]
     qa, qb = d.ik("p_pick", T["q_inicial_rad"]), d.ik("p_place", T["q_inicial_rad"])
     candidatas = [np.array(qa) + (np.array(qb) - np.array(qa)) * s + rng.normal(0, 0.15, 6)

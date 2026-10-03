@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""Hipotesis: RRT* falla porque la tolerancia de meta (0.001 rad) hace que la
-region objetivo sea practicamente un punto en 6D. RRT-Connect no lo sufre porque
-crece un arbol desde la meta; RRT*, de arbol unico, debe acertarla muestreando.
-
-Se barre la tolerancia y se mide la tasa de exito de cada planificador.
-"""
 import statistics, sys, time
 import rclpy
 from rclpy.node import Node

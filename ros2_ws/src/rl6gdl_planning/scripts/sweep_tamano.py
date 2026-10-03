@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.9 — Sensibilidad de la linea base al tamano del obstaculo.
-
-Caracteriza a partir de que tamano de obstruccion los planificadores clasicos
-empiezan a fallar con un presupuesto dado. Es informacion directamente util
-para el escenario 7 del contrato (paso estrecho, prueba de estres).
-"""
 import math, statistics, time, sys
 import rclpy
 from rclpy.node import Node
@@ -18,8 +12,8 @@ J = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
      "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
 Q0 = [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]
 Q1 = [1.2, -1.0472, 1.0472, -1.5708, -1.5708, 0.0]
-POSE = [0.422, 0.450, 0.473]     # punto medio real del recorrido del TCP
-BASE = [0.20, 0.20, 0.40]        # prisma del escenario 2 del contrato
+POSE = [0.422, 0.450, 0.473]
+BASE = [0.20, 0.20, 0.40]
 N, T = 10, 5.0
 ESCALAS = [0.0, 0.25, 0.50, 0.75, 1.00]
 

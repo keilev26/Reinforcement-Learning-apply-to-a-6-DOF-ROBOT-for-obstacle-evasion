@@ -1,5 +1,3 @@
-"""Pruebas del comparador estadístico (protocolo de metricas.yaml 2.1) con datos sintéticos."""
-
 import numpy as np
 
 from evaluation.comparar import comparar, por_escena
@@ -19,14 +17,13 @@ def filas(n_escenas, metodo, rng, L=0.6, t=100.0, d=0.004, exito=True, repeticio
 def test_detecta_direccion_y_no_inventa_diferencias():
     rng = np.random.default_rng(0)
     base = por_escena(filas(40, "RRTConnect", rng, repeticiones=3))
-    # Política: cómputo 10 veces menor, holgura 7 veces mayor, trayectoria 30 % más larga
     politica = por_escena(filas(40, "SAC", rng, L=0.78, t=10.0, d=0.029))
     r = {x["metrica"]: x for x in comparar(politica, base)}
     assert r["M4 cómputo (ms)"]["veredicto"] == "política mejor"
     assert r["M5 distancia mínima (m)"]["veredicto"] == "política mejor"
     assert r["M3 longitud cartesiana (m)"]["veredicto"] == "línea base mejor"
     assert r["M4 ejecución (s)"]["veredicto"] == "sin diferencia significativa"
-    assert r["M1 éxito (fracción)"]["pares_no_nulos"] == 0          # ambos 100 %: no hay prueba
+    assert r["M1 éxito (fracción)"]["pares_no_nulos"] == 0
 
 
 def test_escena_sin_exito_queda_fuera_de_las_metricas_continuas():

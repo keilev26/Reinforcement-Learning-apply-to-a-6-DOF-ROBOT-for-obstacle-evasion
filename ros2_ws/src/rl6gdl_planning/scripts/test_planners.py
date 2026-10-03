@@ -1,14 +1,4 @@
 #!/usr/bin/env python3
-"""Paquete 3.9 — Verificacion de la configuracion de OMPL.
-
-Planifica N veces con cada planificador via el servicio /plan_kinematic_path y
-reporta tasa de exito, tiempo de planificacion y longitud articular.
-
-No ejecuta la trayectoria: solo verifica que RRT-Connect y RRT* quedan
-seleccionables con los parametros fijados y que ambos resuelven la consulta.
-
-Uso:  ros2 run rl6gdl_planning test_planners.py [--n 10] [--tiempo 5.0]
-"""
 import argparse
 import math
 import statistics
@@ -27,21 +17,9 @@ GRUPO = "ur_manipulator"
 ARTICULACIONES = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
                   "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
 
-# Pose de reposo -> configuracion de recogida, declaradas en el contrato 3.1
 Q_INICIAL = [0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0]
 Q_META    = [1.2, -1.0472, 1.0472, -1.5708, -1.5708, 0.0]
 
-# Obstaculo con la MISMA geometria que el prisma del escenario 2 del contrato
-# (shared_scenarios/escenarios.yaml): 0.20 x 0.20 x 0.40 m.
-#
-# La POSE no es la del contrato. El contrato situa el prisma en el punto medio
-# entre p_pick y p_place, que son poses de la celda de E1, todavia no modelada.
-# Esta verificacion usa una consulta articular propia, asi que el obstaculo se
-# coloca en el punto medio REAL de su recorrido, calculado por cinematica directa
-# con PyBullet: (0.422, 0.450, 0.473) en el marco base_link.
-#
-# Verificado: con la pose del contrato el prisma quedaba a 0.80 m del recorrido
-# y no obstruia nada, lo que hacia la prueba vacia.
 PRISMA_DIM  = [0.20, 0.20, 0.40]
 PRISMA_POSE = [0.422, 0.450, 0.473]
 
@@ -83,9 +61,6 @@ class Verificador(Node):
         return fut.result().scene.world.collision_objects
 
     def limpiar_escena(self):
-        """La escena de planificacion PERSISTE entre ejecuciones del script.
-        Sin esta limpieza los obstaculos se acumulan y las medidas salen de una
-        escena distinta de la declarada."""
         viejos = []
         for o in self._objetos_en_escena():
             c = CollisionObject()
@@ -98,13 +73,6 @@ class Verificador(Node):
             self.get_logger().info(f"escena limpiada: {len(viejos)} objeto(s) residual(es)")
 
     def cargar_obstaculo(self):
-        """Inserta el prisma del escenario 2 en la escena de planificacion.
-
-        La pose va en obj.pose, NO en primitive_poses: MoveIt interpreta las poses
-        de las primitivas como RELATIVAS al marco del objeto. Fijarlas como si
-        fueran absolutas deja el obstaculo en el origen, encajado en la base del
-        robot, sin que nada lo advierta.
-        """
         self.limpiar_escena()
 
         obj = CollisionObject()
@@ -122,7 +90,6 @@ class Verificador(Node):
 
         ok = self._aplicar([obj])
 
-        # Verificacion de que la pose quedo donde se pidio
         for o in self._objetos_en_escena():
             if o.id == obj.id:
                 p = o.pose.position

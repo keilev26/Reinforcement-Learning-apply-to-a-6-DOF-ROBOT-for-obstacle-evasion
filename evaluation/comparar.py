@@ -1,19 +1,3 @@
-"""Protocolo estadístico (metricas.yaml 2.1): política frente a línea base, pareado POR ESCENA.
-
-Entradas: el CSV de métricas de la línea base sobre el conjunto de evaluación y uno o más CSV de
-la política (uno por semilla). Por cada escena:
-  política    = media entre semillas (determinista: un episodio por semilla)
-  línea base  = media entre consultas (estocástica: varias consultas por escena)
-Éxito: fracción de episodios exitosos. M3, M4 y M5: media sobre los episodios EXITOSOS; una escena
-entra en la comparación de esas métricas solo si ambos métodos tienen al menos un éxito en ella.
-
-Prueba: rangos con signo de Wilcoxon, pareada por escena, bilateral, α = 0.05. Se reporta la
-dirección (qué método es mejor) junto al valor p. Los pares con diferencia 0 se descartan
-(convención de Wilcoxon), y se dice cuántos quedan.
-
-Uso: .venv/bin/python -m evaluation.comparar results/linea_base_evaluacion_<f>_metricas.csv \\
-         --planner RRTConnect results/politica_<...>_s0.csv results/politica_<...>_s1.csv
-"""
 import argparse
 import csv
 from collections import defaultdict
@@ -21,7 +5,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.stats import wilcoxon
 
-METRICAS = [  # (columna, nombre, mejor si es...)
+METRICAS = [
     ("exito", "M1 éxito (fracción)", "mayor"),
     ("L_cart_m", "M3 longitud cartesiana (m)", "menor"),
     ("L_art_rad", "M3 longitud articular (rad)", "menor"),

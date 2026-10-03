@@ -1,18 +1,3 @@
-"""Paquete 3.13 — Verificación de equivalencia PyBullet ↔ MoveIt ↔ Gazebo (compuerta 1).
-
-Criterio de la compuerta 1 (EDT): el mismo escenario cargado en los motores debe coincidir en
-geometría, posición, escala y límites articulares. Compara, con los datos de
-`equivalencia_ros.py` y el mundo SDF que generó `gazebo_e6.launch.py`:
-
-  1. Límites de velocidad    PyBullet (URDF)  vs  MoveIt (joint_limits.yaml)
-  2. Cinemática              PyBullet         vs  MoveIt (KDL), N configuraciones aleatorias
-  3. Cinemática en Gazebo    PyBullet en el estado que alcanzó Gazebo  vs  poses que reporta Gazebo
-  4. Escena                  contrato  vs  PyBullet  vs  MoveIt (menos el margen de 2 mm)  vs  SDF
-  5. Geometría de colisión del robot: PyBullet vs FCL, ya validada en 3.11 (se cita)
-
-Uso: .venv/bin/python -m evaluation.verificar_equivalencia results/equivalencia_ros_<fecha>.json \\
-         results/equivalencia_mundo_gazebo_escenario_2.sdf
-"""
 import argparse
 import json
 import xml.etree.ElementTree as ET
@@ -50,12 +35,10 @@ def main():
     esc.poner_obstaculos(variantes[R["variante"]])
     informe = {"variante": R["variante"]}
 
-    # 1. Límites de velocidad
     lim = R["limites_velocidad"]
     informe["limites_velocidad_max_dif_rad_s"] = float(max(
         abs(v - lim[f"joint{i + 1}"]) for i, v in enumerate(m.v_max)))
 
-    # 2. Cinemática PyBullet vs MoveIt
     e_pos, e_ang = [], []
     for reg in R["fk"]:
         fijar_q(m, reg["q"])
@@ -66,7 +49,6 @@ def main():
     informe["fk_moveit"] = {"configuraciones": len(R["fk"]), "err_pos_max_m": float(max(e_pos)),
                             "err_ang_max_rad": float(max(e_ang))}
 
-    # 3. Cinemática en Gazebo (en el estado articular que Gazebo alcanzó)
     e_pos, e_ang, seguim = [], [], []
     for reg in R["gazebo"]:
         fijar_q(m, reg["q_gazebo"])
@@ -79,24 +61,23 @@ def main():
                             "err_ang_max_rad": float(max(e_ang)),
                             "desvio_articular_max_rad": float(max(seguim))}
 
-    # 4. Escena: contrato vs PyBullet vs MoveIt vs SDF
     margen = R["margen_planificacion_m"]
     por_id = {o["id"]: o for o in objetos}
     difs = {"pybullet": [], "moveit": [], "gazebo_sdf": []}
-    for o, b in zip(objetos, esc.celda + esc.obstaculos):             # PyBullet
+    for o, b in zip(objetos, esc.celda + esc.obstaculos):
         forma = p.getCollisionShapeData(b, -1)[0]
         pos, quat = p.getBasePositionAndOrientation(b)
         tipo, dim = forma[2], forma[3]
         if tipo == p.GEOM_BOX:
             d = list(dim)
         elif tipo == p.GEOM_CYLINDER:
-            d = [dim[0], dim[1]]                                        # (altura, radio)
+            d = [dim[0], dim[1]]
         else:
             d = [dim[0]]
         difs["pybullet"].append(max(np.max(np.abs(np.subtract(d, dims_de(o)))),
                                     np.linalg.norm(np.subtract(pos, o["pose"][:3])),
                                     angulo(quat, p.getQuaternionFromEuler(o["pose"][3:6]))))
-    for mo in R["escena"]:                                              # MoveIt (inflado)
+    for mo in R["escena"]:
         o = por_id[mo["id"]]
         if o["forma"] == "caja":
             nominal = [v - 2 * margen for v in mo["dims"]]
@@ -107,7 +88,7 @@ def main():
         difs["moveit"].append(max(np.max(np.abs(np.subtract(nominal, dims_de(o)))),
                                   np.linalg.norm(np.subtract(mo["pos"], o["pose"][:3])),
                                   angulo(mo["quat"], p.getQuaternionFromEuler(o["pose"][3:6]))))
-    mundo = ET.parse(a.mundo_sdf).getroot().find("world")               # Gazebo
+    mundo = ET.parse(a.mundo_sdf).getroot().find("world")
     for mod in mundo.findall("model"):
         o = por_id[mod.get("name")]
         pose = [float(v) for v in mod.find("pose").text.split()]

@@ -1,5 +1,3 @@
-# Configuración de entrenamiento con la recompensa formal v1 (paquete 3.4).
-# Igual a sac_v0 salvo la recompensa: gym_env/entorno.py RECOMPENSA_V1 (= experimento sac_v1b).
 version: "1"
 base: sac_v0
 entorno:

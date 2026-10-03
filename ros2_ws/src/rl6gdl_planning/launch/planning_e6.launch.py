@@ -1,18 +1,3 @@
-"""Levanta move_group con el Magician E6 y la configuración de OMPL del paquete 3.9.
-
-No arranca Gazebo: para verificar la PLANIFICACIÓN basta el modelo del robot,
-robot_state_publisher y un publicador de estados articulares.
-
-El URDF y el SRDF salen de rl6gdl_e6_description (fuente única, generada con
-tools/gen_modelo_e6.py): la matriz de colisiones del SRDF es la misma que usa PyBullet.
-Los parámetros se arman a mano, sin MoveItConfigsBuilder, porque el URDF, el SRDF y la
-configuración de planificación viven en paquetes distintos.
-
-Con gazebo:=true (lo usa rl6gdl_e6_gazebo/gazebo_e6.launch.py) corre con tiempo simulado, no
-arranca publicadores de estado propios (los da Gazebo) y ejecuta en brazo_controller.
-
-Uso: ros2 launch rl6gdl_planning planning_e6.launch.py [ompl_config:=<ruta.yaml>] [gazebo:=true]
-"""
 import os
 
 import yaml
@@ -46,7 +31,6 @@ def launch_setup(context):
     gazebo = LaunchConfiguration("gazebo").perform(context) == "true"
     ejecucion = {}
     if gazebo:
-        # MoveIt ejecuta en el JointTrajectoryController de rl6gdl_e6_gazebo
         ejecucion = {
             "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
             "moveit_simple_controller_manager": {

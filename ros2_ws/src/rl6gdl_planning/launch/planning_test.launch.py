@@ -1,13 +1,3 @@
-"""Levanta move_group con la configuracion de OMPL del paquete 3.9.
-
-No arranca Gazebo: para verificar la PLANIFICACION basta el modelo del robot,
-robot_state_publisher y un publicador de estados articulares.
-
-Corrige ademas el desajuste de nombre entre URDF y SRDF documentado en
-docs/semana-03/nota-tecnica-entorno.md: ur_sim_control.launch.py fija el URDF con
-name:="ur" mientras ur_moveit.launch.py construye el SRDF con name:=ur_type.
-Aqui se pasa el MISMO nombre a ambos.
-"""
 import os
 import yaml
 from pathlib import Path
@@ -20,7 +10,7 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from moveit_configs_utils import MoveItConfigsBuilder
 
-NOMBRE_ROBOT = "ur5e"     # mismo valor para URDF y SRDF: evita el desajuste
+NOMBRE_ROBOT = "ur5e"
 
 
 def cargar_yaml(paquete, ruta_rel):
@@ -50,8 +40,6 @@ def launch_setup(context):
         .to_moveit_configs()
     )
 
-    # Configuracion de OMPL: la del paquete por defecto, o una alternativa via
-    # ompl_config:=<ruta> para experimentos sin tocar la entregada.
     ruta = LaunchConfiguration("ompl_config").perform(context)
     if ruta:
         with open(ruta, "r") as f:

@@ -1,12 +1,3 @@
-"""Validación del módulo de distancia mínima contra FCL (paquete 3.11).
-
-Para cada variante del contrato se recorre el camino directo pick -> place y, alrededor de él,
-configuraciones perturbadas (para provocar acercamientos y contactos). En cada configuración se
-compara, par a par (eslabón u efector contra cada objeto de la escena), la distancia de PyBullet
-con la de FCL sobre la misma geometría.
-
-Uso: .venv/bin/python -m geometry.validar_fcl [--perturbadas 3] [--semilla 0]
-"""
 import argparse
 
 import numpy as np
@@ -17,11 +8,10 @@ from gym_env.escena import Escena, contrato
 from gym_env.robot_e6 import RUTA_URDF, cargar_e6
 
 ESLABONES = ("Link1", "Link2", "Link3", "Link4", "Link5", "Link6")
-BANDA_M = 0.002   # contactos poco profundos: donde los motores pueden discrepar
+BANDA_M = 0.002
 
 
 def comparar(esc: Escena, ref: ReferenciaFCL, objetos: list[dict], cuerpos: list[int]) -> list[tuple]:
-    """[(elemento, objeto, d_pybullet, d_fcl, contacto_fcl)] en la configuración actual."""
     c, m = esc.m.cliente, esc.m
     filas = []
     fuentes = [(n, m.cuerpo, m.eslabones[n]) for n in ESLABONES] + [("efector", esc.efector, -1)]
@@ -95,7 +85,6 @@ def main():
     r = informe(filas)
     for k, v in r.items():
         print(f"{k:<32}{v:.3f}" if isinstance(v, float) else f"{k:<32}{v}")
-    # desglose por elemento
     print(f"\n{'elemento':<10}{'separados':>11}{'err medio mm':>14}{'err máx mm':>12}{'discrep.':>10}")
     for e in list(ESLABONES) + ["efector"]:
         s = filas[filas[:, 0] == e]

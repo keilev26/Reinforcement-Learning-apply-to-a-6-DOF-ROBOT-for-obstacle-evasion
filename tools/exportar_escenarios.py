@@ -1,25 +1,10 @@
-"""Paquetes 1.4 y 3.12 — Exporta la biblioteca de componentes y los escenarios del contrato.
-
-  cad/exportados/urdf/<componente>.urdf    un modelo por componente, origen en su centro geométrico
-  cad/exportados/sdf/<componente>.sdf      ídem para Gazebo
-  cad/exportados/mundos/<variante>.sdf     con --mundos: los 19 mundos de Gazebo del contrato
-
-La colisión de cada componente es su primitiva envolvente del contrato (geometría de colisión
-simplificada). Si existe `cad/<componente>.stl` (el CAD del paquete 1.2), se usa como visual del
-URDF; mientras no esté, la visual es la misma primitiva.
-
-Todo sale de `shared_scenarios/contrato.py`: es la misma geometría que componen PyBullet
-(`gym_env/escena.py`), MoveIt (`p6_contrato.py`) y Gazebo (`gazebo_e6.launch.py`).
-
-Uso: .venv/bin/python tools/exportar_escenarios.py [--mundos]
-"""
 import argparse
 import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "shared_scenarios"))
-import contrato  # noqa: E402
+import contrato
 
 
 def main():
