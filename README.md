@@ -56,6 +56,7 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 | `docs/semana-06/3.10-banco-de-pruebas.md` | Las 5 métricas de la línea base con el mismo evaluador que la política |
 | `docs/semana-06/3.11-distancia-minima.md` | Distancia mínima eslabón-obstáculo, validada contra FCL |
 | `docs/semana-06/1.6-1.7-alcanzabilidad-y-singularidades.md` | Alcanzabilidad y singularidades del E6 |
+| `docs/semana-08/` | Resumen de la semana 8, guion de demostración en vivo y análisis de pares |
 | `ros2_ws/src/rl6gdl_e6_description/README.md` | Modelo corregido del E6: qué se corrigió respecto del oficial y con qué números |
 | `docs/estado-del-arte/` | Las 13 referencias verificadas: `referencias.bib`, lista IEEE e índice (PDFs solo en local) |
 
@@ -95,8 +96,9 @@ fuente única: `ros2_ws/src/rl6gdl_e6_description/`, generado con `tools/gen_mod
 
 ## Flujo de trabajo
 
-- `main` protegida. Una rama por tarea, nombrada con el ID de la EDT: `feature/B6-distancia-minima`.
-- **Pull request con revisión cruzada obligatoria.** Sin autoaprobación.
+- **Se trabaja directamente en `main`** (desde el 2026-09-30). Antes de subir: `git pull --rebase origin main`; nunca `push --force`.
+- **Cambiar `shared_scenarios/escenarios.yaml`, `metricas.yaml` o `evaluacion.yaml` invalida las corridas anteriores:** avisar al compañero antes de subirlo y anotar el cambio en el resumen semanal de `docs/`.
+- El código no lleva comentarios ni docstrings: la documentación vive en `docs/`.
 - Mensajes de commit referenciando el ítem de EDT: `[B.4] configurar RRT-Connect en OMPL`.
 - Reunión semanal corta con acta en `docs/actas/` — decisiones, bloqueos y estado de compuertas.
 

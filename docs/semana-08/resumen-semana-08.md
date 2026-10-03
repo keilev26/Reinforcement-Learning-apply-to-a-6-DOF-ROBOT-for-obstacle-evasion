@@ -76,3 +76,16 @@ plan B: `guion-demostracion.md`.
 
 Límite declarado: la política entrenada **no corre en Gazebo/ROS** (no existe el nodo puente); en vivo
 se ve en PyBullet.
+
+## 6. Análisis de pares y limpieza del código
+
+- **Análisis de pares** (`tools/analisis_pares.py`, documento `analisis-pares.md`): por dinámica inversa, los movimientos de la
+  política exigen un par casi igual al de RRT-Connect y como máximo el 44 % del límite estimado del URDF. El entrenamiento es
+  cinemático y no impone límite de par ni de sacudida; las masas y los límites son estimaciones. Es la versión preliminar del
+  paquete 2.1.
+- **Código sin comentarios:** se eliminaron los comentarios y docstrings de todo el Python, YAML y shell versionados (55
+  archivos). Se comprobó que el árbol sintáctico de cada archivo Python y el contenido de cada YAML son idénticos; la
+  documentación vive solo en `docs/`.
+- **README:** el flujo de trabajo ya describe el trabajo directo en `main`.
+- **Entrenamiento:** el relanzamiento de la tercera semilla y del currículo desde los 780 000 pasos quedó **sin hacer** por falta de
+  CPU; los modelos de 780 000 pasos siguen en `training/runs/`.

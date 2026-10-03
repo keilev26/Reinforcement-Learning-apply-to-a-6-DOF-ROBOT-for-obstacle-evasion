@@ -1,0 +1,50 @@
+carga_kg: 0.75
+periodo_control_s: 0.03
+limite_urdf_Nm:
+- 9.0
+- 32.8
+- 14.1
+- 4.4
+- 1.3
+- 1.0
+politica_sac:
+  trayectorias: 19
+  par_max_Nm:
+  - 1.18
+  - 8.75
+  - 6.24
+  - 1.82
+  - 0.41
+  - 0.02
+  fraccion_del_limite:
+  - 0.13
+  - 0.27
+  - 0.44
+  - 0.41
+  - 0.31
+  - 0.02
+  aceleracion_max_rad_s2: 4.72
+rrt_connect:
+  trayectorias: 94
+  par_max_Nm:
+  - 1.3
+  - 9.66
+  - 5.98
+  - 1.9
+  - 0.42
+  - 0.02
+  fraccion_del_limite:
+  - 0.14
+  - 0.29
+  - 0.42
+  - 0.43
+  - 0.32
+  - 0.02
+  aceleracion_max_rad_s2: 4.72
+solo_gravedad_Nm:
+- 0.0
+- 7.48
+- 4.19
+- 1.43
+- 0.02
+- 0.0
