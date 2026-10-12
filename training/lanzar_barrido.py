@@ -42,6 +42,11 @@ def expandir(barrido: dict) -> list[dict]:
     return [{**comunes, **c} for c in barrido["corridas"]]
 
 
+def sustituir(corridas: list[dict], dispositivo: str | None, hilos: int | None, pasos: int | None) -> list[dict]:
+    cambios = {"dispositivo": dispositivo, "hilos": hilos, "pasos": pasos}
+    return [{**c, **{k: v for k, v in cambios.items() if v is not None}} for c in corridas]
+
+
 def comando(c: dict) -> list[str]:
     cmd = [sys.executable, "-m", "training.entrenar_sac", "--config", c["config"], "--semilla", str(c["semilla"])]
     for clave, bandera in (("pasos", "--pasos"), ("dispositivo", "--dispositivo"), ("hilos", "--hilos"),
@@ -112,11 +117,14 @@ def main():
     ap = argparse.ArgumentParser(description="Lanza un barrido de entrenamientos en paralelo y resume sus resultados")
     ap.add_argument("barrido", type=Path)
     ap.add_argument("--paralelo", type=int, default=None, help="corridas simultáneas (por defecto, según los núcleos)")
+    ap.add_argument("--dispositivo", choices=["auto", "cpu", "cuda"], default=None, help="sustituye el del barrido")
+    ap.add_argument("--hilos", type=int, default=None, help="sustituye los hilos de PyTorch del barrido")
+    ap.add_argument("--pasos", type=int, default=None, help="sustituye los pasos del barrido (para pruebas cortas)")
     ap.add_argument("--simular", action="store_true", help="mostrar los comandos sin ejecutarlos")
     ap.add_argument("--resumen", action="store_true", help="solo resumir lo que ya existe")
     a = ap.parse_args()
     barrido = yaml.safe_load(a.barrido.read_text())
-    corridas = expandir(barrido)
+    corridas = sustituir(expandir(barrido), a.dispositivo, a.hilos, a.pasos)
     paralelo = a.paralelo or barrido.get("paralelo") or paralelo_por_defecto(barrido)
     if a.resumen:
         print(resumen(corridas))

@@ -106,3 +106,11 @@ def test_una_corrida_corta_no_cuenta_como_completada(tmp_path, monkeypatch):
     (carpeta / "estado.json").write_text(json.dumps({"pasos_totales": 1000}))
     assert lanzar_barrido.completada(c)
     assert not lanzar_barrido.completada({**c, "etiqueta": "otra"})
+
+
+def test_sustituciones_desde_la_linea_de_comandos():
+    base = [{"config": "sac_v1", "semilla": 0, "pasos": 1000000, "dispositivo": "cpu", "hilos": 2}]
+    nuevo = lanzar_barrido.sustituir(base, "cuda", None, 5000)
+    assert nuevo[0]["dispositivo"] == "cuda" and nuevo[0]["pasos"] == 5000 and nuevo[0]["hilos"] == 2
+    assert base[0]["dispositivo"] == "cpu"
+    assert lanzar_barrido.sustituir(base, None, None, None) == base
