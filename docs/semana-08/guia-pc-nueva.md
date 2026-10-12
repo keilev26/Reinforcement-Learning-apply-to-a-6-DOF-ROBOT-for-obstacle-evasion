@@ -10,6 +10,13 @@ Python 3.12, el mismo sistema que el portátil de desarrollo. Tiempo de preparac
 - Una cuenta de GitHub con acceso al repositorio.
 - No se sabe si la PC tiene GPU: el paso 2 lo detecta y decide qué instalar. Sin GPU todo funciona igual, en CPU.
 
+## Qué NO hace falta en la PC nueva
+
+- **ROS 2, MoveIt y Gazebo:** solo se usan para la línea base de planificadores y la demo. Entrenar y evaluar la política no los necesita.
+- **Los STL de la celda (`cad/`) y los mundos `.sdf` de `cad/exportados/mundos/`:** son solo visuales. El entrenamiento usa las primitivas del contrato (caja, cilindro, esfera). Los `.sdf` se regeneran con `tools/exportar_escenarios.py` si alguna vez se quieren.
+- **La línea base:** ya está medida y versionada en `results/linea_base_evaluacion_20260930_0648_metricas.csv`. Llega con el `git clone`.
+- **`training/runs/` y los modelos `.zip`:** no están en git. La PC nueva entrena desde cero.
+
 ## 1. Sistema y herramientas base
 
 ```bash
