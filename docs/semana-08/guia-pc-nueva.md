@@ -49,8 +49,10 @@ Después de reiniciar:
 nvidia-smi
 ```
 
-Debe mostrar el nombre de la GPU y una versión de driver. Para el PyTorch con **CUDA 13.0** del paso 4 el
-driver debe ser **580 o superior**; con uno anterior, usar la variante `cu126` indicada allí.
+Debe mostrar el nombre de la GPU y una versión de driver. La **GTX 1080 (arquitectura Pascal, sm_61)** es
+una GPU antigua: el PyTorch `cu130` ya no incluye código para ella (su lista de arquitecturas empieza en
+sm_75), así que en esa PC hay que usar la variante **`cu126`** del paso 4. `cu130` es solo para GPUs
+RTX 20xx o más nuevas con driver 580 o superior.
 
 ## 3. Git y descarga del proyecto
 
@@ -94,8 +96,8 @@ pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126
 pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
 ```
 
-La primera es para GPU con driver 580 o superior, la segunda para un driver anterior y la tercera si no
-hay GPU. Después, el resto de dependencias (tarda unos minutos porque compila `pybullet`):
+La primera es para GPUs RTX 20xx o más nuevas con driver 580 o superior, la segunda para GPUs más antiguas
+(como la **GTX 1080**) y la tercera si no hay GPU. Después, el resto de dependencias (tarda unos minutos porque compila `pybullet`):
 
 ```bash
 pip install -r requirements-entrenamiento.txt
@@ -108,7 +110,9 @@ python -c "import torch, pybullet, stable_baselines3, gymnasium; print('torch', 
 python -m pytest -q
 ```
 
-La primera línea debe decir `GPU: True` si se instaló la versión con CUDA. La segunda debe terminar con
+La primera línea debe decir `GPU: True` si se instaló la versión con CUDA. Con la GTX 1080 comprobar además
+que la GPU está soportada: `python -c "import torch; print(torch.cuda.get_arch_list())"` debe incluir `sm_61`
+(o `sm_60`). Si no aparece, PyTorch no puede usar esa GPU: entrenar en CPU con `--dispositivo cpu`. La segunda debe terminar con
 **`91 passed`**. Si algo falla, no seguir: copiar el error y resolverlo antes de entrenar.
 
 ## 6. Medir qué configuración conviene en esta máquina
@@ -148,6 +152,286 @@ Abrir una sesión de `tmux` para que el entrenamiento siga aunque se cierre la t
 ```bash
 tmux new -s entrenamiento
 cd ~/proyecto && source .venv/bin/activate
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 **Un solo modelo** (1 M de pasos, una semilla):
@@ -254,7 +538,7 @@ git push origin main
 sudo apt update && sudo apt install -y git build-essential cmake python3 python3-venv python3-dev python3-pip tmux htop curl
 git clone git@github.com:keilev26/Reinforcement-Learning-apply-to-a-6-DOF-ROBOT-for-obstacle-evasion.git ~/proyecto && cd ~/proyecto
 python3 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip wheel
-pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu130
+pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126
 pip install -r requirements-entrenamiento.txt
 python -m pytest -q
 python -m training.benchmark_pc
