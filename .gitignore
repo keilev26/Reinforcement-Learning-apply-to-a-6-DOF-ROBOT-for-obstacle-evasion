@@ -15,7 +15,7 @@ ros2_ws/log/
 # --- Entrenamiento (artefactos pesados, no versionar) ---
 training/checkpoints/
 training/tensorboard/
-training/runs/
+training/runs
 *.zip
 *.pth
 *.pt
