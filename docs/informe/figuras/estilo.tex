@@ -1,0 +1,18 @@
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds,decorations.pathreplacing}
+\definecolor{granate}{RGB}{138,0,0}
+\definecolor{pizarra}{RGB}{43,58,85}
+\definecolor{verdee}{RGB}{46,125,50}
+\definecolor{ambar}{RGB}{242,169,0}
+\definecolor{grisb}{RGB}{158,158,158}
+\definecolor{grisc}{RGB}{238,238,236}
+\definecolor{celeste}{RGB}{42,120,214}
+\tikzset{
+  bloque/.style={draw=pizarra,fill=white,rounded corners=3pt,thick,align=center,font=\sffamily\small,inner sep=5pt,minimum height=1.0cm},
+  alcance/.style={bloque,fill=granate!10,draw=granate,very thick},
+  fuera/.style={bloque,fill=grisc,draw=grisb,dashed,text=black!55},
+  flecha/.style={-{Stealth[length=2.6mm]},thick,draw=pizarra},
+  flechaf/.style={-{Stealth[length=2.6mm]},thick,draw=grisb,dashed},
+  etiq/.style={font=\sffamily\scriptsize,text=pizarra,align=center}
+}
