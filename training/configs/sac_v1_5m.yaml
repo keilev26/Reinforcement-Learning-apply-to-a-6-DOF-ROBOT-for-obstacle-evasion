@@ -1,0 +1,11 @@
+version: "1-5M"
+base: sac_v1
+
+entrenamiento:
+  pasos_totales: 5000000
+
+evaluacion:
+  cada_pasos: 100000
+  validacion:
+    archivo: shared_scenarios/validacion_200.yaml
+    cada_pasos: 50000

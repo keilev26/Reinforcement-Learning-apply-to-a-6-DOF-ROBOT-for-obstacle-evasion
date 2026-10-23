@@ -41,9 +41,11 @@ def main():
     ap = argparse.ArgumentParser(description="Genera el conjunto fijo de evaluación o el de validación")
     ap.add_argument("--validacion", action="store_true",
                     help="genera shared_scenarios/validacion.yaml (50 escenas, semilla 2000) en vez del de evaluación")
+    ap.add_argument("--cantidad", type=int, default=50, help="escenas de validación (con 200 las primeras 50 son las de validacion.yaml)")
+    ap.add_argument("--salida", type=Path, default=None, help="archivo de salida de la validación")
     a = ap.parse_args()
     if a.validacion:
-        generar(2000, 50, "V", contrato.RUTA_VALIDACION,
+        generar(2000, a.cantidad, "V", a.salida or contrato.RUTA_VALIDACION,
                 "Conjunto de validación para elegir el mejor punto de cada entrenamiento. Generado por "
                 "tools/generar_evaluacion.py --validacion: no editar a mano. Nunca se usa para evaluar.")
         return

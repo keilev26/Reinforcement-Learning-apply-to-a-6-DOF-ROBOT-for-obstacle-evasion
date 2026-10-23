@@ -1,0 +1,13 @@
+version: "2"
+base: sac_v1
+entorno:
+  recompensa: {quieto: 0.05, umbral_quieto: 0.1}
+
+entrenamiento:
+  pasos_totales: 5000000
+
+evaluacion:
+  cada_pasos: 100000
+  validacion:
+    archivo: shared_scenarios/validacion_200.yaml
+    cada_pasos: 50000

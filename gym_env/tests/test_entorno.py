@@ -100,3 +100,29 @@ def test_distancias_concuerdan_con_fcl():
     r = informe(validar(perturbadas=1, escenarios=[2]))
     assert r["error_max_mm"] < 1.5
     assert r["discrepancias_fuera_de_banda"] == 0
+
+
+def test_castigo_por_quedarse_quieto():
+    from gym_env.entorno import RECOMPENSA_V1, RECOMPENSA_V2, castigo_quieto
+    dq_max, parado, rapido = 0.05, np.zeros(6), np.full(6, 0.05)
+    w = {**RECOMPENSA_V2, "umbral_quieto": 0.1}
+    assert castigo_quieto(parado, dq_max, 0.2, 0.01, RECOMPENSA_V1) == 0.0
+    assert castigo_quieto(parado, dq_max, 0.2, 0.01, w) == pytest.approx(0.05)
+    assert castigo_quieto(rapido, dq_max, 0.2, 0.01, w) == 0.0
+    assert castigo_quieto(np.full(6, 0.0025), dq_max, 0.2, 0.01, w) == pytest.approx(0.025)
+    assert castigo_quieto(parado, dq_max, 0.005, 0.01, w) == 0.0
+
+
+def test_quedarse_quieto_cuesta_mas_con_la_recompensa_v2():
+    from gym_env.entorno import RECOMPENSA_V2
+    a = EntornoE6(recompensa={**RECOMPENSA_V2})
+    b = EntornoE6()
+    try:
+        for e in (a, b):
+            e.reset(seed=3, options={"escenario": 1})
+        ra = a.step(np.zeros(6))[1]
+        rb = b.step(np.zeros(6))[1]
+        assert rb - ra == pytest.approx(0.05)
+    finally:
+        a.close()
+        b.close()

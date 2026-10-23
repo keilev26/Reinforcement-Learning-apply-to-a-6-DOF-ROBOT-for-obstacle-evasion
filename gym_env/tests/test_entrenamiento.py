@@ -51,6 +51,16 @@ def test_validacion_separada_de_la_evaluacion():
     assert datos["semilla"] not in {0, 1, 2, 3, 4, contrato.cargar_metricas()["protocolo"]["semilla_conjunto"]}
 
 
+def test_validacion_ampliada_contiene_a_la_original_y_no_toca_la_evaluacion():
+    ruta = contrato.RUTA_VALIDACION.with_name("validacion_200.yaml")
+    va50 = contrato.escenas_evaluacion(contrato.RUTA_VALIDACION)
+    va200 = contrato.escenas_evaluacion(ruta)
+    ev = contrato.escenas_evaluacion()
+    assert len(va200) == 200
+    assert [clave_escena(o) for _, o in va200[:50]] == [clave_escena(o) for _, o in va50]
+    assert not {clave_escena(o) for _, o in va200} & {clave_escena(o) for _, o in ev}
+
+
 def test_el_callback_de_validacion_guarda_el_mejor(tmp_path):
     from stable_baselines3 import SAC
     from stable_baselines3.common.logger import configure

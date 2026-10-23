@@ -14,6 +14,8 @@ RECOMPENSA_V0 = {
     "proximidad": 1.0,
     "suavidad": 0.05,
     "tiempo": 0.01,
+    "quieto": 0.0,
+    "umbral_quieto": 0.1,
     "colision": 10.0,
     "exito": 10.0,
     "precision": 0.0,
@@ -23,6 +25,15 @@ RECOMPENSA_V0 = {
 
 
 RECOMPENSA_V1 = {**RECOMPENSA_V0, "orientacion": 5.0, "precision": 10.0}
+
+RECOMPENSA_V2 = {**RECOMPENSA_V1, "quieto": 0.05}
+
+
+def castigo_quieto(dq: np.ndarray, dq_max: float, dist_m: float, tol_m: float, w: dict) -> float:
+    if w["quieto"] <= 0.0 or dist_m <= tol_m:
+        return 0.0
+    movimiento = float(np.linalg.norm(dq)) / (dq_max * np.sqrt(len(dq)))
+    return w["quieto"] * max(0.0, 1.0 - movimiento / w["umbral_quieto"])
 
 
 def potencial_precision(dist_m: float, ang_rad: float, w: dict) -> float:
@@ -141,6 +152,7 @@ class EntornoE6(gym.Env):
              - w["proximidad"] * max(0.0, 1.0 - medida.d_min / w["d_seguridad_m"])
              - w["suavidad"] * float(np.sum(((dq - self.dq_prev) / self.dq_max) ** 2)) / 6
              - w["tiempo"]
+             - castigo_quieto(dq, self.dq_max, dist_meta, self.tol_pos, w)
              + w["precision"] * (potencial_precision(dist_meta, err_ang, w)
                                  - potencial_precision(self.dist_meta, self.err_ang, w)))
         if choco:
