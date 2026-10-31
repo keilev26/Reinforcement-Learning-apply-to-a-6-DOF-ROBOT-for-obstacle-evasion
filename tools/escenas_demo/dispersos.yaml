@@ -1,0 +1,282 @@
+descripcion: 'Escenas de demostracion con varios obstaculos dispersos (fuera de distribucion:
+  el entrenamiento usa un solo obstaculo). Generado por tools/generar_escenas_demo.py'
+contrato: '2.0'
+escenas:
+- etiqueta: D1 dos obstaculos separados
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.16
+    - 0.0451
+    pose:
+    - 0.17
+    - -0.2
+    - 0.075
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_prisma
+    forma: caja
+    dims:
+    - 0.072
+    - 0.072
+    - 0.144
+    pose:
+    - 0.27
+    - -0.1
+    - 0.067
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D2 tres obstaculos dispersos
+  obstaculos:
+  - id: o0_esfera
+    forma: esfera
+    dims:
+    - 0.0625
+    pose:
+    - 0.1
+    - -0.22
+    - 0.0575
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.144
+    - 0.04059
+    pose:
+    - 0.23
+    - -0.23
+    - 0.067
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_prisma
+    forma: caja
+    dims:
+    - 0.064
+    - 0.064
+    - 0.128
+    pose:
+    - 0.28
+    - -0.09
+    - 0.059
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D3 cuatro obstaculos
+  obstaculos:
+  - id: o0_esfera
+    forma: esfera
+    dims:
+    - 0.05625
+    pose:
+    - 0.08
+    - -0.17
+    - 0.05125
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.16
+    - 0.0451
+    pose:
+    - 0.2
+    - -0.25
+    - 0.075
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_prisma
+    forma: caja
+    dims:
+    - 0.072
+    - 0.072
+    - 0.144
+    pose:
+    - 0.22
+    - -0.12
+    - 0.067
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o3_esfera
+    forma: esfera
+    dims:
+    - 0.05
+    pose:
+    - 0.3
+    - -0.18
+    - 0.045
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D4 pasillo estrecho
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.08
+    - 0.08
+    - 0.16
+    pose:
+    - 0.16
+    - -0.12
+    - 0.075
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.16
+    - 0.0451
+    pose:
+    - 0.25
+    - -0.25
+    - 0.075
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D5 cinco obstaculos
+  obstaculos:
+  - id: o0_esfera
+    forma: esfera
+    dims:
+    - 0.05
+    pose:
+    - 0.07
+    - -0.2
+    - 0.045
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.128
+    - 0.03608
+    pose:
+    - 0.15
+    - -0.26
+    - 0.059
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_prisma
+    forma: caja
+    dims:
+    - 0.064
+    - 0.064
+    - 0.128
+    pose:
+    - 0.2
+    - -0.16
+    - 0.059
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o3_esfera
+    forma: esfera
+    dims:
+    - 0.05
+    pose:
+    - 0.28
+    - -0.22
+    - 0.045
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o4_cilindro
+    forma: cilindro
+    dims:
+    - 0.128
+    - 0.03608
+    pose:
+    - 0.27
+    - -0.08
+    - 0.059
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D6 barrera con un hueco
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.192
+    - 0.05412
+    pose:
+    - 0.14
+    - -0.19
+    - 0.091
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_prisma
+    forma: caja
+    dims:
+    - 0.08
+    - 0.08
+    - 0.16
+    pose:
+    - 0.19
+    - -0.14
+    - 0.075
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_esfera
+    forma: esfera
+    dims:
+    - 0.0625
+    pose:
+    - 0.23
+    - -0.09
+    - 0.0575
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: D7 barrera y obstaculos sueltos
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.208
+    - 0.05863
+    pose:
+    - 0.15
+    - -0.18
+    - 0.099
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_prisma
+    forma: caja
+    dims:
+    - 0.096
+    - 0.096
+    - 0.192
+    pose:
+    - 0.21
+    - -0.12
+    - 0.091
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_esfera
+    forma: esfera
+    dims:
+    - 0.05
+    pose:
+    - 0.27
+    - -0.23
+    - 0.045
+    - 0.0
+    - 0.0
+    - 0.0

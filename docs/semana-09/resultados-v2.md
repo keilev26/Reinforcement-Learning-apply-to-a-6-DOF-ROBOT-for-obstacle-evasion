@@ -106,3 +106,32 @@ nohup systemd-inhibit --what=sleep:idle .venv/bin/python -m training.lanzar_barr
 
 Al terminar: evaluar `mejor.zip` (o `modelo_final.zip` si existe) de cada una con `evaluation.evaluar_politica`
 (`--conjunto evaluacion` y `--conjunto contrato`) y comparar con `sac_v2` y con RRT-Connect.
+
+## 7. Lado por el que se rodea un muro alto (escena `L1` de `tools/escenas_demo/lados.yaml`)
+
+Muro de 56 cm (no se puede pasar por encima) en diagonal sobre el camino pick-place; sus extremos quedan a 6 cm
+del camino por el lado de la base (`−`) y a 18 cm por el lado contrario (`+`).
+
+| Quién | Resultado | Lateral mínimo / máximo (m) |
+|---|---|---|
+| Control `sac_v1_5m` | colisión | −0.24 / 0.00 |
+| `sac_v2` semillas 0 / 1 / 2 | tiempo / colisión / tiempo | −0.36, −0.12, −0.19 / ≤ +0.02 |
+| RRT-Connect propio (5 semillas del azar) | **resuelve las 5** | −0.09 a −0.34 / ≤ +0.05 |
+
+- Las cuatro políticas se desvían hacia `−` y ninguna prueba `+`.
+- **El RRT-Connect también pasa por el lado `−` y llega.** Por tanto el lado de la base no es el problema: el fallo
+  de la política está en **cómo ejecuta** ese desvío (choca o no termina), no en haber elegido el lado equivocado.
+  La suposición inicial de que habría sido mejor el lado contrario **no se confirma**.
+- El RRT-Connect es propio (espacio articular, `tools/verificar_resolubilidad.py`), no MoveIt/OMPL. Sus caminos
+  son largos (7-11 rad de recorrido articular para 2.25 rad entre extremos) porque solo se suaviza con atajos
+  aleatorios; sirven para saber que hay solución, no como referencia de calidad.
+- Sigue siendo cierto que casi nunca se entrena con el obstáculo del lado `−` del camino (el obstáculo se centra en
+  (0.212, −0.212) ± 0.08 m, es decir, lateral +0.088 ± 0.113 m, y solo ≈ 2.5 % de las escenas lo ponen del otro lado).
+  Como el RRT-Connect no usa el lado `+`, **no hay evidencia de que ese sesgo cause este fallo**: queda como una
+  hipótesis separada para `sac_v3` (muestreo simétrico, que cambia `aleatorizacion_entrenamiento` y exige avisar a
+  Leonardo).
+- **Muros más altos** (`L2` 0.96 m y `L3` 1.60 m, imposibles de superar por arriba): la política vuelve a chocar
+  (−0.30 m de lateral, a 400 mm de la meta) y el RRT-Connect propio resuelve las 5 semillas del azar de cada una
+  (1.0 a 3.4 s), siempre por el lado `−` (lateral −0.13 a −0.38 m). Las alturas 0.96 y 1.60 m dan el mismo
+  camino: más allá del alcance del brazo (0.45 m) la altura ya no cambia nada.
+- Muros que se extienden más hacia la base (extremos a −0.12 m o más) dejan inalcanzable el punto de recoger.

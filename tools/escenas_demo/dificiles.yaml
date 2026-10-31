@@ -1,0 +1,338 @@
+descripcion: 'Escenas de demostracion ''dificiles'' con varios obstaculos (fuera de
+  distribucion: el entrenamiento usa un solo obstaculo). Generado por tools/generar_escenas_demo.py'
+contrato: '2.0'
+escenas:
+- etiqueta: R1 tres varillas verticales
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.13
+    - -0.19
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.19
+    - -0.13
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.25
+    - -0.07
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: R2 reja de varillas
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.098076
+    - -0.098076
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.144038
+    - -0.144038
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.19
+    - -0.19
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o3_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.235962
+    - -0.235962
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o4_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.281924
+    - -0.281924
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: R3 reja ancha de varillas
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.062721
+    - -0.042721
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.105147
+    - -0.085147
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.147574
+    - -0.127574
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o3_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.19
+    - -0.17
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o4_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.232426
+    - -0.212426
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o5_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.274853
+    - -0.254853
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o6_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.317279
+    - -0.297279
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: R4 muro largo
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.24
+    - 0.048
+    - 0.32
+    pose:
+    - 0.19
+    - -0.19
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398
+- etiqueta: R5 dos muros con hueco
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.16
+    - 0.048
+    - 0.32
+    pose:
+    - 0.16
+    - -0.22
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398
+  - id: o1_prisma
+    forma: caja
+    dims:
+    - 0.16
+    - 0.048
+    - 0.32
+    pose:
+    - 0.23
+    - -0.15
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398
+- etiqueta: R6 barra horizontal baja
+  obstaculos:
+  - id: o0_cilindro
+    forma: cilindro
+    dims:
+    - 0.4
+    - 0.01804
+    pose:
+    - 0.17
+    - -0.21
+    - 0.05304
+    - 1.570796
+    - 0.0
+    - -0.785398
+- etiqueta: R7 esfera gigante
+  obstaculos:
+  - id: o0_esfera
+    forma: esfera
+    dims:
+    - 0.125
+    pose:
+    - 0.19
+    - -0.21
+    - 0.12
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: R8 esfera gigante y varillas
+  obstaculos:
+  - id: o0_esfera
+    forma: esfera
+    dims:
+    - 0.1125
+    pose:
+    - 0.18
+    - -0.24
+    - 0.1075
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o1_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.08
+    - -0.19
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+  - id: o2_cilindro
+    forma: cilindro
+    dims:
+    - 0.48
+    - 0.015785
+    pose:
+    - 0.27
+    - -0.3
+    - 0.235
+    - 0.0
+    - 0.0
+    - 0.0
+- etiqueta: R9 zigzag de muros
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.16
+    - 0.048
+    - 0.32
+    pose:
+    - 0.15
+    - -0.24
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398
+  - id: o1_prisma
+    forma: caja
+    dims:
+    - 0.16
+    - 0.048
+    - 0.32
+    pose:
+    - 0.26
+    - -0.15
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398
+  - id: o2_prisma
+    forma: caja
+    dims:
+    - 0.16
+    - 0.048
+    - 0.32
+    pose:
+    - 0.31
+    - -0.3
+    - 0.155
+    - 0.0
+    - 0.0
+    - -0.785398

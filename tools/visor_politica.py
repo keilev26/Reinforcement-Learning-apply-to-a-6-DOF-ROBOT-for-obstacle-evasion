@@ -12,6 +12,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 from gym_env.entorno import EntornoE6
 from gym_env.escena import contrato
+from tools.verificar_resolubilidad import rrt_connect
 
 VERDE, AMARILLO, ROJO, BLANCO, CELESTE = (0.1, 0.7, 0.2), (0.95, 0.75, 0.0), (0.85, 0.15, 0.15), (1, 1, 1), (0.2, 0.5, 0.9)
 LINEA_BASE = {"contrato": "linea_base_20260929_0025.jsonl.gz",
@@ -23,7 +24,9 @@ def modelo_por_defecto() -> Path | None:
     return cand[0] if cand else None
 
 
-def lista_escenas(conjunto: str, C: dict):
+def lista_escenas(conjunto: str, C: dict, archivo: Path | None = None):
+    if conjunto == "archivo":
+        return [(et, {"obstaculos": obst, "etiqueta": et}) for et, obst in contrato.escenas_evaluacion(archivo)]
     if conjunto == "contrato":
         return [(et, {"escenario": int(et.split()[0]), "variante": et})
                 for n in C["escenarios"] for et, _ in contrato.variantes(C, n)]
@@ -49,7 +52,7 @@ class Visor:
     def __init__(self, a):
         self.a = a
         self.C = contrato.cargar()
-        self.escenas = lista_escenas(a.conjunto, self.C)
+        self.escenas = lista_escenas(a.conjunto, self.C, a.archivo)
         self.base = cargar_linea_base(a.conjunto) if a.linea_base else {}
         self.env = EntornoE6(render_mode=None if a.sin_ventana else "human")
         self.cl = self.env.cliente
@@ -126,6 +129,7 @@ class Visor:
         if self.base and etiqueta in self.base:
             self.escribir("leyenda", "amarillo: RRT-Connect   verde: política", [-0.25, 0.35, 0.45], AMARILLO, 1.0)
 
+        self.q_inicio = env.q.copy()
         prev, fin, pausa = env.metricas.tcp()[0], False, False
         if self.modelo is None and self.a.sin_ventana:
             self.resultado = ("SOLO ESCENA", {"error_pos_m": info["error_pos_m"], "pasos": 0})
@@ -166,9 +170,44 @@ class Visor:
         self.escribir("veredicto", f"{veredicto}   {info['error_pos_m'] * 1000:.1f} mm   {info['pasos']} pasos"
                       f"   {info['t_ejecucion_s']:.1f} s", [-0.25, 0.35, 0.33], color, 1.6)
         self.resultado = (veredicto, info)
+        if self.a.rrt and not self.a.sin_ventana:
+            self.escribir("leyenda", "verde: politica   amarillo: RRT-Connect (propio)", [-0.25, 0.35, 0.45],
+                          AMARILLO, 1.0)
+            self.reproducir_rrt(opc.get("obstaculos"))
         if self.a.captura:
             self.captura(i)
         return "fin"
+
+    def reproducir_rrt(self, obst):
+        env, esc = self.env, self.env.esc
+        T = self.C["tarea_nominal"]
+        q0 = self.q_inicio
+        q1 = esc.ik_tcp(T["p_place"]["pos"], T["p_place"]["rpy"], q0)
+        self.escribir("rrt", "RRT-Connect (propio): planificando...", [-0.25, 0.35, 0.26], AMARILLO, 1.2)
+        ruta, t_plan = (None, 0.0) if q1 is None else rrt_connect(esc, q0, np.asarray(q1), 30.0, np.random.default_rng(0))
+        if ruta is None:
+            self.escribir("rrt", "RRT-Connect (propio): sin solucion", [-0.25, 0.35, 0.26], ROJO, 1.2)
+            return
+        cuadros = []
+        for a_, b_ in zip(ruta, ruta[1:]):
+            n = max(1, int(np.ceil(np.max(np.abs(b_ - a_)) / env.dq_max)))
+            cuadros += [a_ + (b_ - a_) * k / n for k in range(1, n + 1)]
+        longitud = float(sum(np.linalg.norm(b_ - a_) for a_, b_ in zip(ruta, ruta[1:])))
+        self.escribir("rrt", f"RRT-Connect (propio): plan {t_plan * 1000:.0f} ms, {len(cuadros)} pasos "
+                      f"({len(cuadros) * env.dt:.1f} s), camino {longitud:.1f} rad", [-0.25, 0.35, 0.26],
+                      AMARILLO, 1.2)
+        esc.fijar_q(q0)
+        time.sleep(1.5)
+        prev = env.metricas.tcp()[0]
+        for q in cuadros:
+            t0 = time.perf_counter()
+            esc.fijar_q(q)
+            pos = env.metricas.tcp()[0]
+            p.addUserDebugLine(prev, pos, AMARILLO, 4, physicsClientId=self.cl)
+            prev = pos
+            resto = env.dt / self.a.velocidad - (time.perf_counter() - t0)
+            if resto > 0 and not self.a.sin_ventana:
+                time.sleep(resto)
 
     def captura(self, i):
         carpeta = Path(self.a.captura)
@@ -221,15 +260,19 @@ def main():
                                  epilog="Teclas: n o flecha derecha = siguiente; p o flecha izquierda = anterior; "
                                         "r = repetir; espacio = pausa; q = salir")
     ap.add_argument("--modelo", type=Path, default=None, help="modelo SAC (.zip); sin él solo se ven las escenas")
-    ap.add_argument("--conjunto", choices=["contrato", "evaluacion", "entrenamiento"], default="contrato")
+    ap.add_argument("--conjunto", choices=["contrato", "evaluacion", "entrenamiento", "archivo"], default="contrato")
+    ap.add_argument("--archivo", type=Path, default=None, help="archivo YAML de escenas (formato de evaluacion.yaml); fija --conjunto archivo")
     ap.add_argument("--escena", default="", help="etiqueta (p. ej. E074, '5 k=2.0', 8) o, en entrenamiento, la semilla")
     ap.add_argument("--linea-base", action="store_true", help="dibujar el camino de RRT-Connect (amarillo)")
     ap.add_argument("--velocidad", type=float, default=1.0, help="1.0 = tiempo real; 2.0 = el doble de rápido")
     ap.add_argument("--auto", type=float, default=0.0, help="pasar a la siguiente escena tras N s")
+    ap.add_argument("--rrt", action="store_true", help="tras la politica, repetir la escena con un RRT-Connect propio (amarillo)")
     ap.add_argument("--sin-ventana", action="store_true", help="sin GUI (pruebas)")
     ap.add_argument("--captura", default="", help="carpeta donde guardar una imagen al terminar la escena")
     ap.add_argument("--una-vez", action="store_true", help="con --sin-ventana: una sola escena")
     a = ap.parse_args()
+    if a.archivo:
+        a.conjunto = "archivo"
     Visor(a).correr()
 
 

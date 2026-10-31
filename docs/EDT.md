@@ -223,6 +223,8 @@ cronograma.
 > colisión y exportación de los CAD de la celda). **Con el adelanto, la ruta crítica pasa ahora
 > por 1.3 → 1.4 → 3.12.** Detalle en `semana-06/`.
 
+> **Semana 10 (2026-10-31).** Ver `semana-10/avance-vs-cronograma.md`: 3.5, 3.6, 3.14 y 4.1-4.3 realizados; 3.7 con 3 de 5 semillas; compuerta 2 superada; E2 (2.1-2.4) y actas sin evidencia.
+
 ### Desarrollo, semanas 5 a 14
 
 | Sem | Persona A | Persona B | Hito verificable |

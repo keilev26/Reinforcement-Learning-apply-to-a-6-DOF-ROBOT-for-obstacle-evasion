@@ -5,7 +5,7 @@ from openpyxl.utils import get_column_letter
 SALIDA = "Cronograma RL Manipulador 6GDL.xlsx"
 N_SEM  = 15
 COL_S1 = 8
-COL_LINEA = COL_S1 + 5
+COL_LINEA = COL_S1 + 10
 
 CALEB = "Caleb Camargo"
 LEO   = "Leonardo Vásquez"
@@ -36,23 +36,23 @@ TAREAS = [
     ("3.2", "Entorno Gymnasium sobre PyBullet con el Magician E6 (Δt = 30 ms, transición cinemática)", "Entorno Gym", CALEB, 6, 6, "R", 0),
     ("3.3", "Formulación del MDP: acción Δq ≤ 0.05 rad, observación de 43 descriptores", "Especificación del MDP", CALEB, 6, 6, "R", 0),
     ("3.4", "Función de recompensa multiobjetivo: colisión, autocolisión, alcance de meta, suavidad", "Función de recompensa", CALEB, 7, 7, "R", 0),
-    ("3.5", "Entrenamiento SAC desde cero — escenarios 1 y 2", "Política entrenada v1", CALEB, 9, 9, "P", 0),
-    ("3.6", "Aleatorización de dominio (posición, escala, forma) e integración de escenarios 4-5-6", "Dominio aleatorizado", CALEB, 10, 10, "P", 0),
+    ("3.5", "Entrenamiento SAC desde cero — escenarios 1 y 2", "Política entrenada v1", CALEB, 6, 6, "R", 0),
+    ("3.6", "Aleatorización de dominio (posición, escala, forma) e integración de escenarios 4-5-6", "Dominio aleatorizado", CALEB, 7, 7, "R", 0),
     ("3.7", "Entrenamiento completo: 5 semillas × escenarios núcleo", "Políticas + logs", CALEB, 10, 11, "P", 0),
     ("3.8", "Workspace ROS 2: ros2_control, MoveIt 2, Gazebo (UR5e en sem. 1-3; E6 y Gazebo Harmonic en sem. 5)", "Workspace ROS 2", LEO, 1, 3, "R", 0),
-    ("3.9", "Configuración de OMPL: RRT-Connect y RRT* (UR5e en sem. 4; se vuelve a medir con el E6 en sem. 5)", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
+    ("3.9", "Configuración de OMPL: RRT-Connect y LazyPRM* (UR5e en sem. 4; se vuelve a medir con el E6 en sem. 5)", "ompl_planning.yaml", LEO, 4, 4, "R", 0),
     ("3.10", "Banco de pruebas de la línea base: las 5 métricas con el mismo evaluador que la política", "Banco de pruebas", LEO, 6, 6, "R", 0),
     ("3.11", "Módulo de distancia mínima eslabón-obstáculo, validado contra FCL", "Módulo de distancias", LEO, 6, 6, "R", 0),
     ("3.12", "Generador de escenarios: compone los 8 escenarios desde la biblioteca CAD de E1", "Generador de escenarios", LEO, 7, 7, "R", 0),
     ("3.13", "Verificación de equivalencia PyBullet ↔ Gazebo: URDF, límites, geometría y escala", "Informe de equivalencia", AMBOS, 7, 7, "R", 0),
-    ("3.14", "Ejecución batch de la línea base clásica sobre escenarios núcleo", "Corridas de línea base", LEO, 10, 11, "P", 0),
+    ("3.14", "Ejecución batch de la línea base clásica sobre escenarios núcleo", "Corridas de línea base", LEO, 6, 6, "R", 0),
     ("3.15", "Subprueba PPO bajo la misma recompensa (extensión)", "Comparativa SAC/PPO", CALEB, 12, 12, "P", 0),
     ("3.16", "Modelo corregido del Magician E6: fuente única para PyBullet, MoveIt y Gazebo", "rl6gdl_e6_description", CALEB, 5, 5, "R", 0),
 
     ("FASE", "FASE 4 — INTEGRACIÓN (E4)", "", "", 0, 0, "", 0),
-    ("4.1", "Cálculo de las 5 métricas para ambos métodos", "Tablas de métricas", AMBOS, 12, 12, "P", 0),
-    ("4.2", "Protocolo estadístico: medias, desviaciones, prueba de Wilcoxon", "Análisis estadístico", AMBOS, 12, 12, "P", 0),
-    ("4.3", "Análisis de generalización — escenario 8, fuera de distribución", "Análisis de generalización", CALEB, 12, 12, "P", 0),
+    ("4.1", "Cálculo de las 5 métricas para ambos métodos", "Tablas de métricas", AMBOS, 7, 7, "R", 0),
+    ("4.2", "Protocolo estadístico: medias, desviaciones, prueba de Wilcoxon", "Análisis estadístico", AMBOS, 6, 6, "R", 0),
+    ("4.3", "Análisis de generalización — escenario 8, fuera de distribución", "Análisis de generalización", CALEB, 7, 7, "R", 0),
     ("4.4", "Tablero comparativo y demo en vivo en simulación", "Demo + tablero", LEO, 13, 13, "P", 0),
     ("4.5", "Informe final", "Informe", AMBOS, 13, 14, "P", 0),
     ("4.6", "Slides y ensayo de sustentación", "Diapositivas", AMBOS, 14, 14, "P", 0),
@@ -262,7 +262,7 @@ for marca, texto, color, fuente in (("R", "Realizado", VERDE, "FFFFFF"),
     fila += 1
 ws.cell(row=fila, column=2, value="Código y actividad en rojo y negrita: paquete en la RUTA CRÍTICA (holgura cero)").font = Font(bold=True, color="C00000")
 fila += 2
-ws.cell(row=fila, column=1, value="La línea vertical roja marca el corte al cierre de la semana 5.")
+ws.cell(row=fila, column=1, value="La línea vertical roja marca el corte al cierre de la semana 10 (2026-10-30). Las barras de color P a su izquierda están atrasadas.")
 ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=7)
 ws.cell(row=fila, column=1).font = Font(italic=True, size=9)
 fila += 1

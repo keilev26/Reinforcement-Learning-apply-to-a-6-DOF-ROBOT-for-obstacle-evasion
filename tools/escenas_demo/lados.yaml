@@ -1,0 +1,49 @@
+descripcion: 'Escenas de demostracion ''lados'' con varios obstaculos (fuera de distribucion:
+  el entrenamiento usa un solo obstaculo). Generado por tools/generar_escenas_demo.py'
+contrato: '2.0'
+escenas:
+- etiqueta: L1 muro alto (0.56 m), extremos a -0.06 y +0.18 m
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.24
+    - 0.048
+    - 0.56
+    pose:
+    - 0.192426
+    - -0.192426
+    - 0.275
+    - 0.0
+    - 0.0
+    - -0.785398
+- etiqueta: L2 muro muy alto (0.96 m)
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.24
+    - 0.048
+    - 0.96
+    pose:
+    - 0.192426
+    - -0.192426
+    - 0.475
+    - 0.0
+    - 0.0
+    - -0.785398
+- etiqueta: L3 muro altisimo (1.60 m)
+  obstaculos:
+  - id: o0_prisma
+    forma: caja
+    dims:
+    - 0.24
+    - 0.048
+    - 1.6
+    pose:
+    - 0.192426
+    - -0.192426
+    - 0.795
+    - 0.0
+    - 0.0
+    - -0.785398
