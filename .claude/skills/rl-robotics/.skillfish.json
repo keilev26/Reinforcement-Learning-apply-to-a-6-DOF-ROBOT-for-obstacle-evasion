@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "rl-robotics",
+  "owner": "a5c-ai",
+  "repo": "babysitter",
+  "path": "library/specializations/robotics-simulation/skills/rl-robotics",
+  "branch": "main",
+  "sha": "225868c64b484cc4d806c439d511141eb7c6e4da",
+  "source": "manual"
+}

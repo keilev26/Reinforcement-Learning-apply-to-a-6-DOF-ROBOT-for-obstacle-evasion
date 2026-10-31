@@ -1,0 +1,10 @@
+comunes:
+  pasos: 5000000
+  dispositivo: auto
+  hilos: 2
+paralelo: 4
+corridas:
+  - {config: sac_v1_5m, semilla: 1}
+  - {config: sac_v1_5m, semilla: 2}
+  - {config: sac_v1_5m, semilla: 3}
+  - {config: sac_v1_5m, semilla: 4}
