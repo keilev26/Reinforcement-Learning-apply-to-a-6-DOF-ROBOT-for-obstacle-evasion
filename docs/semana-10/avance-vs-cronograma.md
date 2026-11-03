@@ -48,3 +48,8 @@ la semana 11 de 15 (la sustentación es la 15). Con semanas lunes-domingo sería
 
 - Informe y presentación con las cifras vigentes (0.92-0.96 a ≈ 4.6 M, no 0.66).
 - Avisar a Leonardo del cambio de contrato (muestreo y set de evaluación nuevos).
+
+## Actualización (2026-11-02)
+
+- Kit físico de obstáculos (24 STEP + 5 piezas altas en la macro de SolidWorks), 28 combinaciones y 10 pares recoger/depositar verificados: `docs/semana-10/pares-y-piezas-altas.md`.
+- Entrenamiento `sac_v3`/`sac_v3p` de ≈ 72 h preparado y probado en corto, sin lanzar: `docs/semana-10/entrenamiento-v3.md`. Sigue pendiente el aviso a Leonardo por los conjuntos nuevos de `shared_scenarios/` y las 5 semillas del control (3.7).

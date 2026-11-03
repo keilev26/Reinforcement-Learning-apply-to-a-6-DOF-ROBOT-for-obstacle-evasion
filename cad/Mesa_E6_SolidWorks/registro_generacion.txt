@@ -1,0 +1,29 @@
+SOLIDWORKS 32.5.0  -  10/14/2026 9:20:53 PM
+   agujeros rejilla: 376
+MESA_01_Tablero  guardado=True
+MESA_02_Pata  guardado=True
+MESA_03_Faldon_largo  guardado=True
+MESA_04_Faldon_corto  guardado=True
+MESA_05_Travesano_largo  guardado=True
+MESA_06_Travesano_corto  guardado=True
+MESA_07_Repisa  guardado=True
+P01_Cubo_75  guardado=True
+P02_Columna_75x150  guardado=True
+P03_Caja_baja_125x75x50  guardado=True
+P04_Muro_175x25x150  guardado=True
+P05_Angulo_L_125x75x150  guardado=True
+P06_Escalera_175x75  guardado=True
+P07_Cruz_125x125x100  guardado=True
+P08_Viga_portal_275x75x20  guardado=True
+R01_Cilindro_D60x100  guardado=True
+R02_Poste_D30x220  guardado=True
+R03_Cono_D100x120  guardado=True
+R04_Tronco_cono_D100_D40x100  guardado=True
+R05_Esfera_D100_pedestal  guardado=True
+R06_Domo_D120  guardado=True
+R07_Prisma_hexagonal_80x120  guardado=True
+R08_Prisma_triangular_100x100  guardado=True
+R09_Piramide_cuadrada_100x120  guardado=True
+MESA_00_Ensamblaje  guardado=True  componentes=14
+Operaciones OK: 45   Fallos: 0
+FIN

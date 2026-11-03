@@ -1,0 +1,13 @@
+version: "3"
+base: sac_v1
+entorno:
+  muestreo: kit
+
+entrenamiento:
+  pasos_totales: 16000000
+
+evaluacion:
+  cada_pasos: 500000
+  validacion:
+    archivo: shared_scenarios/kit_validacion.yaml
+    cada_pasos: 100000

@@ -1,0 +1,9 @@
+version: "3p"
+base: sac_v3
+entorno:
+  pares_archivo: shared_scenarios/pares_kit.yaml
+  pares_ids: [N0, N1, N2, N3, N7]
+
+evaluacion:
+  validacion:
+    archivo: shared_scenarios/kit_validacion_pares.yaml

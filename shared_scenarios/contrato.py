@@ -174,3 +174,14 @@ def muestrear_con_obstaculo(C: dict, rng) -> tuple[str, list[dict]]:
 def escenas_evaluacion(ruta=RUTA_EVALUACION) -> list[tuple[str, list[dict]]]:
     datos = yaml.safe_load(Path(ruta).read_text())
     return [(e["etiqueta"], e["obstaculos"]) for e in datos["escenas"]]
+
+
+def escenas_con_par(ruta) -> list[tuple[str, list[dict], dict | None]]:
+    datos = yaml.safe_load(Path(ruta).read_text())
+    return [(e["etiqueta"], e["obstaculos"], e.get("par")) for e in datos["escenas"]]
+
+
+def pares_kit(ruta, ids: list[str] | None = None) -> list[dict]:
+    datos = yaml.safe_load(Path(ruta).read_text())["pares"]
+    return [{"id": q["id"], "pick": q["pick"]["pos"], "place": q["place"]["pos"]} for q in datos
+            if ids is None or q["id"] in ids]

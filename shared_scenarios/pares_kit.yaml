@@ -1,0 +1,135 @@
+descripcion: Pares recoger/depositar candidatos. Generado por tools/pares_candidatos.py
+pares:
+- id: N0
+  pick:
+    pos:
+    - 0.0
+    - -0.3
+    - 0.05
+    rpy: &id001
+    - 3.1416
+    - 0.0
+    - 0.0
+  place:
+    pos:
+    - 0.3
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N1
+  pick:
+    pos:
+    - -0.06
+    - -0.3
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N2
+  pick:
+    pos:
+    - 0.06
+    - -0.3
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N3
+  pick:
+    pos:
+    - 0.0
+    - -0.25
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N4
+  pick:
+    pos:
+    - 0.0
+    - -0.35
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N5
+  pick:
+    pos:
+    - 0.0
+    - -0.3
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - -0.06
+    - 0.1
+    rpy: *id001
+- id: N6
+  pick:
+    pos:
+    - 0.0
+    - -0.3
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.3
+    - 0.06
+    - 0.1
+    rpy: *id001
+- id: N7
+  pick:
+    pos:
+    - 0.0
+    - -0.3
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.25
+    - 0.0
+    - 0.1
+    rpy: *id001
+- id: N9
+  pick:
+    pos:
+    - -0.06
+    - -0.34
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.34
+    - 0.06
+    - 0.1
+    rpy: *id001
+- id: N10
+  pick:
+    pos:
+    - 0.06
+    - -0.26
+    - 0.05
+    rpy: *id001
+  place:
+    pos:
+    - 0.26
+    - -0.06
+    - 0.1
+    rpy: *id001

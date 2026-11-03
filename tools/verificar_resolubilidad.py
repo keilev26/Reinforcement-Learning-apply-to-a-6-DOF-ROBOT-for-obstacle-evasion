@@ -76,10 +76,12 @@ def main():
     T = C["tarea_nominal"]
     esc = Escena(cargar_e6(p.connect(p.DIRECT)), C)
     rng = np.random.default_rng(0)
-    for etiqueta, obst in contrato.escenas_evaluacion(a.archivo):
+    for etiqueta, obst, par in contrato.escenas_con_par(a.archivo):
         esc.poner_obstaculos(obst)
-        q0 = esc.ik_tcp(T["p_pick"]["pos"], T["p_pick"]["rpy"], T["q_inicial_rad"])
-        q1 = esc.ik_tcp(T["p_place"]["pos"], T["p_place"]["rpy"], T["q_inicial_rad"])
+        pick = par["pick"] if par else T["p_pick"]["pos"]
+        place = par["place"] if par else T["p_place"]["pos"]
+        q0 = esc.ik_tcp(pick, T["p_pick"]["rpy"], T["q_inicial_rad"])
+        q1 = esc.ik_tcp(place, T["p_place"]["rpy"], T["q_inicial_rad"])
         if q0 is None or q1 is None:
             print(f"{etiqueta:<34}sin cinemática inversa libre en pick o place")
             continue

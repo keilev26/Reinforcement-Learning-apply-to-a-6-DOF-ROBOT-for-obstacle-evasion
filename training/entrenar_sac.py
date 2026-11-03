@@ -64,8 +64,11 @@ def criterio_mejor(nuevo: dict, mejor: dict | None) -> bool:
     return clave(nuevo) > clave(mejor)
 
 
-def episodio_escena(modelo, env, etiqueta, obstaculos):
-    obs, info = env.reset(options={"obstaculos": obstaculos, "etiqueta": etiqueta})
+def episodio_escena(modelo, env, etiqueta, obstaculos, par=None):
+    opciones = {"obstaculos": obstaculos, "etiqueta": etiqueta}
+    if par:
+        opciones["par"] = par
+    obs, info = env.reset(options=opciones)
     fin = False
     while not fin:
         a, _ = modelo.predict(obs, deterministic=True)
@@ -156,7 +159,7 @@ class Validacion(BaseCallback):
         super().__init__()
         v = cfg["evaluacion"]["validacion"]
         ruta = Path(v["archivo"])
-        self.escenas = contrato.escenas_evaluacion(ruta if ruta.is_absolute() else RAIZ / ruta)
+        self.escenas = contrato.escenas_con_par(ruta if ruta.is_absolute() else RAIZ / ruta)
         self.cada, self.carpeta, self.mejor, self.ultimo = v["cada_pasos"], carpeta, None, -1
         self.env = EntornoE6(recompensa=cfg["entorno"]["recompensa"])
         self.csv = open(carpeta / "validacion.csv", "w", newline="")
@@ -167,7 +170,7 @@ class Validacion(BaseCallback):
         self.proxima = self.num_timesteps + self.cada
 
     def _validar(self) -> None:
-        infos = [episodio_escena(self.model, self.env, et, ob) for et, ob in self.escenas]
+        infos = [episodio_escena(self.model, self.env, et, ob, par) for et, ob, par in self.escenas]
         m = {"pasos": int(self.num_timesteps), "exito": float(np.mean([i["exito"] for i in infos])),
              "colision": float(np.mean([i["colisiones"] > 0 for i in infos])),
              "error_mm": float(np.median([i["error_pos_m"] for i in infos]) * 1000),
@@ -230,8 +233,15 @@ def main():
         {**cfg, "pasos_usados": pasos, "semilla_usada": semilla, "cambios": a.cambios}))
 
     E = cfg["entorno"]
+    kwargs = {"escenario": E["escenario"], "recompensa": E["recompensa"]}
+    if E.get("muestreo"):
+        kwargs["muestreo"] = E["muestreo"]
+    if E.get("pares_archivo"):
+        ruta_pares = Path(E["pares_archivo"])
+        kwargs["pares"] = contrato.pares_kit(ruta_pares if ruta_pares.is_absolute() else RAIZ / ruta_pares,
+                                             E.get("pares_ids"))
     venv = make_vec_env(EntornoE6, n_envs=E["n_entornos"], seed=semilla, vec_env_cls=SubprocVecEnv,
-                        env_kwargs={"escenario": E["escenario"], "recompensa": E["recompensa"]})
+                        env_kwargs=kwargs)
     S = cfg["sac"]
     if a.desde:
         modelo = SAC.load(a.desde, env=venv, device=a.dispositivo,

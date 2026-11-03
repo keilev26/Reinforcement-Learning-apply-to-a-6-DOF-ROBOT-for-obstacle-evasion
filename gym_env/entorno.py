@@ -4,6 +4,7 @@ import pybullet as p
 
 from evaluation.metricas import ContadorMetricas
 from geometry.distancia import D_MAX, ESLABONES_OBSERVADOS, MedidorDistancias
+from gym_env import kit
 from gym_env.escena import ESLABONES_MOVILES, Escena, contrato
 from gym_env.robot_e6 import cargar_e6
 
@@ -44,7 +45,8 @@ class EntornoE6(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 33}
 
     def __init__(self, escenario: int | None = None, variante: str | None = None,
-                 recompensa: dict | None = None, render_mode: str | None = None):
+                 recompensa: dict | None = None, render_mode: str | None = None,
+                 muestreo: str = "contrato", pares: list | None = None):
         super().__init__()
         self.C, self.M = contrato.cargar(), contrato.cargar_metricas()
         term, acc = self.M["terminacion"], self.M["accion"]
@@ -57,6 +59,7 @@ class EntornoE6(gym.Env):
         self.w = {**RECOMPENSA_V0, **(recompensa or {})}
         self.escenario, self.variante = escenario, variante
         self.escala_max = None
+        self.muestreo, self.pares = muestreo, pares
         self.render_mode = render_mode
 
         self.cliente = p.connect(p.GUI if render_mode == "human" else p.DIRECT)
@@ -72,13 +75,18 @@ class EntornoE6(gym.Env):
             self.subpasos, self.M["m2_colisiones"]["histeresis_m"], self.C["efector"]["largo_m"])
 
         T = self.C["tarea_nominal"]
+        self.rpy_pick, self.rpy_meta = T["p_pick"]["rpy"], T["p_place"]["rpy"]
+        self.quat_meta = np.array(p.getQuaternionFromEuler(self.rpy_meta))
+        self.p_pick = np.array(T["p_pick"]["pos"])
         self.p_meta = np.array(T["p_place"]["pos"])
-        self.quat_meta = np.array(p.getQuaternionFromEuler(T["p_place"]["rpy"]))
-        self.L = float(np.linalg.norm(self.p_meta - np.array(T["p_pick"]["pos"])))
+        self.L = float(np.linalg.norm(self.p_meta - self.p_pick))
+        self.L_obs = self.L
+        self.par_nominal = {"pick": self.p_pick.tolist(), "place": self.p_meta.tolist()}
         self.esc.poner_obstaculos([])
         self.q_pick_ref = self.esc.ik_tcp(T["p_pick"]["pos"], T["p_pick"]["rpy"], T["q_inicial_rad"])
         if self.q_pick_ref is None:
             raise RuntimeError("p_pick sin cinemática inversa libre de colisión en la celda vacía")
+        self.q_referencias = {tuple(np.round(self.p_pick, 5)): self.q_pick_ref}
 
         self.action_space = gym.spaces.Box(-1.0, 1.0, (6,), np.float32)
         n = len(ESLABONES_OBSERVADOS)
@@ -96,18 +104,44 @@ class EntornoE6(gym.Env):
     def _observar(self, medida):
         e_pos, e_quat, _, _ = self._errores()
         q_norm = 2 * (self.q - self.m.q_min) / (self.m.q_max - self.m.q_min) - 1
-        return np.concatenate([q_norm, self.dq_prev / self.dq_max, e_pos / self.L, e_quat,
+        return np.concatenate([q_norm, self.dq_prev / self.dq_max, e_pos / self.L_obs, e_quat,
                                medida.distancia / D_MAX, medida.direccion.ravel()]).clip(-3, 3).astype(np.float32)
 
+
+    def fijar_par(self, par: dict) -> None:
+        self.p_pick, self.p_meta = np.array(par["pick"], dtype=float), np.array(par["place"], dtype=float)
+        self.L = float(np.linalg.norm(self.p_meta - self.p_pick))
+        clave = tuple(np.round(self.p_pick, 5))
+        if clave not in self.q_referencias:
+            self.esc.poner_obstaculos([])
+            q = self.esc.ik_tcp(self.p_pick, self.rpy_pick, self.q_referencias[tuple(np.round(self.par_nominal["pick"], 5))])
+            if q is None:
+                raise RuntimeError(f"par sin cinemática inversa libre en recoger: {par}")
+            self.q_referencias[clave] = q
+        self.q_pick_ref = self.q_referencias[clave]
+
+    def _elegir_par(self, opciones: dict) -> None:
+        par = opciones.get("par")
+        if par is None and self.pares:
+            par = self.pares[int(self.np_random.integers(len(self.pares)))]
+        self.fijar_par(par or self.par_nominal)
+
+    def _sorteo_con_kit(self, esc_n, opciones) -> bool:
+        return self.muestreo == "kit" and esc_n is None and "obstaculos" not in opciones
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         opciones = options or {}
         esc_n = opciones.get("escenario", self.escenario)
         var = opciones.get("variante", self.variante)
+        self._elegir_par(opciones)
+        sorteo_kit = self._sorteo_con_kit(esc_n, opciones)
+        q0 = None
         for _ in range(20):
             if "obstaculos" in opciones:
                 self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
+            elif sorteo_kit:
+                self.etiqueta, obst = kit.muestrear(self.np_random, self.p_pick, self.p_meta)
             elif esc_n is None:
                 self.etiqueta, obst = contrato.muestrear_entrenamiento(self.C, self.np_random,
                                                                        self.escala_max)
@@ -117,12 +151,17 @@ class EntornoE6(gym.Env):
             self.esc.poner_obstaculos(obst)
             q0 = self.q_pick_ref
             if self.esc.en_colision(q0):
-                T = self.C["tarea_nominal"]
-                q0 = self.esc.ik_tcp(T["p_pick"]["pos"], T["p_pick"]["rpy"], self.q_pick_ref)
+                q0 = self.esc.ik_tcp(self.p_pick, self.rpy_pick, self.q_pick_ref)
+            if q0 is not None and sorteo_kit and self.esc.ik_tcp(self.p_meta, self.rpy_meta, q0, intentos=10) is None:
+                q0 = None
             if q0 is not None:
                 break
             if esc_n is not None or "obstaculos" in opciones:
                 raise RuntimeError(f"{self.etiqueta}: p_pick sin solución libre de colisión")
+        if q0 is None:
+            self.etiqueta = "1"
+            self.esc.poner_obstaculos([])
+            q0 = self.q_pick_ref
         self.q = np.array(q0, dtype=float)
         self.metricas.reiniciar(self.q)
         self.dq_prev = np.zeros(6)
