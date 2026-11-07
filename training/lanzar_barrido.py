@@ -30,7 +30,8 @@ def terminada(carpeta: Path, pasos_pedidos: int | None) -> bool:
     estado = carpeta / "estado.json"
     if pasos_pedidos is None or not estado.exists():
         return True
-    return json.loads(estado.read_text())["pasos_totales"] >= pasos_pedidos
+    datos = json.loads(estado.read_text())
+    return "detenida_por" in datos or datos["pasos_totales"] >= pasos_pedidos
 
 
 def completada(c: dict) -> bool:

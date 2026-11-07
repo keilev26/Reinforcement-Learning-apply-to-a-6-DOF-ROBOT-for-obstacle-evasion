@@ -1,0 +1,14 @@
+comunes:
+  pasos: 4000000
+  dispositivo: auto
+  hilos: 2
+paralelo: 4
+corridas:
+  - {config: sac_v4c, semilla: 0}
+  - {config: sac_v4b, semilla: 0}
+  - {config: sac_v4d, semilla: 0}
+  - {config: sac_v4c, semilla: 1}
+  - {config: sac_v4b, semilla: 1}
+  - {config: sac_v4d, semilla: 1}
+  - {config: sac_v3, semilla: 2, etiqueta: parada, cambios: {entrenamiento.parada.activa: true, entrenamiento.parada.critic_loss: 10}}
+  - {config: sac_v3, semilla: 3, etiqueta: parada, cambios: {entrenamiento.parada.activa: true, entrenamiento.parada.critic_loss: 10}}

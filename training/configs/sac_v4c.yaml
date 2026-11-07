@@ -1,0 +1,10 @@
+version: "4c"
+base: sac_v3
+sac:
+  learning_rate: 1.0e-4
+  batch_size: 512
+  tau: 0.002
+  ent_max: 0.1
+entrenamiento:
+  pasos_totales: 4000000
+  parada: {activa: true, critic_loss: 10}

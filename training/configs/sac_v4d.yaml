@@ -1,0 +1,4 @@
+version: "4d"
+base: sac_v4c
+entorno:
+  demos: training/demos/kit_rrt.npz

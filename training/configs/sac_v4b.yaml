@@ -1,0 +1,7 @@
+version: "4b"
+base: sac_v3
+sac:
+  algoritmo: TQC
+entrenamiento:
+  pasos_totales: 4000000
+  parada: {activa: true}

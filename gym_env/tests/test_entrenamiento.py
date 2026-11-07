@@ -6,7 +6,12 @@ import yaml
 
 from gym_env.escena import contrato
 from training import lanzar_barrido
-from training.entrenar_sac import Validacion, aplicar_cambios, cargar_config, criterio_mejor
+import numpy as np
+import torch
+from gymnasium import spaces
+
+from training.entrenar_sac import (AcotarEntropia, BufferConDemos, Validacion, aplicar_cambios, cargar_config,
+                                   criterio_mejor, debe_detener)
 
 RAIZ = Path(__file__).resolve().parents[2]
 
@@ -124,3 +129,73 @@ def test_sustituciones_desde_la_linea_de_comandos():
     assert nuevo[0]["dispositivo"] == "cuda" and nuevo[0]["pasos"] == 5000 and nuevo[0]["hilos"] == 2
     assert base[0]["dispositivo"] == "cpu"
     assert lanzar_barrido.sustituir(base, None, None, None) == base
+
+
+PARADA = {"critic_loss": 10.0, "lecturas": 3, "validacion_ratio": 0.3, "validaciones": 4}
+
+
+def test_parada_por_critico_sostenido():
+    assert debe_detener([1.0, 50.0, 60.0, 70.0], [], PARADA) == "critic_loss"
+    assert debe_detener([50.0, 1.0, 60.0, 70.0], [], PARADA) is None
+    assert debe_detener([50.0, 60.0], [], PARADA) is None
+
+
+def test_parada_por_validacion_colapsada():
+    assert debe_detener([], [0.8, 0.1, 0.1, 0.0, 0.1], PARADA) == "validacion"
+    assert debe_detener([], [0.8, 0.1, 0.5, 0.0, 0.1], PARADA) is None
+    assert debe_detener([], [0.0, 0.0, 0.0, 0.0], PARADA) is None
+
+
+def test_parada_sin_umbral_de_critico_solo_mira_la_validacion():
+    parada = dict(PARADA, critic_loss=None)
+    assert debe_detener([1e6] * 10, [], parada) is None
+
+
+def test_la_entropia_se_acota():
+    class Modelo:
+        log_ent_coef = torch.tensor([2.0])
+
+    cb = AcotarEntropia(0.1)
+    cb.model = Modelo()
+    assert cb._on_step() is True
+    assert float(cb.model.log_ent_coef.exp()) == pytest.approx(0.1, rel=1e-5)
+    cb.model.log_ent_coef = torch.tensor([-5.0])
+    cb._on_step()
+    assert float(cb.model.log_ent_coef) == pytest.approx(-5.0)
+
+
+def test_el_buffer_con_demos_mezcla_mitad_y_mitad():
+    obs, act = spaces.Box(-1, 1, (4,), np.float32), spaces.Box(-1, 1, (2,), np.float32)
+    n = 40
+    demos = {"obs": np.full((n, 4), 7.0), "acciones": np.full((n, 2), 7.0), "obs_sig": np.full((n, 4), 7.0),
+             "terminados": np.zeros(n), "recompensas": np.full(n, 7.0)}
+    buf = BufferConDemos(100, obs, act, device="cpu", demos=demos)
+    for _ in range(50):
+        buf.add(np.zeros(4), np.zeros(4), np.zeros(2), np.zeros(1), np.zeros(1), [{}])
+    lote = buf.sample(32)
+    assert lote.observations.shape == (32, 4)
+    assert int((lote.observations[:, 0] == 7.0).sum()) == 16
+    sin = BufferConDemos(100, obs, act, device="cpu")
+    for _ in range(50):
+        sin.add(np.zeros(4), np.zeros(4), np.zeros(2), np.zeros(1), np.zeros(1), [{}])
+    assert sin.sample(32).observations.shape == (32, 4)
+
+
+def test_los_valores_por_defecto_no_cambian_las_configs_anteriores():
+    for nombre in ("sac_v3", "sac_v3p"):
+        c = cargar_config(nombre)
+        assert c["sac"]["algoritmo"] == "SAC"
+        assert c["sac"]["ent_max"] is None
+        assert c["entrenamiento"]["parada"]["activa"] is False
+        assert c["entorno"]["demos"] is None
+        assert c["entrenamiento"]["guardar_buffer"] is False
+
+
+def test_las_configs_v4_cargan_y_difieren_donde_corresponde():
+    b, c, d = (cargar_config(n) for n in ("sac_v4b", "sac_v4c", "sac_v4d"))
+    assert b["sac"]["algoritmo"] == "TQC"
+    assert c["sac"]["algoritmo"] == "SAC" and c["sac"]["ent_max"] == pytest.approx(0.1)
+    assert d["entorno"]["demos"] and d["sac"]["ent_max"] == c["sac"]["ent_max"]
+    assert c["entorno"]["demos"] is None
+    for x in (b, c, d):
+        assert x["entrenamiento"]["pasos_totales"] == 4000000
