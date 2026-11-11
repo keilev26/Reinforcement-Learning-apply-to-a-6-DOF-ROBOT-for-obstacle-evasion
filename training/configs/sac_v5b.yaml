@@ -1,0 +1,4 @@
+version: "5b"
+base: sac_v5a
+sac:
+  net_arch: [512, 512]

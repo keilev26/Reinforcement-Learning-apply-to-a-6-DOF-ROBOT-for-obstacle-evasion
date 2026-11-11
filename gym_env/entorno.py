@@ -60,6 +60,7 @@ class EntornoE6(gym.Env):
         self.escenario, self.variante = escenario, variante
         self.escala_max = None
         self.muestreo, self.pares = muestreo, pares
+        self.p_estructuradas = 0.0
         self.render_mode = render_mode
 
         self.cliente = p.connect(p.GUI if render_mode == "human" else p.DIRECT)
@@ -126,6 +127,9 @@ class EntornoE6(gym.Env):
             par = self.pares[int(self.np_random.integers(len(self.pares)))]
         self.fijar_par(par or self.par_nominal)
 
+    def fijar_p_estructuradas(self, p: float) -> None:
+        self.p_estructuradas = float(p)
+
     def _sorteo_con_kit(self, esc_n, opciones) -> bool:
         return self.muestreo == "kit" and esc_n is None and "obstaculos" not in opciones
 
@@ -140,6 +144,8 @@ class EntornoE6(gym.Env):
         for _ in range(20):
             if "obstaculos" in opciones:
                 self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
+            elif sorteo_kit and self.np_random.random() < self.p_estructuradas:
+                self.etiqueta, obst = kit.muestrear_estructurada(self.np_random, self.p_pick, self.p_meta)
             elif sorteo_kit:
                 self.etiqueta, obst = kit.muestrear(self.np_random, self.p_pick, self.p_meta)
             elif esc_n is None:

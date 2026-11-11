@@ -199,3 +199,50 @@ def test_las_configs_v4_cargan_y_difieren_donde_corresponde():
     assert c["entorno"]["demos"] is None
     for x in (b, c, d):
         assert x["entrenamiento"]["pasos_totales"] == 4000000
+
+
+def test_familias_de_prueba_nunca_se_sortean_en_entrenamiento():
+    from gym_env import kit
+    rng = np.random.default_rng(1)
+    pick, place = np.array([0.0, -0.3, 0.05]), np.array([0.3, 0.0, 0.1])
+    assert set(kit.familias_entrenamiento()).isdisjoint(kit.FAMILIAS_PRUEBA)
+    vistas = set()
+    for _ in range(200):
+        etiqueta, obst = kit.muestrear_estructurada(rng, pick, place)
+        vistas.add(etiqueta.split()[1])
+    assert vistas <= set(kit.familias_entrenamiento())
+    assert len(vistas) > 5
+
+
+def test_entorno_mezcla_estructuradas_segun_la_proporcion():
+    from gym_env.entorno import EntornoE6
+    env = EntornoE6(muestreo="kit")
+    try:
+        env.fijar_p_estructuradas(1.0)
+        env.reset(seed=0)
+        assert env.etiqueta.startswith("est ")
+        env.fijar_p_estructuradas(0.0)
+        env.reset(seed=1)
+        assert env.etiqueta.startswith("kit ")
+    finally:
+        env.close()
+
+
+def test_curriculo_estructuradas_interpola():
+    from training.entrenar_sac import CurriculoEstructuradas
+    c = CurriculoEstructuradas({"p_inicial": 0.1, "p_final": 0.5, "fraccion": 0.5}, 1000)
+    c.num_timesteps = 0
+    assert c.valor() == pytest.approx(0.1)
+    c.num_timesteps = 250
+    assert c.valor() == pytest.approx(0.3)
+    c.num_timesteps = 900
+    assert c.valor() == pytest.approx(0.5)
+
+
+def test_las_configs_v5_cargan():
+    a, b, c = cargar_config("sac_v5a"), cargar_config("sac_v5b"), cargar_config("sac_v5c")
+    assert a["sac"]["algoritmo"] == "TQC" and a["entrenamiento"]["pasos_totales"] == 12000000
+    assert a["estructuradas"]["p_final"] == 0.5 and a["entrenamiento"]["guardar_buffer"] is True
+    assert b["sac"]["net_arch"] == [512, 512] and a["sac"]["net_arch"] == [256, 256]
+    assert c["estructuradas"]["p_inicial"] == 0.5
+    assert Path("shared_scenarios/kit_validacion_v5.yaml").exists()

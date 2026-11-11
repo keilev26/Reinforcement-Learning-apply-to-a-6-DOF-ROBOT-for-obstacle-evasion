@@ -11,6 +11,14 @@ from gym_env.entorno import EntornoE6
 from gym_env.escena import contrato
 
 
+def cargar(ruta):
+    try:
+        return SAC.load(ruta, device="cpu")
+    except Exception:
+        from sb3_contrib import TQC
+        return TQC.load(ruta, device="cpu")
+
+
 def evaluar(modelo, env, variante: str, consulta: int, obstaculos=None, par=None) -> dict:
     if obstaculos is None:
         opciones = {"escenario": int(variante.split()[0]), "variante": variante}
@@ -54,7 +62,7 @@ def main():
     else:
         todas = [et for n in C["escenarios"] for et, _ in contrato.variantes(C, n)]
         escenas = [(v.strip(), None, None) for v in (a.variantes.split(";") if a.variantes else todas)]
-    modelo = SAC.load(a.modelo, device="cpu")
+    modelo = cargar(a.modelo)
     env = EntornoE6()
     filas = [evaluar(modelo, env, et, i, obst, par) for et, obst, par in escenas for i in range(a.episodios)]
     env.close()

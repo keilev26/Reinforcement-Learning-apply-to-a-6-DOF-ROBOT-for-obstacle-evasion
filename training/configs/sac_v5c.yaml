@@ -1,0 +1,3 @@
+version: "5c"
+base: sac_v5a
+estructuradas: {p_inicial: 0.5, p_final: 0.5, fraccion: 0.5}

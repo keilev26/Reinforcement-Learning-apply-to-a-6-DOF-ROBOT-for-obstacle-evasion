@@ -203,6 +203,33 @@ class Curriculo(BaseCallback):
             self.ultimo = v
 
 
+class CurriculoEstructuradas(BaseCallback):
+
+    def __init__(self, cfg: dict, pasos_totales: int):
+        super().__init__()
+        self.c, self.total, self.ultimo = cfg, pasos_totales, None
+
+    def valor(self) -> float:
+        c = self.c
+        avance = min(1.0, self.num_timesteps / (c["fraccion"] * self.total))
+        return c["p_inicial"] + avance * (c["p_final"] - c["p_inicial"])
+
+    def _on_training_start(self) -> None:
+        self._aplicar()
+
+    def _on_step(self) -> bool:
+        if self.num_timesteps % 5000 < self.training_env.num_envs:
+            self._aplicar()
+        return True
+
+    def _aplicar(self) -> None:
+        v = round(self.valor(), 3)
+        if v != self.ultimo:
+            self.training_env.env_method("fijar_p_estructuradas", v)
+            self.logger.record("curriculo/p_estructuradas", v)
+            self.ultimo = v
+
+
 class Evaluacion(BaseCallback):
 
     def __init__(self, cfg, carpeta: Path):
@@ -368,6 +395,8 @@ def main():
         callbacks.append(validacion)
     if cfg.get("curriculo"):
         callbacks.append(Curriculo(cfg["curriculo"], pasos))
+    if cfg.get("estructuradas"):
+        callbacks.append(CurriculoEstructuradas(cfg["estructuradas"], pasos))
     parada = cfg["entrenamiento"]["parada"]
     vigilante = None
     if parada["activa"] and validacion is not None:

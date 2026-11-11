@@ -169,3 +169,28 @@ COMBINACIONES_3 = [
                                                           ("T01", 325, -375, 0), ("T04", -275, -225, 0),
                                                           ("T03", 75, 125, 0), ("T05", 325, -175, 0)]),
 ]
+
+
+FAMILIAS_PRUEBA = ("C", "M", "S", "K", "R", "E", "I", "O", "Q")
+
+
+def composiciones() -> dict:
+    return {letra: (titulo, piezas) for letra, titulo, piezas in COMBINACIONES + COMBINACIONES_2 + COMBINACIONES_3}
+
+
+def familias_entrenamiento() -> list[str]:
+    return [letra for letra in composiciones() if letra not in FAMILIAS_PRUEBA]
+
+
+def muestrear_estructurada(rng, pick, place, paso_mm: int = 50) -> tuple[str, list[dict]]:
+    letras = familias_entrenamiento()
+    letra = letras[int(rng.integers(len(letras)))]
+    titulo, base = composiciones()[letra]
+    piezas = []
+    for codigo, x, y, yaw, *z in base:
+        dx, dy = (int(rng.integers(-1, 2)) * paso_mm for _ in range(2))
+        cand = (codigo, x + dx, y + dy, yaw, *z)
+        if np.hypot(cand[1], cand[2]) / 1000 <= RADIO_MAX_M and not conflictos(piezas + [cand], pick, place):
+            piezas.append(cand)
+    etiqueta = f"est {letra} n={len(piezas)}"
+    return etiqueta, [objeto_kit(i, pz) for i, pz in enumerate(piezas)]

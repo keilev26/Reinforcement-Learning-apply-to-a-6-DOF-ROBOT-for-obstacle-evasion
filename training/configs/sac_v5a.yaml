@@ -1,0 +1,15 @@
+version: "5a"
+base: sac_v3
+sac:
+  algoritmo: TQC
+entorno:
+  pares_archivo: shared_scenarios/pares_kit.yaml
+  pares_ids: [N0, N1, N2, N3, N7]
+estructuradas: {p_inicial: 0.1, p_final: 0.5, fraccion: 0.5}
+entrenamiento:
+  pasos_totales: 12000000
+  guardar_buffer: true
+  parada: {activa: true}
+evaluacion:
+  validacion:
+    archivo: shared_scenarios/kit_validacion_v5.yaml
