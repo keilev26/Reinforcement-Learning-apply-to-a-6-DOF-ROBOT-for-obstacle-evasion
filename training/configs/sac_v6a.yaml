@@ -1,0 +1,7 @@
+version: "6a"
+base: sac_v5a
+entorno:
+  pares_combinados: {radio_m: 0.04, paso_m: 0.01, p_fijos: 0.3}
+estructuradas: {p_inicial: 0.1, p_final: 0.5, fraccion: 1.0}
+entrenamiento:
+  pasos_totales: 6000000

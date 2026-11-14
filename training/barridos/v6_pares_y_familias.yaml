@@ -1,0 +1,11 @@
+version: "v6"
+comunes:
+  pasos: 6000000
+  dispositivo: auto
+  hilos: 2
+paralelo: 4
+corridas:
+  - {config: sac_v6a, semilla: 0}
+  - {config: sac_v6b, semilla: 0}
+  - {config: sac_v6c, semilla: 0}
+  - {config: sac_v6b, semilla: 1}

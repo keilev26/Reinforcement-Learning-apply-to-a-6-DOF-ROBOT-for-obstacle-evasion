@@ -246,3 +246,62 @@ def test_las_configs_v5_cargan():
     assert b["sac"]["net_arch"] == [512, 512] and a["sac"]["net_arch"] == [256, 256]
     assert c["estructuradas"]["p_inicial"] == 0.5
     assert Path("shared_scenarios/kit_validacion_v5.yaml").exists()
+
+
+def test_muestreo_ponderado_y_exclusion_de_familias():
+    from gym_env import kit
+    rng = np.random.default_rng(3)
+    pick, place = np.array([0.0, -0.3, 0.05]), np.array([0.3, 0.0, 0.1])
+    cuentas = {}
+    for _ in range(600):
+        etiqueta, _ = kit.muestrear_estructurada(rng, pick, place, excluir=("J",), pesos={"N": 4.0})
+        letra = etiqueta.split()[1]
+        cuentas[letra] = cuentas.get(letra, 0) + 1
+    assert "J" not in cuentas
+    assert cuentas["N"] > 2 * cuentas["A"]
+
+
+def test_pares_combinados_cambian_pick_y_place_a_la_vez_y_son_resolubles():
+    from gym_env.entorno import EntornoE6
+    cfg = {"radio_m": 0.04, "paso_m": 0.01, "p_fijos": 0.0}
+    env = EntornoE6(muestreo="kit", pares_combinados=cfg)
+    try:
+        nom = env.par_nominal
+        combinados = 0
+        for s in range(12):
+            env.reset(seed=s)
+            dp = np.abs(env.p_pick[:2] - np.array(nom["pick"][:2]))
+            dl = np.abs(env.p_meta[:2] - np.array(nom["place"][:2]))
+            assert dp.max() <= 0.04 + 1e-9 and dl.max() <= 0.04 + 1e-9
+            combinados += dp.max() > 0 and dl.max() > 0
+        assert combinados >= 3
+    finally:
+        env.close()
+
+
+def test_pares_fijos_si_p_fijos_es_uno():
+    from gym_env.entorno import EntornoE6
+    env = EntornoE6(muestreo="kit", pares_combinados={"radio_m": 0.04, "paso_m": 0.01, "p_fijos": 1.0})
+    try:
+        env.reset(seed=0)
+        assert np.allclose(env.p_pick, env.par_nominal["pick"]) and np.allclose(env.p_meta, env.par_nominal["place"])
+    finally:
+        env.close()
+
+
+def test_las_configs_v6_cargan_y_v5_no_cambia():
+    a, b, c = cargar_config("sac_v6a"), cargar_config("sac_v6b"), cargar_config("sac_v6c")
+    assert a["entrenamiento"]["pasos_totales"] == 6000000 and a["estructuradas"]["fraccion"] == 1.0
+    assert a["entorno"]["pares_combinados"]["radio_m"] == 0.04 and a["entorno"]["estructuradas_familias"] is None
+    assert b["entorno"]["estructuradas_familias"]["excluir"] == ["J"]
+    assert c["entorno"]["recompensa"]["sigma_pos_m"] == 0.01 and c["entorno"]["recompensa"]["precision"] == 10.0
+    v5 = cargar_config("sac_v5a")
+    assert v5["entorno"]["pares_combinados"] is None and v5["entrenamiento"]["pasos_totales"] == 12000000
+
+
+def test_resumen_familias_agrupa_la_prueba_grande():
+    from tools.resumen_familias import grupo
+    assert grupo("PG-C est C n=3 par=N9") == "PG par no visto"
+    assert grupo("PG-C est C n=3 par=N1") == "PG par visto"
+    assert grupo("S-C Portal par=N0") == "S prueba"
+    assert grupo("SP-D Pasillo par=N2") == "SP entrenadas"

@@ -1,0 +1,4 @@
+version: "6c"
+base: sac_v6b
+entorno:
+  recompensa: {sigma_pos_m: 0.01}

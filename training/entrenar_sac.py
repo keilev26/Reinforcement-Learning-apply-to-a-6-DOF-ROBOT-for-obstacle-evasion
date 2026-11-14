@@ -356,6 +356,9 @@ def main():
     kwargs = {"escenario": E["escenario"], "recompensa": E["recompensa"]}
     if E.get("muestreo"):
         kwargs["muestreo"] = E["muestreo"]
+    for clave in ("pares_combinados", "estructuradas_familias"):
+        if E.get(clave):
+            kwargs[clave] = E[clave]
     if E.get("pares_archivo"):
         ruta_pares = Path(E["pares_archivo"])
         kwargs["pares"] = contrato.pares_kit(ruta_pares if ruta_pares.is_absolute() else RAIZ / ruta_pares,

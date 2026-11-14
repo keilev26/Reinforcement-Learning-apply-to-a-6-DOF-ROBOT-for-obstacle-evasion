@@ -46,7 +46,8 @@ class EntornoE6(gym.Env):
 
     def __init__(self, escenario: int | None = None, variante: str | None = None,
                  recompensa: dict | None = None, render_mode: str | None = None,
-                 muestreo: str = "contrato", pares: list | None = None):
+                 muestreo: str = "contrato", pares: list | None = None,
+                 pares_combinados: dict | None = None, estructuradas_familias: dict | None = None):
         super().__init__()
         self.C, self.M = contrato.cargar(), contrato.cargar_metricas()
         term, acc = self.M["terminacion"], self.M["accion"]
@@ -61,6 +62,9 @@ class EntornoE6(gym.Env):
         self.escala_max = None
         self.muestreo, self.pares = muestreo, pares
         self.p_estructuradas = 0.0
+        self.pares_combinados = pares_combinados
+        self.familias_cfg = estructuradas_familias or {}
+        self.pares_validos = {}
         self.render_mode = render_mode
 
         self.cliente = p.connect(p.GUI if render_mode == "human" else p.DIRECT)
@@ -123,9 +127,34 @@ class EntornoE6(gym.Env):
 
     def _elegir_par(self, opciones: dict) -> None:
         par = opciones.get("par")
+        if par is None and self.pares_combinados and self.np_random.random() >= self.pares_combinados["p_fijos"]:
+            par = self._par_combinado()
         if par is None and self.pares:
             par = self.pares[int(self.np_random.integers(len(self.pares)))]
         self.fijar_par(par or self.par_nominal)
+
+    def _par_combinado(self) -> dict | None:
+        c = self.pares_combinados
+        n = int(round(c["radio_m"] / c["paso_m"]))
+        nom = self.par_nominal
+        for _ in range(8):
+            d = self.np_random.integers(-n, n + 1, size=4) * c["paso_m"]
+            pick = np.array([nom["pick"][0] + d[0], nom["pick"][1] + d[1], nom["pick"][2]])
+            place = np.array([nom["place"][0] + d[2], nom["place"][1] + d[3], nom["place"][2]])
+            clave = (tuple(np.round(pick, 5)), tuple(np.round(place, 5)))
+            if clave not in self.pares_validos:
+                self.pares_validos[clave] = self._par_resoluble(pick, place)
+            if self.pares_validos[clave]:
+                return {"pick": pick.tolist(), "place": place.tolist()}
+        return None
+
+    def _par_resoluble(self, pick, place) -> bool:
+        try:
+            self.fijar_par({"pick": pick, "place": place})
+        except RuntimeError:
+            return False
+        self.esc.poner_obstaculos([])
+        return self.esc.ik_tcp(self.p_meta, self.rpy_meta, self.q_pick_ref, intentos=10) is not None
 
     def fijar_p_estructuradas(self, p: float) -> None:
         self.p_estructuradas = float(p)
@@ -145,7 +174,8 @@ class EntornoE6(gym.Env):
             if "obstaculos" in opciones:
                 self.etiqueta, obst = opciones.get("etiqueta", "escena dada"), opciones["obstaculos"]
             elif sorteo_kit and self.np_random.random() < self.p_estructuradas:
-                self.etiqueta, obst = kit.muestrear_estructurada(self.np_random, self.p_pick, self.p_meta)
+                self.etiqueta, obst = kit.muestrear_estructurada(self.np_random, self.p_pick, self.p_meta,
+                                                                    self.familias_cfg.get("excluir", ()), self.familias_cfg.get("pesos"))
             elif sorteo_kit:
                 self.etiqueta, obst = kit.muestrear(self.np_random, self.p_pick, self.p_meta)
             elif esc_n is None:

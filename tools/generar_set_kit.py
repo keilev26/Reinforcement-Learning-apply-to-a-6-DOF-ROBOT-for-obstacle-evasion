@@ -13,8 +13,8 @@ from gym_env.escena import Escena, contrato
 from gym_env.robot_e6 import cargar_e6
 from tools.verificar_resolubilidad import rrt_connect
 
-PARES_VISTOS = ["N0", "N1", "N2", "N3", "N7"]
-PARES_NO_VISTOS = ["N4", "N9", "N5", "N6", "N10"]
+PARES_VISTOS = list(kit.PARES_VISTOS)
+PARES_NO_VISTOS = list(kit.PARES_NO_VISTOS)
 
 
 class Verificador:

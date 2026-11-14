@@ -1,0 +1,4 @@
+version: "6b"
+base: sac_v6a
+entorno:
+  estructuradas_familias: {excluir: [J], pesos: {N: 2.0, U: 2.0, P: 2.0}}

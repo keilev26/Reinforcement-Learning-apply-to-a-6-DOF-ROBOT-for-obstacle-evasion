@@ -5,6 +5,8 @@ entorno:
   recompensa: {}
   n_entornos: 4
   demos: null
+  pares_combinados: null
+  estructuradas_familias: null
 
 sac:
   learning_rate: 3.0e-4

@@ -10,6 +10,9 @@ from gym_env import kit
 
 def grupo(variante: str) -> str:
     pref = variante.split(" ")[0]
+    if pref.startswith("PG-"):
+        par = variante.rsplit("par=", 1)[-1]
+        return "PG " + ("par no visto" if par in kit.PARES_NO_VISTOS else "par visto")
     if pref.startswith(("S-", "SP-")):
         letra = pref.split("-")[1]
         return pref.split("-")[0] + (" prueba" if letra in kit.FAMILIAS_PRUEBA else " entrenadas")
